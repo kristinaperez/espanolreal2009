@@ -38,12 +38,17 @@ export function sampleN<T>(items: readonly T[], count: number, rng: Rng = Math.r
 
 const PUNCT = /[¡¿?!.,;:()"«»'’\-–—]/g;
 
-/** Normalises an answer for comparison: case, accents (except ñ), punctuation, spacing. */
+/**
+ * Normalises a learner's answer for comparison.
+ *
+ * Case and Spanish diacritics are ignored, so Á/á → a and Ñ/ñ → n.
+ * Spanish punctuation (¿ ¡ etc.) and repeated whitespace are also ignored.
+ */
 export function normalizeAnswer(value: string): string {
   return value
     .normalize("NFD")
-    // keep the combining tilde so ñ stays ñ
-    .replace(/[\u0300-\u0302\u0304-\u036f]/g, "")
+    // Ignore all combining marks: accents, diaeresis and the tilde in ñ.
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(PUNCT, " ")
     .replace(/\s+/g, " ")

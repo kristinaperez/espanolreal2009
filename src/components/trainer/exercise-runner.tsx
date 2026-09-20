@@ -290,7 +290,14 @@ export function ExerciseRunner({
                 next();
               }}
               onUnknown={() => {
-                grade(false, current);
+                // «Не знал» — это самооценка флеш-карточки, а не ошибка ответа.
+                // Ошибкой считаем только реально неверный ответ в упражнении.
+                dispatch({
+                  type: "flashcard",
+                  lesson: current.lesson,
+                  phraseIndex: current.phraseIndex,
+                  reverse: current.kind === "reverse-flashcard",
+                });
                 next();
               }}
             />
