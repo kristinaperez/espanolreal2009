@@ -5,22 +5,26 @@ import type { LessonPhrase } from "@/lib/content/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+interface FlipCardProps {
+  phrase: LessonPhrase;
+  reverse: boolean;
+  index: number;
+  total: number;
+  onKnown: () => void;
+  /** Called when the learner marks the phrase as not known. */
+  onUnknown?: () => void;
+  difficulty?: string;
+}
+
 export function FlipCard({
   phrase,
   reverse,
   index,
   total,
   onKnown,
+  onUnknown,
   difficulty,
-}: {
-  phrase: LessonPhrase;
-  reverse: boolean;
-  index: number;
-  total: number;
-  onKnown: () => void;
-  onUnknown?: () => void;
-  difficulty?: string;
-}) {
+}: FlipCardProps) {
   const [flipped, setFlipped] = useState(false);
   const [revealed, setRevealed] = useState(false);
 

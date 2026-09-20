@@ -1,0 +1,132 @@
+
+  Build a Spanish language learning web app called Español Real for Russian-speaking users moving to or visiting Spain (A0–A1 level). Tech stack: React + TypeScript + Tailwind CSS v4. Single-page app with state-based navigation (no router needed).
+
+Design system
+Font: Montserrat (headings, buttons, labels — weights 700/800/900) + Inter (body text — 400/500). Load both from Google Fonts.
+Colors:
+Primary: #D32F2F (red)
+Primary dark: #B71C1C
+Accent (Telegram): #229ED9
+Surface: #F9F8F6 (warm off-white)
+Card: #FFFFFF
+Text: #1A1A1A
+Muted text: #6B6B6B
+Border radius: 16px for cards, 999px for pills/buttons
+Animations: fadeIn (opacity + translateY), scaleIn, shake on wrong answer, celebrate on completion
+App pages (state-based)
+Page 1: Landing page
+NavBar (fixed, blur on scroll):
+
+Left: red square logo "ES" + "Español Real / Живой испанский"
+Center links: Программа, Метод, Цена, Сообщество
+Right: red pill button "Начать бесплатно"
+Hero section (two-column grid, right side has pink skew background):
+
+Badge: "✦ Курс по авторскому учебнику"
+H1: "Learn Real Spanish" (black)
+H2: "Spoken in Spain" (red #D32F2F)
+Subtitle: "Учите реальные фразы вместо грамматики. От «Me cuentas» до собеседования — только то, что нужно в Испании."
+Button row:
+Primary red pill: "Начать бесплатно" → goes to exercise screen
+Outline red pill: "Разблокировать за 500 ★" → opens unlock modal
+Caption: "7 уроков бесплатно · без карты · без регистрации"
+Right column: two white cards:
+"Пример фразы" card: red bold phrase "Me pones un café con leche, por favor" + Russian explanation
+"Карта адаптации" card: 6 emoji+text items (✈️ Первые дни, 🏠 Квартира, ☕ Кофе, 🛒 Продукты, 🚌 Автобус, 🏥 Врач)
+Stats row (3 columns, border-top): 45 уроков · 360 фраз · 9 экзаменов
+"Почему это работает" section (warm off-white #F9F8F6 bg):
+
+H2 + subtitle
+3-column grid of 6 cards, each: big emoji, bold title, gray description
+🗣️ Реальные разговоры
+📅 Ежедневные ситуации
+✏️ Авторский метод
+🔄 Обучение через повторение
+⚡ Легко и быстро
+🧳 Для эмигрантов и путешественников
+"Структура курса" section (white bg):
+
+H2 + subtitle: "45 уроков, 360 фраз, 9 экзаменов"
+3-column grid of 9 stage cards:
+Each: emoji + "Этап N" pill (red if free, gray if locked) + bold title + description + "N уроков" + 🔒 Premium if locked
+Stage 1 (free, clickable): ✈️ Первые дни в Испании — 3 урока
+Stages 2–9: locked (Premium)
+Pricing section (warm bg):
+
+H2: "Стоимость"
+2-column: Free card (white) + Premium card (red bg)
+Free: "Бесплатно" large + 5 checklist items + outline "Начать бесплатно" button
+Premium: "500 ★ единоразово" + Telegram Stars badge + 7 checklist items + white "Разблокировать за 500 ★" button
+Telegram community section (white):
+
+💬 emoji, H2 "Сообщество в Telegram", paragraph, blue pill link button "Присоединиться к чату"
+Footer: logo + nav links
+
+Floating Telegram button: fixed bottom-right, round, blue #229ED9, Telegram SVG icon
+
+Unlock modal (overlay):
+
+⭐ emoji, "Premium за 500 ★", description, blue "Открыть в Telegram" button, dismissable by clicking backdrop or ✕
+Page 2: Exercise screen
+State: current step (0..N), flipped (flashcard), selected answer, answered, isCorrect, mistakes count, XP, done.
+
+Header (sticky):
+
+Back arrow button (→ landing)
+Progress bar: label "3 из 8" left, "+XP" right, red filled progress bar
+Heart icon + count "❤️ 3" (lives remaining, starts at 3, decreases on wrong)
+Lesson info row: "Первые дни" red pill + "A1" gray pill + lesson title
+
+Exercise cards (one at a time, animate scaleIn on each new step):
+
+Flashcard (type: flashcard):
+
+Label: "Что означает эта фраза?"
+Large dashed card (off-white), Spanish phrase bold. Tap to flip → shows Russian translation in red, transitions to solid border
+After flip: two buttons — "😕 Не знал" (outline gray) and "✓ Знал" (outline red)
+Multiple choice (type: multiple_choice):
+
+Label: "Выберите правильный перевод"
+Spanish phrase in off-white card
+4 answer buttons (full width, border-2, left-aligned text):
+Default: gray border
+After answer: correct = green bg/border, selected wrong = red bg/border, others = faded gray
+True/False (type: true_false):
+
+Label: "Верный ли перевод?"
+Card with Spanish phrase + "= «Russian statement»"
+Two buttons: "✗ Неверно" (gray) and "✓ Верно" (green outline)
+Feedback block (appears after answering, animate fadeIn):
+
+Correct: green-50 bg, "🎉 Отлично!" bold green + phrase pair
+Wrong: red-50 bg, "💡 Почти!" bold red + "Правильно: X" + "Мы повторим эту фразу позже 🔄"
+Shake animation on wrong answer card
+Next button: full-width red "Далее →" or "Завершить урок"
+
+Page 3: Completion screen
+🎉 animate-celebrate (scale pulse)
+H2: "Урок завершён!"
+3 stat tiles: ⭐ +XP / 🎯 accuracy% / 🔄 mistakes count
+If mistakes > 0: amber warning block about spaced repetition review (1 day)
+Primary red button "Продолжить курс →"
+Secondary outline button "Вернуться на главную"
+Exercise data for Lesson 1 "Me cuentas"
+phrases: [
+  { es: 'Me cuentas',      ru: 'Расскажи / Как дела?' },
+  { es: '¿Qué me cuentas?', ru: 'Как дела? Что нового?' },
+  { es: 'Ya te cuento',    ru: 'Сейчас расскажу' },
+  { es: '¿Qué tal?',       ru: 'Как дела?' },
+  { es: 'Buenas',          ru: 'Привет / Здравствуйте' },
+  { es: 'Venga',           ru: 'Ладно / Давай / Пока' },
+  { es: 'Tío / Tía',       ru: 'Чувак / Чувиха (к другу)' },
+]
+Exercise sequence: 3 flashcards → 3 multiple choice → 2 true/false
+
+Key UX requirements
+No lorem ipsum — all content is real Spanish phrases with Russian translations
+Error messages are warm and encouraging, never discouraging
+Words answered incorrectly are flagged for spaced repetition (shown on completion screen)
+Progress bar animates smoothly between steps
+Every button has hover + active:scale-95 transition
+Scrollbar hidden by default
+Fully responsive: hero stacks to single column below md breakpoint
