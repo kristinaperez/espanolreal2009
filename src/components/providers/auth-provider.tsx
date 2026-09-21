@@ -193,7 +193,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!cancelled) setMiniApp(Boolean(app));
       if (app?.initData) {
         const ok = await loginWithInitData(app.initData);
-        if (ok || !cancelled) return;
+        //if (ok || !cancelled) return; 22-09-26 подсказка из GPT K-12 чтобы заработал Mini App 
+		if (ok || cancelled) return;
       }
       await refresh();
     };
