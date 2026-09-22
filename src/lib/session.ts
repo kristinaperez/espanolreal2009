@@ -12,11 +12,20 @@ export const SESSION_COOKIE = "er_session";
 export const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
 function sessionSecret(): string {
-  return (
-    process.env.SESSION_SECRET ??
-    process.env.TELEGRAM_BOT_TOKEN ??
-    "espanol-real-development-secret"
-  );
+  const secret = process.env.SESSION_SECRET?.trim();
+  if (!secret || Buffer.byteLength(secret, "utf8") < 32) {
+    throw new Error("SESSION_SECRET must be a dedicated secret of at least 32 bytes");
+  }
+  return secret;
+}
+
+export function sessionIsConfigured(): boolean {
+  try {
+    sessionSecret();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 interface SessionPayload {
@@ -48,8 +57,8 @@ export function readSessionToken(token: string | undefined | null): number | nul
   if (!token) return null;
   const [encoded, signature] = token.split(".");
   if (!encoded || !signature) return null;
-  if (!safeEqual(sign(encoded), signature)) return null;
   try {
+    if (!safeEqual(sign(encoded), signature)) return null;
     const payload = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")) as SessionPayload;
     if (typeof payload.tid !== "number" || typeof payload.exp !== "number") return null;
     if (payload.exp < Date.now()) return null;

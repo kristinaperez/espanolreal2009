@@ -233,14 +233,6 @@ export function reduce(
       next = { ...next, settings: { ...next.settings, ...patch } };
       break;
     }
-    case "activate": {
-      next = { ...next, license: { key: event.key, activatedAt: new Date().toISOString() } };
-      break;
-    }
-    case "deactivate": {
-      next = { ...next, license: null };
-      break;
-    }
     case "reset": {
       const preserved: Settings = { ...next.settings };
       const fresh = defaultState(courseConfig.hearts.enabled, courseConfig.hearts.max);

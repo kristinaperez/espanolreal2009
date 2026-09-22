@@ -38,7 +38,12 @@ try {
   }
   execSync("npx next build", {
     stdio: "inherit",
-    env: { ...process.env, STATIC_EXPORT: "true" },
+    env: {
+      ...process.env,
+      STATIC_EXPORT: "true",
+      NEXT_PUBLIC_STATIC_EXPORT: "true",
+      PROTECT_PREMIUM_CONTENT: "false",
+    },
   });
 } finally {
   if (fs.existsSync(STASH) && !fs.existsSync(API_DIR)) {

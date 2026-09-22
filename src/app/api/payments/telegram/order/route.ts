@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { errorResponse, jsonResponse, readJsonBody } from "@/server/http";
+import { errorResponse, jsonResponse, rateLimit, readJsonBody } from "@/server/http";
 import { currentUser } from "@/server/http";
 import {
   fulfillOrder,
@@ -16,13 +16,15 @@ interface OrderStatusPayload {
   stars: number;
   currency: string;
   invoiceLink: string | null;
-  license: { key: string; productId: string; source: string; issuedAt: string } | null;
+  premium: boolean;
   verification: "webhook" | "stars-history" | "none";
 }
 
-async function resolve(request: NextRequest, orderId: number): Promise<Response> {
+async function resolve(request: NextRequest, orderId: number, verifyHistory: boolean): Promise<Response> {
   const user = await currentUser(request);
   if (!user) return errorResponse("Требуется вход через Telegram.", 401);
+  const limited = rateLimit(request, "order-status", 60, 60_000, user.id);
+  if (limited) return limited;
 
   const order = await getOrderForUser(orderId, user.id);
   if (!order) return errorResponse("Заказ не найден", 404);
@@ -36,21 +38,26 @@ async function resolve(request: NextRequest, orderId: number): Promise<Response>
       stars: order.stars,
       currency: order.currency,
       invoiceLink: order.invoiceLink,
-      license: fulfilled?.license
-        ? {
-            key: fulfilled.license.key,
-            productId: fulfilled.license.productId,
-            source: fulfilled.license.source,
-            issuedAt: new Date(fulfilled.license.issuedAt).toISOString(),
-          }
-        : null,
+      premium: Boolean(fulfilled?.license),
       verification: "webhook",
     };
     return jsonResponse(payload);
   }
 
-  // The webhook is the source of truth; this history check is the fallback for
-  // deployments where the bot webhook is not reachable.
+  if (!verifyHistory) {
+    return jsonResponse({
+      ok: true,
+      orderId: order.id,
+      status: order.status,
+      stars: order.stars,
+      currency: order.currency,
+      invoiceLink: order.invoiceLink,
+      premium: false,
+      verification: "none",
+    } satisfies OrderStatusPayload);
+  }
+
+  // Explicit POST-only fallback when the webhook is delayed or unreachable.
   const verification = await verifyOrderThroughStarsHistory(order, user.telegramId);
   if (verification.paid && verification.chargeId) {
     const fulfilled = await fulfillOrder(order.id, verification.chargeId);
@@ -61,14 +68,7 @@ async function resolve(request: NextRequest, orderId: number): Promise<Response>
       stars: order.stars,
       currency: order.currency,
       invoiceLink: order.invoiceLink,
-      license: fulfilled?.license
-        ? {
-            key: fulfilled.license.key,
-            productId: fulfilled.license.productId,
-            source: fulfilled.license.source,
-            issuedAt: new Date(fulfilled.license.issuedAt).toISOString(),
-          }
-        : null,
+      premium: Boolean(fulfilled?.license),
       verification: "stars-history",
     };
     return jsonResponse(payload);
@@ -81,7 +81,7 @@ async function resolve(request: NextRequest, orderId: number): Promise<Response>
     stars: order.stars,
     currency: order.currency,
     invoiceLink: order.invoiceLink,
-    license: null,
+    premium: false,
     verification: "none",
   };
   return jsonResponse(payload);
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
 
   const orderId = Number(new URL(request.url).searchParams.get("orderId"));
   if (!Number.isFinite(orderId) || orderId <= 0) return errorResponse("orderId is required");
-  return resolve(request, orderId);
+  return resolve(request, orderId, false);
 }
 
 /** POST /api/payments/telegram/order { orderId } — force a verification pass. */
@@ -106,5 +106,5 @@ export async function POST(request: NextRequest) {
   const body = await readJsonBody<{ orderId?: number }>(request);
   const orderId = Number(body?.orderId);
   if (!Number.isFinite(orderId) || orderId <= 0) return errorResponse("orderId is required");
-  return resolve(request, orderId);
+  return resolve(request, orderId, true);
 }

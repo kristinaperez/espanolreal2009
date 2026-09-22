@@ -7,7 +7,7 @@ import type { Distractor, Lesson } from "@/lib/content/types";
  *
  * Free lessons ship inside the static HTML. Premium lesson phrases are only
  * delivered through `/api/lessons/[n]` after the server confirms an
- * entitlement (a paid license bound to the Telegram account, or a license key).
+ * entitlement (a paid license record bound to the Telegram account).
  *
  * `STATIC_EXPORT=true` builds the offline distribution, where every lesson is
  * bundled on purpose — flip `PROTECT_PREMIUM_CONTENT=false` to do the same in

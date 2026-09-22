@@ -5,6 +5,8 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { Badge, Card, Input } from "@/components/ui/card";
 import { useProgress } from "@/components/providers/progress-provider";
+import { useAuth } from "@/components/providers/auth-provider";
+import { useAuthorizedPhraseIndex } from "@/components/providers/phrase-index";
 import { categoryById, milestoneById } from "@/lib/content/config";
 import type { IndexedPhrase } from "@/lib/content/types";
 import { cn, formatDateRu } from "@/lib/utils";
@@ -20,7 +22,9 @@ const FIELDS: { id: Field; label: string }[] = [
 ];
 
 export function SearchView({ phrases }: { phrases: IndexedPhrase[] }) {
+  const authorizedPhrases = useAuthorizedPhraseIndex(phrases);
   const { metas, access } = useProgress();
+  const { serverPremium } = useAuth();
   const [query, setQuery] = useState("");
   const [field, setField] = useState<Field>("all");
   const [limit, setLimit] = useState(40);
@@ -30,7 +34,7 @@ export function SearchView({ phrases }: { phrases: IndexedPhrase[] }) {
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (q.length < 2) return [];
-    return phrases.filter((phrase) => {
+    return authorizedPhrases.filter((phrase) => {
       const meta = lessonsById.get(phrase.lesson);
       const haystack = {
         spanish: phrase.spanish.toLowerCase(),
@@ -45,7 +49,7 @@ export function SearchView({ phrases }: { phrases: IndexedPhrase[] }) {
       }
       return haystack[field].includes(q);
     });
-  }, [field, lessonsById, phrases, query]);
+  }, [authorizedPhrases, field, lessonsById, query]);
 
   const grouped = useMemo(() => {
     const map = new Map<number, IndexedPhrase[]>();
@@ -64,7 +68,7 @@ export function SearchView({ phrases }: { phrases: IndexedPhrase[] }) {
         <h1 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">Поиск фраз</h1>
         <p className="mt-2 max-w-2xl text-sm text-muted">
           Найдите любую фразу из учебника: по-испански, по-русски, по тегу, по уроку или ситуации. В базе{" "}
-          {phrases.length} фраз.
+          {authorizedPhrases.length} фраз.
         </p>
       </header>
 
@@ -145,7 +149,7 @@ export function SearchView({ phrases }: { phrases: IndexedPhrase[] }) {
                     <p className="truncate text-base font-extrabold">{meta?.title}</p>
                   </div>
                   <Link
-                    href={access(lessonNumber) ? `/lesson/${lessonNumber}` : "/learn/settings#premium"}
+                    href={access(lessonNumber) || serverPremium ? `/lesson/${lessonNumber}` : "/learn/settings#premium"}
                     className="rounded-2xl border border-line px-4 py-2 text-sm font-bold hover:border-primary"
                   >
                     Открыть урок

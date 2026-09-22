@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Check, CreditCard, ExternalLink, Loader2, RefreshCw, Star } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
-import { useProgress } from "@/components/providers/progress-provider";
 import { Badge, Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { openInvoiceLink } from "@/lib/telegram/webapp";
@@ -28,7 +27,7 @@ interface StatusResponse {
   status: string;
   stars: number;
   invoiceLink: string | null;
-  license: { key: string; productId: string; source: string; issuedAt: string } | null;
+  premium: boolean;
   verification: "webhook" | "stars-history" | "none";
 }
 
@@ -42,7 +41,6 @@ const POLL_ATTEMPTS = 40;
  */
 export function TelegramStarsPayment({ compact = false }: { compact?: boolean }) {
   const { user, starsPrice, status: authStatus, refresh, serverPremium, account } = useAuth();
-  const { state, dispatch } = useProgress();
   const [phase, setPhase] = useState<Phase>("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -59,20 +57,19 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
 
   useEffect(() => stopPolling, [stopPolling]);
 
-  const activate = useCallback(
-    (key: string) => {
-      dispatch({ type: "activate", key });
-      setPhase("paid");
-      setMessage("Premium активирован!");
-      void refresh();
-    },
-    [dispatch, refresh],
-  );
+  const activate = useCallback(() => {
+    setPhase("paid");
+    setMessage("Premium активирован!");
+    void refresh();
+  }, [refresh]);
 
   const checkOrder = useCallback(
     async (orderId: number): Promise<boolean> => {
       try {
-        const response = await fetch(`/api/payments/telegram/order?orderId=${orderId}`, {
+        const response = await fetch("/api/payments/telegram/order", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ orderId }),
           cache: "no-store",
         });
         const payload = (await response.json()) as StatusResponse;
@@ -80,8 +77,8 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
           setError(payload.error ?? "Не удалось проверить оплату.");
           return false;
         }
-        if (payload.status === "paid" && payload.license) {
-          activate(payload.license.key);
+        if (payload.status === "paid" && payload.premium) {
+          activate();
           return true;
         }
         return false;
@@ -159,13 +156,8 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
     setError(null);
     setMessage(null);
     await refresh();
-    const key = account?.premium.key;
-    if (key) {
-      activate(key);
-      return;
-    }
-    setError("Активной покупки не найдено для этого аккаунта Telegram.");
-  }, [account?.premium.key, activate, refresh]);
+    setMessage("Статус покупки обновлён по вашему Telegram-аккаунту.");
+  }, [refresh]);
 
   // ---------------- render ----------------
 
@@ -203,7 +195,7 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
     );
   }
 
-  const alreadyPremium = serverPremium || Boolean(state.license);
+  const alreadyPremium = serverPremium;
 
   if (phase === "paid") {
     return (

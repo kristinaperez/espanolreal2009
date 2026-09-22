@@ -2,23 +2,25 @@ import type { NextRequest } from "next/server";
 import { FREE_LESSON_COUNT } from "@/lib/content/config";
 import { getDistractorPool, getLesson } from "@/lib/content/loader";
 import { isFreeLesson } from "@/lib/content/secure";
-import { currentUser, errorResponse, jsonResponse } from "@/server/http";
-import { findPaidLicenseForUser, getLicenseByKey } from "@/server/orders";
-import { formatKey, normalizeKey } from "@/lib/license";
+import { currentUser, errorResponse, jsonResponse, rateLimit, serverErrorResponse } from "@/server/http";
+import { findPaidLicenseForUser } from "@/server/orders";
 
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/lessons/8?key=ESPA-XXXX-XXXX
+ * GET /api/lessons/8
  *
  * Delivers the full lesson content (and its distractor pool) to entitled users.
- * Free lessons are always public; premium lessons require either a signed-in
- * Telegram account with a paid order or a valid license key.
+ * Free lessons are public; premium lessons require a signed-in Telegram account
+ * with a server-confirmed paid order.
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ n: string }> },
 ) {
+  const limited = rateLimit(request, "lesson-content", 120, 60_000);
+  if (limited) return limited;
+
   const { n } = await params;
   const lessonNumber = Number(n);
   if (!Number.isFinite(lessonNumber) || lessonNumber <= 0) {
@@ -38,36 +40,23 @@ export async function GET(
     });
   }
 
-  // 1) License key supplied by the client (offline purchase / gift).
-  const rawKey = new URL(request.url).searchParams.get("key");
-  if (rawKey) {
-    const clean = normalizeKey(rawKey);
-    const license =
-      (await getLicenseByKey(formatKey(clean))) ?? (await getLicenseByKey(clean));
-    if (license) {
-      return jsonResponse({
-        ok: true,
-        lesson,
-        pool: getDistractorPool(lessonNumber, 40),
-        access: "license-key" as const,
-        freeLessonCount: FREE_LESSON_COUNT,
-      });
+  // Telegram session with a paid order.
+  try {
+    const user = await currentUser(request);
+    if (user) {
+      const license = await findPaidLicenseForUser(user.id);
+      if (license) {
+        return jsonResponse({
+          ok: true,
+          lesson,
+          pool: getDistractorPool(lessonNumber, 40),
+          access: "telegram-account" as const,
+          freeLessonCount: FREE_LESSON_COUNT,
+        });
+      }
     }
-  }
-
-  // 2) Telegram session with a paid order.
-  const user = await currentUser(request);
-  if (user) {
-    const license = await findPaidLicenseForUser(user.id);
-    if (license) {
-      return jsonResponse({
-        ok: true,
-        lesson,
-        pool: getDistractorPool(lessonNumber, 40),
-        access: "telegram-account" as const,
-        freeLessonCount: FREE_LESSON_COUNT,
-      });
-    }
+  } catch (error) {
+    return serverErrorResponse("lesson-content", error);
   }
 
   return jsonResponse(

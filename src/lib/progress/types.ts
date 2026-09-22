@@ -54,7 +54,6 @@ export interface ProgressState {
   };
   exams: Record<string, { score: number; total: number; completedAt: string }>;
   achievements: Record<string, string>;
-  license: { key: string; activatedAt: string } | null;
   settings: Settings;
   hearts: { count: number; updatedAt: string };
 }
@@ -67,8 +66,6 @@ export type ProgressEvent =
   | { type: "reviewComplete"; correct: number; total: number }
   | { type: "setDailyGoal"; value: number }
   | { type: "setSettings"; patch: Partial<Settings> }
-  | { type: "activate"; key: string }
-  | { type: "deactivate" }
   | { type: "reset" }
   | { type: "touch" };
 
@@ -90,7 +87,6 @@ export function defaultState(heartsEnabled = false, maxHearts = 5): ProgressStat
     totals: { correct: 0, wrong: 0, reviews: 0, exams: 0, perfectLessons: 0, flashcards: 0 },
     exams: {},
     achievements: {},
-    license: null,
     settings: {
       theme: "system",
       sound: true,

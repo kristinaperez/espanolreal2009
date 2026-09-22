@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { jsonResponse } from "@/server/http";
+import { jsonResponse, rateLimit } from "@/server/http";
 import { errorResponse } from "@/server/http";
 import { currentUser } from "@/server/http";
 import { buildAccountPayload } from "@/server/account";
@@ -8,6 +8,8 @@ export const dynamic = "force-dynamic";
 
 /** GET — current account, premium state and the Stars price. */
 export async function GET(request: NextRequest) {
+  const limited = rateLimit(request, "session", 120, 60_000);
+  if (limited) return limited;
   try {
     const { db } = await import("@/db");
     await db.execute(await (await import("drizzle-orm")).sql`select 1`);

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { MistakesView } from "@/components/learn/phrase-study";
-import { getPhraseIndex } from "@/lib/content/loader";
+import { getClientPhraseIndex } from "@/lib/content/loader";
 
 export const metadata: Metadata = {
   title: "Ошибки",
@@ -9,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function MistakesPage() {
-  return <MistakesView phrases={getPhraseIndex()} />;
+  return <MistakesView phrases={getClientPhraseIndex()} />;
 }

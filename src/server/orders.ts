@@ -55,38 +55,15 @@ export async function getRecentOrdersForUser(userId: number, limit = 5): Promise
 }
 
 const LICENSE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const LICENSE_LENGTH = 12;
+const LICENSE_LENGTH = 20;
 const LICENSE_PREFIX = "ESPA";
-
-/**
- * The key format is intentionally identical to the offline check in
- * `src/lib/license.ts`, so a key bought with Stars keeps validating locally
- * (and can be restored on any device straight from the local storage).
- */
-function licenseChecksum(clean: string): number {
-  let sum = 0;
-  for (let i = 0; i < clean.length; i++) {
-    const index = LICENSE_ALPHABET.indexOf(clean[i]);
-    if (index < 0) return -1;
-    sum += (i + 1) * (index + 1);
-  }
-  return sum % 7;
-}
 
 export function generateLicenseKey(): string {
   const chars = LICENSE_PREFIX.split("");
-  while (chars.length < LICENSE_LENGTH - 1) {
+  while (chars.length < LICENSE_LENGTH) {
     chars.push(LICENSE_ALPHABET[randomBytes(1)[0] % LICENSE_ALPHABET.length]);
   }
-  // Solve the final character so the checksum is ≡ 0 (mod 7).
-  for (const candidate of LICENSE_ALPHABET) {
-    const attempt = [...chars, candidate].join("");
-    if (licenseChecksum(attempt) === 0) {
-      return (attempt.match(/.{1,4}/g) ?? []).join("-");
-    }
-  }
-  // Unreachable: 32 candidates always cover all 7 residues.
-  throw new Error("failed to generate a valid license key");
+  return (chars.join("").match(/.{1,4}/g) ?? []).join("-");
 }
 
 export async function issueLicenseForOrder(order: OrderRow): Promise<LicenseRow> {
@@ -109,8 +86,15 @@ export async function issueLicenseForOrder(order: OrderRow): Promise<LicenseRow>
           productId: order.productId,
           source: "telegram_stars",
         })
+        .onConflictDoNothing({ target: licenses.orderId })
         .returning();
-      return row;
+      if (row) return row;
+      const [createdByAnotherRequest] = await db
+        .select()
+        .from(licenses)
+        .where(eq(licenses.orderId, order.id))
+        .limit(1);
+      if (createdByAnotherRequest) return createdByAnotherRequest;
     } catch {
       // Extremely unlikely key collision — regenerate.
     }
@@ -128,16 +112,33 @@ export async function fulfillOrder(orderId: number, chargeId: string | null): Pr
   const [order] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
   if (!order) return null;
 
+  if (chargeId) {
+    const [chargeOwner] = await db
+      .select({ id: orders.id })
+      .from(orders)
+      .where(and(eq(orders.chargeId, chargeId), ne(orders.id, orderId)))
+      .limit(1);
+    if (chargeOwner) return null;
+  }
+
   if (order.status !== "paid") {
+    if (order.status !== "pending") return null;
     const [updated] = await db
       .update(orders)
       .set({ status: "paid", chargeId, paidAt: new Date() })
-      .where(and(eq(orders.id, orderId), ne(orders.status, "paid")))
+      .where(and(eq(orders.id, orderId), eq(orders.status, "pending")))
       .returning();
-    const finalOrder = updated ?? order;
+    const [latest] = updated
+      ? [updated]
+      : await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+    if (!latest || latest.status !== "paid") return null;
+    if (chargeId && latest.chargeId !== chargeId) return null;
+    const finalOrder = latest;
     const license = await issueLicenseForOrder(finalOrder);
     return { order: finalOrder, license };
   }
+
+  if (chargeId && order.chargeId !== chargeId) return null;
 
   const license = await issueLicenseForOrder(order);
   return { order, license };
@@ -156,10 +157,14 @@ export async function findPaidLicenseForUser(userId: number): Promise<LicenseRow
   const [row] = await db
     .select()
     .from(licenses)
+    .innerJoin(
+      orders,
+      and(eq(licenses.orderId, orders.id), eq(orders.status, "paid")),
+    )
     .where(eq(licenses.userId, userId))
     .orderBy(desc(licenses.issuedAt))
     .limit(1);
-  return row ?? null;
+  return row?.licenses ?? null;
 }
 
 const STARS_LOOKUP_WINDOW_MS = 15 * 60 * 1000;
@@ -169,8 +174,8 @@ const STARS_LOOKUP_WINDOW_MS = 15 * 60 * 1000;
  *
  * `getStarTransactions` returns incoming payments with the transaction id equal
  * to `SuccessfulPayment.telegram_payment_charge_id`, and (when available) the
- * invoice payload inside `source`. We match on the payload first and fall back
- * to amount + date window + buyer id.
+ * invoice payload inside `source`. Matching requires that exact payload; an
+ * amount/date-only fallback could attribute an unrelated payment.
  */
 export async function verifyOrderThroughStarsHistory(
   order: OrderRow,
@@ -195,12 +200,12 @@ export async function verifyOrderThroughStarsHistory(
   const byPayload = candidates.find(
     (transaction) => transaction.source?.invoice_payload === order.payload,
   );
-  const byUser = candidates.find(
-    (transaction) => transaction.source?.user?.id === telegramId && !transaction.source?.invoice_payload,
-  );
-  const transaction = byPayload ?? byUser ?? null;
+  const transaction = byPayload ?? null;
 
   if (!transaction) return { paid: false, chargeId: null, transaction: null };
+  if (transaction.source?.user?.id !== undefined && transaction.source.user.id !== telegramId) {
+    return { paid: false, chargeId: null, transaction: null };
+  }
 
   // Guard against double-spending the same transaction across orders.
   const [existing] = await db

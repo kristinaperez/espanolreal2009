@@ -14,8 +14,9 @@ import { exportProgress, importProgress } from "@/lib/progress/storage";
 import { cn } from "@/lib/utils";
 
 export function SettingsView() {
-  const { state, dispatch, ready, premium } = useProgress();
-  const { user, starsPrice, status: authStatus } = useAuth();
+  const { state, dispatch, ready } = useProgress();
+  const { user, starsPrice, status: authStatus, serverPremium } = useAuth();
+  const premium = serverPremium || process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
   const [importError, setImportError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 

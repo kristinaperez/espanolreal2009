@@ -10,16 +10,20 @@
  * Requires the app to be started with:
  *   TELEGRAM_BOT_TOKEN=7000000001:test-token-for-local-mock
  *   TELEGRAM_API_URL=http://127.0.0.1:4010
+ *   SESSION_SECRET=0123456789abcdef0123456789abcdef
+ *   TELEGRAM_WEBHOOK_SECRET=abcdef0123456789abcdef0123456789
  */
 import { createHash, createHmac, randomBytes } from "node:crypto";
 import http from "node:http";
 
 const BASE = process.argv[2] ?? "http://127.0.0.1:3100";
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "7000000001:test-token-for-local-mock";
+const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET ?? "abcdef0123456789abcdef0123456789";
 const MOCK_PORT = Number(new URL(process.env.TELEGRAM_API_URL ?? "http://127.0.0.1:4010").port ?? 4010);
 
 const TELEGRAM_ID = 7000000001;
 const CREATED_INVOICES = [];
+const PRECHECKOUT_ANSWERS = [];
 
 const log = (...args) => console.log(" ", ...args);
 let failures = 0;
@@ -63,7 +67,10 @@ const mock = http.createServer((request, response) => {
             ]
           : [],
       };
-    } else if (method === "setWebhook" || method === "answerPreCheckoutQuery") {
+    } else if (method === "answerPreCheckoutQuery") {
+      PRECHECKOUT_ANSWERS.push(payload);
+      result = true;
+    } else if (method === "setWebhook") {
       result = true;
     } else if (method === "getWebhookInfo") {
       result = { url: "", pending_update_count: 0 };
@@ -152,8 +159,31 @@ check("invoice is for 500 stars", invoice.json?.stars === 500, invoice.json?.sta
 
 // 4. Telegram confirms the payment through the webhook
 const orderPayload = invoice.json?.payload;
+const noSecret = await api("/api/telegram/webhook", {
+  method: "POST",
+  body: JSON.stringify({ update_id: 0 }),
+});
+check("webhook rejects a missing secret", noSecret.status === 403, noSecret);
+
+const wrongAmount = await api("/api/telegram/webhook", {
+  method: "POST",
+  headers: { "x-telegram-bot-api-secret-token": WEBHOOK_SECRET },
+  body: JSON.stringify({
+    update_id: 1,
+    pre_checkout_query: {
+      id: "pcq-wrong",
+      from: { id: TELEGRAM_ID },
+      currency: "XTR",
+      total_amount: 1,
+      invoice_payload: orderPayload,
+    },
+  }),
+});
+check("wrong payment amount is rejected", wrongAmount.status === 200 && PRECHECKOUT_ANSWERS.at(-1)?.allow === false, wrongAmount);
+
 const preCheckout = await api("/api/telegram/webhook", {
   method: "POST",
+  headers: { "x-telegram-bot-api-secret-token": WEBHOOK_SECRET },
   body: JSON.stringify({
     update_id: 1,
     pre_checkout_query: {
@@ -169,6 +199,7 @@ check("pre_checkout_query accepted", preCheckout.json?.ok === true, preCheckout)
 
 const paid = await api("/api/telegram/webhook", {
   method: "POST",
+  headers: { "x-telegram-bot-api-secret-token": WEBHOOK_SECRET },
   body: JSON.stringify({
     update_id: 2,
     message: {
@@ -187,33 +218,11 @@ const paid = await api("/api/telegram/webhook", {
 });
 check("successful_payment processed", paid.json?.handled === "successful_payment", paid);
 
-// 5. Order status now carries a license key
+// 5. Order status confirms entitlement without exposing a bearer key
 const status = await api(`/api/payments/telegram/order?orderId=${invoice.json?.orderId}`);
 check("order marked paid", status.json?.status === "paid", status);
-const licenseKey = status.json?.license?.key;
-check("license key issued", typeof licenseKey === "string" && /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(licenseKey), licenseKey);
-check("license source recorded", status.json?.license?.source === "telegram_stars", status.json?.license);
-
-// 6. The key must pass the offline checksum used by the client
-const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const clean = licenseKey.replace(/-/g, "");
-let sum = 0;
-for (let i = 0; i < clean.length; i++) sum += (i + 1) * (ALPHABET.indexOf(clean[i]) + 1);
-check("key passes the offline client checksum", sum % 7 === 0, { clean, sum });
-
-// 7. Server-side activation
-const activate = await api("/api/licenses/activate", {
-  method: "POST",
-  body: JSON.stringify({ key: licenseKey.toLowerCase().replace(/-/g, "") }),
-});
-check("license activates (normalised input)", activate.json?.valid === true, activate);
-
-// 8. A wrong key must not activate
-const bad = await api("/api/licenses/activate", {
-  method: "POST",
-  body: JSON.stringify({ key: "ESPA-0000-0000" }),
-});
-check("unknown key rejected", bad.json?.valid === false, bad);
+check("server entitlement is active", status.json?.premium === true, status);
+check("order response does not expose a license key", !JSON.stringify(status.json).includes('"key"'), status.json);
 
 // 9. Session reports premium
 const after = await api("/api/telegram/session");
@@ -245,7 +254,7 @@ const initDataCheck = [...initDataParams.entries()]
   .join("\n");
 initDataParams.set(
   "hash",
-  createHmac("sha256", createHash("sha256").update(BOT_TOKEN).digest())
+  createHmac("sha256", createHmac("sha256", "WebAppData").update(BOT_TOKEN).digest())
     .update(initDataCheck)
     .digest("hex"),
 );
@@ -275,10 +284,13 @@ const fallbackInvoice = await api("/api/payments/telegram/stars", {
 });
 check("second invoice created", fallbackInvoice.status === 200, fallbackInvoice);
 
-const fallback = await api(`/api/payments/telegram/order?orderId=${fallbackInvoice.json?.orderId}`);
+const fallback = await api("/api/payments/telegram/order", {
+  method: "POST",
+  body: JSON.stringify({ orderId: fallbackInvoice.json?.orderId }),
+});
 check(
   "payment detected without a webhook",
-  fallback.json?.status === "paid" && Boolean(fallback.json?.license?.key),
+  fallback.json?.status === "paid" && fallback.json?.premium === true,
   fallback,
 );
 check(
@@ -323,14 +335,6 @@ check("free lesson is public", freeLesson.status === 200 && freeJson?.lesson?.ph
 const blocked = await fetch(`${BASE}/api/lessons/8`);
 check("premium lesson blocked without entitlement", blocked.status === 402, blocked.status);
 
-const withKey = await fetch(`${BASE}/api/lessons/8?key=${licenseKey}`);
-const keyJson = await withKey.json();
-check(
-  "premium lesson served with a license key",
-  withKey.status === 200 && keyJson?.lesson?.phrases?.length === 8,
-  { status: withKey.status, phrases: keyJson?.lesson?.phrases?.length },
-);
-
 cookie = savedCookie;
 const withSession = await api("/api/lessons/8");
 check(
@@ -347,7 +351,21 @@ check(
 cookie = "";
 const anonymousLesson = await api("/api/lessons/8");
 check("premium lesson blocked for anonymous users", anonymousLesson.status === 402, anonymousLesson.status);
+const queryKeyLesson = await api("/api/lessons/8?key=ESPA-FAKE-FAKE-FAKE-FAKE");
+check("query-string license keys are ignored", queryKeyLesson.status === 402, queryKeyLesson.status);
+const publicPhrases = await api("/api/phrases");
+check(
+  "anonymous phrase index contains only free lessons",
+  publicPhrases.status === 200 && publicPhrases.json?.phrases?.every((phrase) => phrase.lesson <= 7),
+  publicPhrases.json?.phrases?.length,
+);
 cookie = savedCookie;
+const premiumPhrases = await api("/api/phrases");
+check(
+  "paid session receives the premium phrase index",
+  premiumPhrases.status === 200 && premiumPhrases.json?.phrases?.some((phrase) => phrase.lesson === 45),
+  premiumPhrases.json?.phrases?.length,
+);
 
 mock.close();
 console.log(

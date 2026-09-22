@@ -13,7 +13,7 @@ import {
 import { achievementsConfig, courseConfig } from "@/lib/content/config";
 import type { LessonMeta } from "@/lib/content/types";
 import { reduce } from "@/lib/progress/reducer";
-import { computeStats, hasAccess, isPremium } from "@/lib/progress/selectors";
+import { computeStats, hasAccess } from "@/lib/progress/selectors";
 import { loadState, saveState } from "@/lib/progress/storage";
 import { defaultState, type ProgressEvent, type ProgressState } from "@/lib/progress/types";
 
@@ -22,7 +22,6 @@ interface ProgressContextValue {
   state: ProgressState;
   metas: LessonMeta[];
   dispatch: (event: ProgressEvent) => void;
-  premium: boolean;
   access: (lesson: number) => boolean;
   newAchievements: string[];
   clearAchievement: (id: string) => void;
@@ -95,7 +94,6 @@ export function ProgressProvider({
       state,
       metas,
       dispatch,
-      premium: isPremium(state),
       access: (lesson: number) => hasAccess(state, lesson),
       newAchievements,
       clearAchievement,

@@ -12,7 +12,7 @@ let dbInstance: ReturnType<typeof drizzle>;
 
 if (!databaseUrl) {
   // Graceful degradation: when DATABASE_URL is absent, the offline trainer,
-  // license-key activation and static export keep working. Server-side
+  // free lessons and static export keep working. Server-side
   // persistence (Telegram login, Stars payments, webhook fulfillment) is disabled.
   const noopPool = {
     connect: async () => ({ release: () => {} }),

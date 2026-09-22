@@ -5,18 +5,20 @@ import { Flame, Repeat, Sparkles, Trophy, Zap } from "lucide-react";
 import { Badge, Card, ProgressBar } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useProgress, useStats } from "@/components/providers/progress-provider";
+import { useAuth } from "@/components/providers/auth-provider";
 import { milestoneProgress } from "@/lib/progress/reducer";
 import { achievementsConfig, categoryById } from "@/lib/content/config";
 import { addDays, dateKey, daysBetween } from "@/lib/utils";
 
 export function Dashboard() {
   const { state, ready, metas, access } = useProgress();
+  const { serverPremium } = useAuth();
   const stats = useStats();
   const milestones = milestoneProgress(state, metas);
 
   const nextLessonMeta = metas.find((meta) => !state.lessons[String(meta.lesson)]?.completed);
   const nextHref = nextLessonMeta
-    ? access(nextLessonMeta.lesson)
+    ? access(nextLessonMeta.lesson) || serverPremium
       ? `/lesson/${nextLessonMeta.lesson}`
       : "/learn/settings#premium"
     : "/certificate";

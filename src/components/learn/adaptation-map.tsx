@@ -4,12 +4,14 @@ import Link from "next/link";
 import { Lock } from "lucide-react";
 import { Badge, Card, ProgressBar } from "@/components/ui/card";
 import { useProgress } from "@/components/providers/progress-provider";
+import { useAuth } from "@/components/providers/auth-provider";
 import { milestoneProgress } from "@/lib/progress/reducer";
 import { categoryById } from "@/lib/content/config";
 import { cn } from "@/lib/utils";
 
 export function AdaptationMap() {
   const { state, metas, access } = useProgress();
+  const { serverPremium } = useAuth();
   const milestones = milestoneProgress(state, metas);
 
   return (
@@ -66,7 +68,7 @@ export function AdaptationMap() {
                 <div className="mt-4 flex flex-wrap gap-2">
                   {milestone.lessons.map((meta) => {
                     const completed = state.lessons[String(meta.lesson)]?.completed;
-                    const unlocked = access(meta.lesson);
+                    const unlocked = access(meta.lesson) || serverPremium;
                     const category = categoryById.get(meta.category);
                     return (
                       <Link

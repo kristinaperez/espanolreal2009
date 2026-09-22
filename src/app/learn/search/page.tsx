@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { SearchView } from "@/components/learn/search-view";
-import { getPhraseIndex } from "@/lib/content/loader";
+import { getClientPhraseIndex } from "@/lib/content/loader";
 
 export const metadata: Metadata = {
   title: "Поиск фраз",
@@ -9,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function SearchPage() {
-  return <SearchView phrases={getPhraseIndex()} />;
+  return <SearchView phrases={getClientPhraseIndex()} />;
 }

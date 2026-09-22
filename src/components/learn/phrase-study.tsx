@@ -8,6 +8,7 @@ import { SessionSummary } from "@/components/trainer/session-summary";
 import { Badge, Card, ProgressBar } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useProgress } from "@/components/providers/progress-provider";
+import { useAuthorizedPhraseIndex } from "@/components/providers/phrase-index";
 import { generatePractice, flashcardsFor } from "@/lib/exercises/generator";
 import type { Exercise } from "@/lib/exercises/generator";
 import type { Distractor, IndexedPhrase } from "@/lib/content/types";
@@ -151,14 +152,15 @@ function Session({
 }
 
 export function ReviewView({ phrases }: { phrases: IndexedPhrase[] }) {
+  const authorizedPhrases = useAuthorizedPhraseIndex(phrases);
   const { state, ready } = useProgress();
   const due = useMemo(
     () =>
-      phrases.filter((phrase) => {
+      authorizedPhrases.filter((phrase) => {
         const srs = state.phrases[phraseId(phrase.lesson, phrase.index)];
         return srs ? isDue(srs) : false;
       }),
-    [phrases, state.phrases],
+    [authorizedPhrases, state.phrases],
   );
 
   const nextDue = useMemo(() => {
@@ -219,15 +221,16 @@ export function ReviewView({ phrases }: { phrases: IndexedPhrase[] }) {
 }
 
 export function MistakesView({ phrases }: { phrases: IndexedPhrase[] }) {
+  const authorizedPhrases = useAuthorizedPhraseIndex(phrases);
   const { state, ready } = useProgress();
   const mistakes = useMemo(
     () =>
-      phrases
+      authorizedPhrases
         .map((phrase) => ({ phrase, srs: state.phrases[phraseId(phrase.lesson, phrase.index)] }))
         .filter((item) => (item.srs?.wrong ?? 0) > 0)
         .sort((a, b) => (b.srs?.wrong ?? 0) - (a.srs?.wrong ?? 0))
         .map((item) => item.phrase),
-    [phrases, state.phrases],
+    [authorizedPhrases, state.phrases],
   );
 
   return (

@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { getProduct, premiumProduct } from "@/lib/payments/catalog";
 import { createStarsInvoiceLink, isBotConfigured } from "@/lib/telegram/bot-api";
-import { errorResponse, jsonResponse, readJsonBody, siteOrigin } from "@/server/http";
+import { errorResponse, jsonResponse, rateLimit, readJsonBody, serverErrorResponse, siteOrigin } from "@/server/http";
 import { currentUser } from "@/server/http";
 import { attachInvoiceLink, createPendingOrder } from "@/server/orders";
 
@@ -31,6 +31,8 @@ export async function POST(request: NextRequest) {
   if (!user) {
     return errorResponse("Сначала войдите через Telegram, чтобы оплатить.", 401);
   }
+  const limited = rateLimit(request, "stars-create", 5, 60_000, user.id);
+  if (limited) return limited;
 
   const body = await readJsonBody<{ productId?: string }>(request);
   const product = getProduct(body?.productId ?? premiumProduct().id);
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
   try {
     order = await createPendingOrder(user.id, product);
   } catch (error) {
-    return errorResponse(`Не удалось создать заказ: ${(error as Error).message}`, 500);
+    return serverErrorResponse("stars-order-create", error);
   }
 
   let invoiceLink: string;
@@ -53,10 +55,7 @@ export async function POST(request: NextRequest) {
       photoUrl: `${siteOrigin(request)}/og.jpg`,
     });
   } catch (error) {
-    return errorResponse(
-      `Telegram не создал счёт: ${(error as Error).message}`,
-      502,
-    );
+    return serverErrorResponse("stars-invoice-create", error, 502);
   }
 
   try {

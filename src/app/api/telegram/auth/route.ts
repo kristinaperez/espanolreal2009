@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyTelegramAuthDetailed, type TelegramAuthUser } from "@/lib/telegram/crypto";
-import { clearSessionCookie, setSessionCookie } from "@/lib/session";
-import { currentUser, errorResponse, jsonResponse, readJsonBody } from "@/server/http";
+import { clearSessionCookie, sessionIsConfigured, setSessionCookie } from "@/lib/session";
+import { currentUser, errorResponse, jsonResponse, rateLimit, readJsonBody, serverErrorResponse } from "@/server/http";
 import { buildAccountPayload } from "@/server/account";
 import { upsertTelegramUser } from "@/server/users";
 
@@ -11,6 +11,11 @@ export const dynamic = "force-dynamic";
  * POST — Telegram Login Widget callback (`data-onauth` posts the user object).
  */
 export async function POST(request: NextRequest) {
+  const limited = rateLimit(request, "telegram-auth", 10, 60_000);
+  if (limited) return limited;
+  if (!sessionIsConfigured()) {
+    return errorResponse("Telegram login is not configured.", 503);
+  }
   // Without DATABASE_URL server-side persistence is unavailable.
   try {
     const { db } = await import("@/db");
@@ -57,7 +62,7 @@ export async function POST(request: NextRequest) {
   try {
     user = await upsertTelegramUser(verified.user);
   } catch (error) {
-    return errorResponse(`Ошибка сохранения профиля: ${(error as Error).message}`, 500);
+    return serverErrorResponse("telegram-auth-save", error);
   }
 
   const response = jsonResponse(await buildAccountPayload(user));
@@ -72,12 +77,20 @@ export async function POST(request: NextRequest) {
  * Netlify deploy-preview URLs never show up in the browser address bar.
  */
 export async function GET(request: NextRequest) {
+  const limited = rateLimit(request, "telegram-auth-redirect", 10, 60_000);
+  if (limited) return limited;
   // Resolve canonical origin: prefer NEXT_PUBLIC_SITE_URL to avoid deploy-preview URLs.
   const requestUrl = new URL(request.url);
   const canonicalOrigin =
     process.env.NEXT_PUBLIC_SITE_URL
       ? new URL(process.env.NEXT_PUBLIC_SITE_URL).origin
       : requestUrl.origin;
+
+  if (!sessionIsConfigured()) {
+    const target = new URL("/learn/settings#premium", canonicalOrigin);
+    target.searchParams.set("telegram", "error");
+    return NextResponse.redirect(target);
+  }
 
   try {
     const { db } = await import("@/db");

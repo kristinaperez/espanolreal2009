@@ -5,11 +5,14 @@ import { useMemo, useState } from "react";
 import { Check, Lock, Search } from "lucide-react";
 import { Badge, Card, Input, ProgressBar } from "@/components/ui/card";
 import { useProgress } from "@/components/providers/progress-provider";
+import { useAuth } from "@/components/providers/auth-provider";
 import { categoryById, milestones, FREE_LESSON_COUNT, STARS_PRICE } from "@/lib/content/config";
 import { cn } from "@/lib/utils";
 
 export function LessonList({ examBlocks }: { examBlocks: { block: number; fromLesson: number; toLesson: number; phraseCount: number }[] }) {
-  const { state, metas, access, premium } = useProgress();
+  const { state, metas, access } = useProgress();
+  const { serverPremium } = useAuth();
+  const premium = serverPremium || process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>("all");
   const [onlyTodo, setOnlyTodo] = useState(false);
@@ -109,7 +112,7 @@ export function LessonList({ examBlocks }: { examBlocks: { block: number; fromLe
             <div className="grid gap-3 sm:grid-cols-2">
               {group.lessons.map((meta) => {
                 const lessonState = state.lessons[String(meta.lesson)];
-                const unlocked = access(meta.lesson);
+                const unlocked = access(meta.lesson) || serverPremium;
                 const categoryItem = categoryById.get(meta.category);
                 return (
                   <Link
@@ -160,7 +163,7 @@ export function LessonList({ examBlocks }: { examBlocks: { block: number; fromLe
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {examBlocks.map((block) => {
             const examState = state.exams[String(block.block)];
-            const unlocked = access(block.toLesson);
+            const unlocked = access(block.toLesson) || serverPremium;
             return (
               <Link
                 key={block.block}

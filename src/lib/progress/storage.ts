@@ -47,7 +47,6 @@ export function migrate(partial: Partial<ProgressState>): ProgressState {
     days: partial.days ?? {},
     exams: partial.exams ?? {},
     achievements: partial.achievements ?? {},
-    license: partial.license ?? null,
   };
 }
 

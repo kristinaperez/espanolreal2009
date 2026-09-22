@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ReviewView } from "@/components/learn/phrase-study";
-import { getPhraseIndex } from "@/lib/content/loader";
+import { getClientPhraseIndex } from "@/lib/content/loader";
 
 export const metadata: Metadata = {
   title: "Повторение",
@@ -9,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function ReviewPage() {
-  return <ReviewView phrases={getPhraseIndex()} />;
+  return <ReviewView phrases={getClientPhraseIndex()} />;
 }

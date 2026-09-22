@@ -6,11 +6,9 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
-import { useProgress } from "./progress-provider";
 import { isMiniApp, prepareMiniApp } from "@/lib/telegram/webapp";
 
 export interface AccountUser {
@@ -33,7 +31,6 @@ export interface AccountState {
   displayName: string | null;
   premium: {
     active: boolean;
-    key: string | null;
     productId: string | null;
     source: string | null;
     issuedAt: string | null;
@@ -72,19 +69,17 @@ function fallbackAccount(): AccountState {
     productId: "premium-45",
     user: null,
     displayName: null,
-    premium: { active: false, key: null, productId: null, source: null, issuedAt: null },
+    premium: { active: false, productId: null, source: null, issuedAt: null },
     orders: [],
   };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { state, dispatch } = useProgress();
   const [status, setStatus] = useState<AuthContextValue["status"]>("loading");
   const [account, setAccount] = useState<AccountState | null>(null);
   const [authenticating, setAuthenticating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [miniApp, setMiniApp] = useState(false);
-  const syncedRef = useRef<string | null>(null);
 
   const applyAccount = useCallback((payload: AccountState) => {
     setAccount(payload);
@@ -204,16 +199,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Restore a purchase: a server-confirmed license unlocks the local trainer.
-  useEffect(() => {
-    const key = account?.premium.key;
-    if (!key) return;
-    if (state.license?.key === key) return;
-    if (syncedRef.current === key) return;
-    syncedRef.current = key;
-    dispatch({ type: "activate", key });
-  }, [account?.premium.key, dispatch, state.license?.key]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

@@ -8,7 +8,7 @@ import { sql } from "drizzle-orm";
  * exists for platform monitoring and therefore renders statically, which keeps
  * `output: "export"` builds working on free static hosting.
  */
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   let database = false;
@@ -19,5 +19,8 @@ export async function GET() {
     database = false;
   }
 
-  return Response.json({ ok: true, app: "espanol-real", database, static: true });
+  return Response.json(
+    { ok: database, app: "espanol-real", database },
+    { status: database ? 200 : 503, headers: { "cache-control": "no-store" } },
+  );
 }

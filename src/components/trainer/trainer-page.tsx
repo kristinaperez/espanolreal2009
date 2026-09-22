@@ -25,7 +25,7 @@ interface LessonPayload {
  *
  * `protectedContent` means the server withheld the premium phrases: they are
  * fetched from `/api/lessons/[n]` only after an entitlement is confirmed
- * (locally activated license key or a Telegram account with a paid order).
+ * (a Telegram account with a server-confirmed paid order).
  */
 export function TrainerPage({
   mode,
@@ -45,7 +45,7 @@ export function TrainerPage({
   protectedContent?: boolean;
 }) {
   const { state, dispatch, access } = useProgress();
-  const { user, serverPremium } = useAuth();
+  const { serverPremium } = useAuth();
   const [phase, setPhase] = useState<Phase>("intro");
   const [result, setResult] = useState<SessionResult | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -57,22 +57,19 @@ export function TrainerPage({
 
   const primary = lessons[0];
   const accessLesson = mode === "exam" ? lessons[lessons.length - 1].lesson : primary.lesson;
-  // Either a locally activated key or a Telegram account with a paid order.
+  // Access is granted by the server session, except for an intentional static distribution.
   // Deliberately independent of hydration state so SSR and the first client
   // render agree: locked lessons never leak their phrases.
   const entitled = access(accessLesson) || serverPremium;
   const locked = !entitled;
 
-  const licenseKey = state.license?.key ?? "";
-
   const loadProtected = useCallback(async () => {
     if (!protectedContent || payloads || locked) return;
     setLoadError(null);
-    const key = licenseKey ? `?key=${encodeURIComponent(licenseKey)}` : "";
     const responses = await Promise.all(
       lessons.map(async (lesson) => {
         try {
-          const response = await fetch(`/api/lessons/${lesson.lesson}${key}`, {
+          const response = await fetch(`/api/lessons/${lesson.lesson}`, {
             cache: "no-store",
             credentials: "same-origin",
           });
@@ -90,13 +87,11 @@ export function TrainerPage({
       return;
     }
     setPayloads(responses as LessonPayload[]);
-  }, [lessons, licenseKey, locked, payloads, protectedContent]);
+  }, [lessons, locked, payloads, protectedContent]);
 
   useEffect(() => {
     if (!protectedContent || locked) return;
     if (payloads) return;
-    // Wait for the local license to be restored from localStorage first.
-    if (typeof window === "undefined") return;
     void loadProtected();
   }, [loadProtected, locked, payloads, protectedContent]);
 
@@ -211,7 +206,9 @@ export function TrainerPage({
           <Badge tone="accent">{primary.difficulty}</Badge>
           <Badge>{fullLesson.phrases.length} фраз</Badge>
           {progress?.completed ? <Badge tone="success">✓ пройден</Badge> : null}
-          {serverPremium || user ? <Badge tone="info">Premium</Badge> : null}
+          {serverPremium || process.env.NEXT_PUBLIC_STATIC_EXPORT === "true" ? (
+            <Badge tone="info">Premium</Badge>
+          ) : null}
         </div>
         <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">{primary.title}</h1>
         {primary.subtitle ? <p className="text-base text-muted">{primary.subtitle}</p> : null}

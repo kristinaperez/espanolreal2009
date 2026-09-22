@@ -6,7 +6,8 @@ import type { ProgressState } from "./types";
 import { nextReviewKey } from "./reducer";
 
 export function isPremium(state: ProgressState): boolean {
-  return Boolean(state.license);
+  void state;
+  return process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
 }
 
 export function hasAccess(state: ProgressState, lesson: number): boolean {

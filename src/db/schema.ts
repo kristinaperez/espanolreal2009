@@ -17,8 +17,8 @@ import {
  * back the features that genuinely need a server: Telegram login, Telegram
  * Stars payments and issued license keys.
  *
- * A local license key is still handed to the client after payment, so the
- * offline-first architecture of the trainer keeps working.
+ * License records remain server-side and are used only to derive the account
+ * entitlement returned to an authenticated Telegram session.
  */
 
 export const telegramUsers = pgTable(
@@ -52,7 +52,7 @@ export const orders = pgTable(
     stars: integer("stars").notNull(),
     payload: text("payload").notNull().unique(),
     invoiceLink: text("invoice_link"),
-    chargeId: text("charge_id"),
+    chargeId: text("charge_id").unique(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     paidAt: timestamp("paid_at", { withTimezone: true }),
   },
@@ -72,6 +72,7 @@ export const licenses = pgTable(
       .references(() => telegramUsers.id, { onDelete: "cascade" }),
     orderId: integer("order_id")
       .notNull()
+      .unique()
       .references(() => orders.id, { onDelete: "cascade" }),
     productId: text("product_id").notNull(),
     /** telegram_stars | manual | gift */

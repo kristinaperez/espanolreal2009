@@ -21,7 +21,6 @@ export interface AccountPayload {
   displayName: string | null;
   premium: {
     active: boolean;
-    key: string | null;
     productId: string | null;
     source: string | null;
     issuedAt: string | null;
@@ -37,7 +36,7 @@ const emptyPayload = (configured: boolean): AccountPayload => ({
   productId: premiumProduct().id,
   user: null,
   displayName: null,
-  premium: { active: false, key: null, productId: null, source: null, issuedAt: null },
+  premium: { active: false, productId: null, source: null, issuedAt: null },
   orders: [],
 });
 
@@ -60,7 +59,6 @@ export async function buildAccountPayload(
     displayName: publicDisplayName(toPublicUser(user)),
     premium: {
       active: Boolean(license),
-      key: license?.key ?? null,
       productId: license?.productId ?? null,
       source: license?.source ?? null,
       issuedAt: license?.issuedAt ? new Date(license.issuedAt).toISOString() : null,

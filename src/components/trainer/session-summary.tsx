@@ -130,8 +130,8 @@ function Stat({ icon, label, value }: { icon: string; label: string; value: stri
 }
 
 export function PremiumLock({ nextLesson }: { nextLesson?: number }) {
-  const { premium } = useProgress();
-  const { starsPrice, user } = useAuth();
+  const { starsPrice, user, serverPremium } = useAuth();
+  const premium = serverPremium || process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
   const [showPayment, setShowPayment] = useState(false);
 
   return (

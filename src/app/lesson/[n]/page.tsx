@@ -73,7 +73,7 @@ export default async function LessonPage({ params }: { params: Promise<{ n: stri
 
   return (
     <AppShell>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <TrainerPage
         mode="lesson"
         lessons={[lesson]}

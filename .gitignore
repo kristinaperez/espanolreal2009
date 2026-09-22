@@ -1,7 +1,11 @@
 .env
 .env.local 
 node_modules
-EspanolStars1909.zip
+*.zip
+*.tar.gz
+.next
+out
+*.tsbuildinfo
 Промо.txt
 Neon prompt.txt
 Промпт по дизайну лендинга от Figma Make.txt 

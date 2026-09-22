@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { verifyInitData } from "@/lib/telegram/crypto";
-import { setSessionCookie } from "@/lib/session";
-import { errorResponse, jsonResponse, readJsonBody } from "@/server/http";
+import { sessionIsConfigured, setSessionCookie } from "@/lib/session";
+import { errorResponse, jsonResponse, rateLimit, readJsonBody, serverErrorResponse } from "@/server/http";
 import { buildAccountPayload } from "@/server/account";
 import { upsertTelegramUser } from "@/server/users";
 
@@ -13,6 +13,11 @@ export const dynamic = "force-dynamic";
  * verified server-side with the bot token before any session is created.
  */
 export async function POST(request: NextRequest) {
+  const limited = rateLimit(request, "telegram-init-auth", 10, 60_000);
+  if (limited) return limited;
+  if (!sessionIsConfigured()) {
+    return errorResponse("Telegram login is not configured.", 503);
+  }
   try {
     const { db } = await import("@/db");
     await db.execute(await (await import("drizzle-orm")).sql`select 1`);
@@ -36,6 +41,6 @@ export async function POST(request: NextRequest) {
     setSessionCookie(response, user.telegramId);
     return response;
   } catch (error) {
-    return errorResponse(`Ошибка сохранения профиля: ${(error as Error).message}`, 500);
+    return serverErrorResponse("telegram-init-save", error);
   }
 }
