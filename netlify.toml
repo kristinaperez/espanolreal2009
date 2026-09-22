@@ -1,8 +1,10 @@
 [build]
-  SECRETS_SCAN_OMIT_PATHS = ".env.example"
-  SECRETS_SCAN_OMIT_KEYS = "TELEGRAM_AUTH_MAX_AGE", "NEXT_PUBLIC_MASTER_LICENSE_KEY"
   command = "npm run build"
   publish = ".next"
+
+[build.processing]
+  SECRETS_SCAN_OMIT_PATHS = [".env.example"]
+  SECRETS_SCAN_OMIT_KEYS = ["TELEGRAM_AUTH_MAX_AGE", "NEXT_PUBLIC_MASTER_LICENSE_KEY"]
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
