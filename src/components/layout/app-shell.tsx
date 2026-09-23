@@ -24,6 +24,8 @@ import { useProgress, useStats } from "@/components/providers/progress-provider"
 import { achievementById } from "@/components/providers/progress-provider";
 import { courseConfig } from "@/lib/content/config";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/providers/language-provider";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 
 const ICONS: Record<string, typeof Home> = {
   home: Home,
@@ -42,6 +44,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { state, dispatch, ready, newAchievements, clearAchievement } = useProgress();
   const stats = useStats();
   const [open, setOpen] = useState(false);
+  const { language } = useLanguage();
+  const fr = language === "fr";
 
   const nav = courseConfig.navigation;
 
@@ -64,7 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 )}
               >
                 <Icon className="h-5 w-5" />
-                {item.label}
+                {fr ? NAV_FR[item.href] ?? item.label : item.label}
               </Link>
             );
           })}
@@ -78,7 +82,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <button
             type="button"
             onClick={() => setOpen(true)}
-            aria-label="Меню"
+            aria-label={fr ? "Menu" : "Меню"}
             className="grid h-10 w-10 place-items-center rounded-xl border border-line"
           >
             <Menu className="h-5 w-5" />
@@ -107,7 +111,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="fixed inset-0 z-50 lg:hidden">
           <button
             type="button"
-            aria-label="Закрыть"
+            aria-label={fr ? "Fermer" : "Закрыть"}
             className="absolute inset-0 bg-black/40"
             onClick={() => setOpen(false)}
           />
@@ -117,7 +121,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                aria-label="Закрыть меню"
+                aria-label={fr ? "Fermer le menu" : "Закрыть меню"}
                 className="grid h-10 w-10 place-items-center rounded-xl border border-line"
               >
                 <X className="h-5 w-5" />
@@ -138,7 +142,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     )}
                   >
                     <Icon className="h-5 w-5" />
-                    {item.label}
+                    {fr ? NAV_FR[item.href] ?? item.label : item.label}
                   </Link>
                 );
               })}
@@ -163,7 +167,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               )}
             >
               <Icon className="h-5 w-5" />
-              {item.label}
+              {fr ? NAV_FR[item.href] ?? item.label : item.label}
             </Link>
           );
         })}
@@ -183,8 +187,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <span className="text-2xl">{achievement.emoji}</span>
               <span>
-                <span className="block text-sm font-extrabold">Достижение: {achievement.title}</span>
-                <span className="block text-xs text-muted">{achievement.description}</span>
+                <span className="block text-sm font-extrabold">{fr ? "Succès débloqué !" : `Достижение: ${achievement.title}`}</span>
+                <span className="block text-xs text-muted">{fr ? "Continuez votre progression." : achievement.description}</span>
               </span>
             </button>
           );
@@ -197,6 +201,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 function Brand() {
+  const { language } = useLanguage();
   return (
     <Link href="/" className="flex items-center gap-2 px-2 py-3">
       <span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary text-lg text-primary-contrast shadow-[0_3px_0_0_var(--primary-strong)]">
@@ -205,7 +210,7 @@ function Brand() {
       <span className="leading-tight">
         <span className="block text-base font-extrabold tracking-tight">Español Real</span>
         <span className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
-          живой испанский
+          {language === "fr" ? "espagnol vivant" : "живой испанский"}
         </span>
       </span>
     </Link>
@@ -215,15 +220,17 @@ function Brand() {
 function SidebarFooter() {
   const stats = useStats();
   const { ready } = useProgress();
+  const { language } = useLanguage();
+  const fr = language === "fr";
   return (
     <div className="mt-3 rounded-2xl bg-background-soft p-4">
-      <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">Прогресс курса</p>
+      <div className="flex items-center justify-between gap-2"><p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">{fr ? "Progression du cours" : "Прогресс курса"}</p><LanguageSwitcher compact /></div>
       <p className="mt-1 text-2xl font-extrabold">{ready ? `${stats.coursePercent}%` : "—"}</p>
       <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-surface">
         <div className="h-full rounded-full bg-primary transition-[width] duration-500" style={{ width: `${stats.coursePercent}%` }} />
       </div>
       <p className="mt-2 text-xs text-muted">
-        {ready ? `${stats.lessonsCompleted}/${stats.lessonsTotal} уроков · ${stats.phrasesLearned} фраз` : "Загрузка…"}
+        {ready ? `${stats.lessonsCompleted}/${stats.lessonsTotal} ${fr ? "leçons" : "уроков"} · ${stats.phrasesLearned} ${fr ? "phrases" : "фраз"}` : fr ? "Chargement…" : "Загрузка…"}
       </p>
     </div>
   );
@@ -236,11 +243,12 @@ function ThemeToggle({
   theme: "light" | "dark" | "system";
   onTheme: (theme: "light" | "dark" | "system") => void;
 }) {
+  const { language } = useLanguage();
   const next = theme === "dark" ? "light" : "dark";
   return (
     <button
       type="button"
-      aria-label="Переключить тему"
+      aria-label={language === "fr" ? "Changer de thème" : "Переключить тему"}
       onClick={() => onTheme(next)}
       className="fixed bottom-24 left-4 z-40 grid h-11 w-11 place-items-center rounded-full border border-line bg-surface shadow-[0_6px_20px_rgba(28,21,18,0.15)] lg:bottom-6 lg:left-auto lg:right-6"
     >
@@ -248,3 +256,15 @@ function ThemeToggle({
     </button>
   );
 }
+
+const NAV_FR: Record<string, string> = {
+  "/learn": "Accueil",
+  "/learn/lessons": "Leçons",
+  "/learn/map": "Parcours",
+  "/learn/review": "Révisions",
+  "/learn/mistakes": "Erreurs",
+  "/learn/search": "Phrases",
+  "/learn/stats": "Progression",
+  "/learn/settings": "Réglages",
+  "/learn/about": "À propos",
+};

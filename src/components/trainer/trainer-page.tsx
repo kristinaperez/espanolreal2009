@@ -12,6 +12,8 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { categoryById, course } from "@/lib/content/config";
 import type { Distractor, Lesson } from "@/lib/content/types";
 import { buildExamSession, buildLessonSession } from "@/lib/exercises/generator";
+import { frenchDemoPool, localizeLessonForFrench } from "@/lib/content/french-demo";
+import { useLanguage } from "@/components/providers/language-provider";
 
 type Phase = "intro" | "run" | "done";
 
@@ -46,6 +48,8 @@ export function TrainerPage({
 }) {
   const { state, dispatch, access } = useProgress();
   const { serverPremium } = useAuth();
+  const { language } = useLanguage();
+  const fr = language === "fr";
   const [phase, setPhase] = useState<Phase>("intro");
   const [result, setResult] = useState<SessionResult | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -81,13 +85,11 @@ export function TrainerPage({
       }),
     );
     if (responses.some((item) => !item)) {
-      setLoadError(
-        "Не удалось загрузить урок. Проверьте подключение к интернету или войдите через Telegram, чтобы восстановить покупку.",
-      );
+      setLoadError(fr ? "Impossible de charger la leçon. Vérifiez votre connexion ou connectez-vous avec Telegram pour restaurer votre achat." : "Не удалось загрузить урок. Проверьте подключение к интернету или войдите через Telegram, чтобы восстановить покупку.");
       return;
     }
     setPayloads(responses as LessonPayload[]);
-  }, [lessons, locked, payloads, protectedContent]);
+  }, [fr, lessons, locked, payloads, protectedContent]);
 
   useEffect(() => {
     if (!protectedContent || locked) return;
@@ -106,13 +108,25 @@ export function TrainerPage({
         : pool,
     [payloads, pool],
   );
+  const frenchDemo = fr && mode === "lesson" && activeLessons.length === 1 && activeLessons[0].lesson <= 2;
+  // The French prototype deliberately stops after lesson 2: it must not send
+  // a demonstration visitor into untranslated lesson 3.
+  const visibleNextHref = frenchDemo && primary.lesson === 2 ? undefined : nextHref;
+  const displayLessons = useMemo(
+    () => (frenchDemo ? activeLessons.map(localizeLessonForFrench) : activeLessons),
+    [activeLessons, frenchDemo],
+  );
+  const displayPool = useMemo(
+    () => (frenchDemo ? frenchDemoPool(activeLessons[0].lesson) : activePool),
+    [activeLessons, activePool, frenchDemo],
+  );
 
   const session = useMemo(() => {
     if (mode === "exam") {
-      return buildExamSession(activeLessons, activePool, `exam-${blockNumber}-${attempt}`, course.examQuestionCount);
+      return buildExamSession(displayLessons, displayPool, `exam-${blockNumber}-${attempt}`, course.examQuestionCount);
     }
-    return buildLessonSession(activeLessons[0], activePool, String(attempt));
-  }, [attempt, activeLessons, activePool, blockNumber, mode]);
+    return buildLessonSession(displayLessons[0], displayPool, String(attempt));
+  }, [attempt, blockNumber, displayLessons, displayPool, mode]);
 
   const progress = state.lessons[String(primary.lesson)];
   const category = categoryById.get(primary.category);
@@ -138,25 +152,25 @@ export function TrainerPage({
           {loadError ? (
             <>
               <span className="text-4xl">📡</span>
-              <p className="text-lg font-bold">Урок не загрузился</p>
+              <p className="text-lg font-bold">{fr ? "La leçon n'a pas pu être chargée" : "Урок не загрузился"}</p>
               <p className="max-w-md text-sm text-muted">{loadError}</p>
               <div className="mt-2 flex flex-wrap justify-center gap-3">
                 <Button size="lg" onClick={() => void loadProtected()}>
-                  Попробовать снова
+                  {fr ? "Réessayer" : "Попробовать снова"}
                 </Button>
                 <Link
                   href="/learn/settings#premium"
                   className="inline-flex h-14 items-center justify-center rounded-2xl border border-line bg-surface px-7 text-base font-semibold"
                 >
-                  Восстановить покупку
+                  {fr ? "Restaurer l'achat" : "Восстановить покупку"}
                 </Link>
               </div>
             </>
           ) : (
             <>
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-base font-bold">Загружаем урок…</p>
-              <p className="text-sm text-muted">Premium-контент подгружается после проверки доступа.</p>
+              <p className="text-base font-bold">{fr ? "Chargement de la leçon…" : "Загружаем урок…"}</p>
+              <p className="text-sm text-muted">{fr ? "Le contenu Premium se charge après vérification de l'accès." : "Premium-контент подгружается после проверки доступа."}</p>
             </>
           )}
         </Card>
@@ -170,9 +184,9 @@ export function TrainerPage({
         key={`${mode}-${attempt}`}
         exercises={session.exercises}
         mode={mode}
-        title={mode === "exam" ? `Экзамен ${blockNumber}` : primary.title}
-        subtitle={mode === "exam" ? "Проверка знаний по блоку уроков" : primary.subtitle}
-        lessonLabel={mode === "exam" ? "Экзамен" : category?.labelRu ?? primary.category}
+        title={mode === "exam" ? `${fr ? "Examen" : "Экзамен"} ${blockNumber}` : displayLessons[0].title}
+        subtitle={mode === "exam" ? (fr ? "Vérification des connaissances du bloc de leçons" : "Проверка знаний по блоку уроков") : displayLessons[0].subtitle}
+        lessonLabel={mode === "exam" ? (fr ? "Examen" : "Экзамен") : fr ? "Vie quotidienne" : category?.labelRu ?? primary.category}
         level={primary.difficulty}
         onFinish={finish}
       />
@@ -183,42 +197,42 @@ export function TrainerPage({
     return (
       <SessionSummary
         result={result}
-        title={mode === "exam" ? "Экзамен сдан!" : "Урок пройден!"}
-        nextHref={nextHref}
+        title={mode === "exam" ? (fr ? "Examen réussi !" : "Экзамен сдан!") : (fr ? "Leçon terminée !" : "Урок пройден!")}
+        nextHref={visibleNextHref}
         retryHref={mode === "lesson" ? `/lesson/${primary.lesson}` : blockNumber ? `/exam/${blockNumber}` : undefined}
         reviewHref="/learn/review"
       />
     );
   }
 
-  const fullLesson = activeLessons[0];
+  const fullLesson = displayLessons[0];
 
   return (
     <div className="flex flex-col gap-5">
       <header className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <Badge tone="primary">
-            {mode === "exam" ? `Экзамен ${blockNumber}` : `Урок ${primary.lesson}`}
+            {mode === "exam" ? `${fr ? "Examen" : "Экзамен"} ${blockNumber}` : `${fr ? "Leçon" : "Урок"} ${primary.lesson}`}
           </Badge>
           <Badge>
-            {category?.emoji} {category?.labelRu ?? primary.category}
+            {category?.emoji} {fr ? "Vie quotidienne" : category?.labelRu ?? primary.category}
           </Badge>
           <Badge tone="accent">{primary.difficulty}</Badge>
-          <Badge>{fullLesson.phrases.length} фраз</Badge>
-          {progress?.completed ? <Badge tone="success">✓ пройден</Badge> : null}
+          <Badge>{fullLesson.phrases.length} {fr ? "phrases" : "фраз"}</Badge>
+          {progress?.completed ? <Badge tone="success">✓ {fr ? "terminée" : "пройден"}</Badge> : null}
           {serverPremium || process.env.NEXT_PUBLIC_STATIC_EXPORT === "true" ? (
             <Badge tone="info">Premium</Badge>
           ) : null}
         </div>
-        <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">{primary.title}</h1>
-        {primary.subtitle ? <p className="text-base text-muted">{primary.subtitle}</p> : null}
-        {primary.summary ? <p className="max-w-2xl text-base">{primary.summary}</p> : null}
+        <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">{fullLesson.title}</h1>
+        {fullLesson.subtitle ? <p className="text-base text-muted">{fullLesson.subtitle}</p> : null}
+        {fullLesson.summary ? <p className="max-w-2xl text-base">{fullLesson.summary}</p> : null}
       </header>
 
       {fullLesson.authorComment ? (
         <Card className="border-primary/30 bg-primary/8">
           <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-primary">
-            <Sparkles className="h-4 w-4" /> Комментарий автора
+            <Sparkles className="h-4 w-4" /> {fr ? "Note de l'auteur" : "Комментарий автора"}
           </p>
           <p className="mt-2 text-[15px] font-medium leading-relaxed">{fullLesson.authorComment}</p>
         </Card>
@@ -226,7 +240,7 @@ export function TrainerPage({
 
       <Card>
         <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-muted">
-          <BookOpen className="h-4 w-4" /> Фразы урока
+          <BookOpen className="h-4 w-4" /> {fr ? "Phrases de la leçon" : "Фразы урока"}
         </p>
         <ul className="mt-4 flex flex-col divide-y divide-line">
           {fullLesson.phrases.map((phrase) => (
@@ -244,7 +258,7 @@ export function TrainerPage({
         </ul>
         {mode === "exam" ? (
           <p className="mt-4 text-sm text-muted">
-            В экзамен входят фразы из уроков {activeLessons.map((item) => item.lesson).join(", ")}.
+            {fr ? "L'examen inclut les phrases des leçons" : "В экзамен входят фразы из уроков"} {displayLessons.map((item) => item.lesson).join(", ")}.
           </p>
         ) : null}
       </Card>
@@ -252,9 +266,9 @@ export function TrainerPage({
       <Card className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-base font-bold">
-            {mode === "exam" ? `${course.examQuestionCount} вопросов` : "Карточки · практика · мини-тест"}
+            {mode === "exam" ? `${course.examQuestionCount} ${fr ? "questions" : "вопросов"}` : fr ? "Cartes · pratique · mini-test" : "Карточки · практика · мини-тест"}
           </p>
-          <p className="text-sm text-muted">Ошибки автоматически попадают в план повторения.</p>
+          <p className="text-sm text-muted">{fr ? "Les erreurs sont ajoutées automatiquement au plan de révision." : "Ошибки автоматически попадают в план повторения."}</p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button
@@ -265,23 +279,23 @@ export function TrainerPage({
               setPhase("run");
             }}
           >
-            <GraduationCap className="h-5 w-5" /> Ещё раз
+            <GraduationCap className="h-5 w-5" /> {fr ? "Encore une fois" : "Ещё раз"}
           </Button>
           <Button size="lg" onClick={() => setPhase("run")}>
-            Начать <ArrowRight className="h-5 w-5" />
+            {fr ? "Commencer" : "Начать"} <ArrowRight className="h-5 w-5" />
           </Button>
         </div>
       </Card>
 
-      {nextHref ? (
+      {visibleNextHref ? (
         <p className="text-sm text-muted">
-          Дальше:{" "}
-          <Link href={nextHref} className="font-bold text-primary underline decoration-primary/40">
-            следующий урок
+          {fr ? "Ensuite :" : "Дальше:"}{" "}
+          <Link href={visibleNextHref} className="font-bold text-primary underline decoration-primary/40">
+            {fr ? "la leçon suivante" : "следующий урок"}
           </Link>{" "}
           ·{" "}
           <Link href={reviewHref ?? "/learn/review"} className="font-bold text-primary underline decoration-primary/40">
-            повторение
+            {fr ? "révisions" : "повторение"}
           </Link>
         </p>
       ) : null}

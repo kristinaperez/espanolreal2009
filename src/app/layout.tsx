@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import Script from "next/script";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { ProgressProvider } from "@/components/providers/progress-provider";
+import { LanguageProvider } from "@/components/providers/language-provider";
 import { PwaRegister } from "@/components/providers/pwa-register";
 import { getCourseStats, getLessonMetas } from "@/lib/content/loader";
 import { course, payments } from "@/lib/content/config";
@@ -99,9 +100,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
         />
-        <ProgressProvider metas={metas}>
-          <AuthProvider>{children}</AuthProvider>
-        </ProgressProvider>
+        <LanguageProvider>
+          <ProgressProvider metas={metas}>
+            <AuthProvider>{children}</AuthProvider>
+          </ProgressProvider>
+        </LanguageProvider>
         <PwaRegister />
       </body>
     </html>

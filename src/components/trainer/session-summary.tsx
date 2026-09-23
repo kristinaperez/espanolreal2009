@@ -12,6 +12,7 @@ import { TelegramLogin } from "@/components/auth/telegram-login";
 import { TelegramStarsPayment } from "@/components/payments/telegram-stars";
 import { levelFromXp, levelProgress } from "@/lib/content/config";
 import type { SessionResult } from "./exercise-runner";
+import { useLanguage } from "@/components/providers/language-provider";
 
 export function SessionSummary({
   result,
@@ -27,6 +28,8 @@ export function SessionSummary({
   reviewHref?: string;
 }) {
   const { state } = useProgress();
+  const { language } = useLanguage();
+  const fr = language === "fr";
   const score = result.total === 0 ? 0 : Math.round((result.correct / result.total) * 100);
   const currentLevel = levelFromXp(state.xp).level;
   const progress = levelProgress(state.xp);
@@ -41,29 +44,29 @@ export function SessionSummary({
             🎉
           </div>
           <h2 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl">
-            {title === "Урок пройден!" ? "Урок завершён!" : title}
+            {title === "Урок пройден!" ? (fr ? "Leçon terminée !" : "Урок завершён!") : title}
           </h2>
           <p className="mt-2 text-sm leading-6 text-muted">
             {score === 100
-              ? "Идеально! Все ответы верные 🎯"
+              ? (fr ? "Parfait ! Toutes les réponses sont correctes 🎯" : "Идеально! Все ответы верные 🎯")
               : score >= 80
-                ? "Отличная работа! Продолжайте в том же духе."
-                : "Ошибки — часть обучения. Мы вернём эти фразы в повторение."}
+                ? (fr ? "Très bon travail ! Continuez comme ça." : "Отличная работа! Продолжайте в том же духе.")
+                : (fr ? "Les erreurs font partie de l'apprentissage. Nous reverrons ces phrases." : "Ошибки — часть обучения. Мы вернём эти фразы в повторение.")}
           </p>
 
           <div className="mx-auto mt-8 grid max-w-xl grid-cols-3 gap-3">
             <Stat icon="⭐" label="XP" value={`+${result.xpGained}`} />
-            <Stat icon="🎯" label="Точность" value={`${score}%`} />
-            <Stat icon="🔄" label="Ошибки" value={`${result.wrong}`} />
+            <Stat icon="🎯" label={fr ? "Précision" : "Точность"} value={`${score}%`} />
+            <Stat icon="🔄" label={fr ? "Erreurs" : "Ошибки"} value={`${result.wrong}`} />
           </div>
 
           {result.mistakes.length > 0 ? (
             <div className="mx-auto mt-6 max-w-xl rounded-[20px] border border-amber-300/70 bg-amber-50 p-5 text-left dark:border-amber-500/30 dark:bg-amber-950/20">
               <p className="font-black text-amber-800 dark:text-amber-300">
-                🔄 Фразы отправлены в повторение
+                🔄 {fr ? "Phrases ajoutées aux révisions" : "Фразы отправлены в повторение"}
               </p>
               <p className="mt-1 text-sm leading-6 text-amber-800/80 dark:text-amber-200/80">
-                Мы повторим их позже — следующая проверка начнётся примерно через 1 день.
+                {fr ? "Nous les reverrons plus tard : la prochaine révision commencera dans environ un jour." : "Мы повторим их позже — следующая проверка начнётся примерно через 1 день."}
               </p>
               <ul className="mt-3 space-y-1.5 text-sm">
                 {result.mistakes.slice(0, 4).map((exercise) => (
@@ -75,7 +78,7 @@ export function SessionSummary({
               </ul>
               {reviewHref ? (
                 <Link href={reviewHref} className="mt-3 inline-flex text-sm font-extrabold text-primary hover:underline">
-                  Открыть повторение →
+                  {fr ? "Ouvrir les révisions →" : "Открыть повторение →"}
                 </Link>
               ) : null}
             </div>
@@ -83,8 +86,8 @@ export function SessionSummary({
 
           <div className="mx-auto mt-7 max-w-xl rounded-[20px] bg-background-soft p-4 text-left">
             <div className="mb-2 flex items-center justify-between text-xs font-bold">
-              <span>Уровень {currentLevel} · {levelFromXp(state.xp).name}</span>
-              <span className="text-muted">{progress.xpToNext} XP до следующего</span>
+              <span>{fr ? `Niveau ${currentLevel}` : `Уровень ${currentLevel} · ${levelFromXp(state.xp).name}`}</span>
+              <span className="text-muted">{progress.xpToNext} XP {fr ? "avant le niveau suivant" : "до следующего"}</span>
             </div>
             <ProgressBar value={progress.percent} tone="accent" />
           </div>
@@ -95,14 +98,14 @@ export function SessionSummary({
                 href={nextHref}
                 className="inline-flex h-14 items-center justify-center rounded-full bg-primary px-7 text-base font-extrabold text-white shadow-[0_4px_0_0_var(--primary-strong)] transition hover:bg-primary-strong active:scale-95"
               >
-                Продолжить курс →
+                {fr ? "Continuer le cours →" : "Продолжить курс →"}
               </Link>
             ) : retryHref ? (
               <Link
                 href={retryHref}
                 className="inline-flex h-14 items-center justify-center rounded-full bg-primary px-7 text-base font-extrabold text-white shadow-[0_4px_0_0_var(--primary-strong)] transition hover:bg-primary-strong active:scale-95"
               >
-                Пройти ещё раз
+                {fr ? "Recommencer" : "Пройти ещё раз"}
               </Link>
             ) : null}
 
@@ -110,7 +113,7 @@ export function SessionSummary({
               href="/"
               className="inline-flex h-14 items-center justify-center rounded-full border-2 border-line bg-surface px-7 text-base font-extrabold transition hover:border-primary hover:text-primary active:scale-95"
             >
-              Вернуться на главную
+              {fr ? "Retour à l'accueil" : "Вернуться на главную"}
             </Link>
           </div>
         </div>
