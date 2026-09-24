@@ -89,6 +89,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="ru" suppressHydrationWarning>
       <body>
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
+        <Script
+          src="https://static.userguiding.com/media/user-guiding-8SS114332UJ2ID-embedded.js"
+          strategy="beforeInteractive"
+          async
+        />
         <script
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
