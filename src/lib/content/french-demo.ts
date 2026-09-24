@@ -13,7 +13,7 @@ const lessons: Record<number, Lesson> = {
       { spanish: "Cuéntamelo todo", translation: "Raconte-moi tout", example: "Ven aquí y cuéntamelo todo.", exampleTranslation: "Viens ici et raconte-moi tout.", notes: "Deux pronoms se combinent : me + lo = melo.", difficulty: "A2" },
       { spanish: "Ni idea", translation: "Aucune idée", example: "— ¿A qué hora cierra? — Ni idea.", exampleTranslation: "— À quelle heure ça ferme ? — Aucune idée.", notes: "Réponse très fréquente. Plus poli : «No lo sé».", difficulty: "A1" },
       { spanish: "Vamos a ver", translation: "Voyons voir / alors", example: "Vamos a ver qué dicen.", exampleTranslation: "Voyons ce qu'ils disent.", notes: "Une expression très polyvalente quand on a besoin de réfléchir.", difficulty: "A1" },
-      { spanish: "Ya verás", translation: "Tu verras", example: "Ya verás, te gusta.", exampleTranslation: "Tu verras, ça va te plaire.", notes: "Elle exprime la certitude de la personne qui parle. Une tournure très courante entre amis.", difficulty: "A2" },
+      { spanish: "Ya verás", translation: "Tu verras", example: "Ya verás, te va a gustar.", exampleTranslation: "Tu verras, ça va te plaire.", notes: "Elle exprime la certitude de la personne qui parle. Une tournure très courante entre amis.", difficulty: "A2" },
       { spanish: "No pasa nada", translation: "Ce n'est rien / pas de souci", example: "Perdona por el retraso. — No pasa nada.", exampleTranslation: "Pardon pour le retard. — Ce n'est rien.", notes: "La phrase-médicament : on l'entend des dizaines de fois par jour en Espagne.", difficulty: "A1" },
     ],
   },
