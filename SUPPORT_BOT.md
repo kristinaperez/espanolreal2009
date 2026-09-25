@@ -36,7 +36,11 @@ Then open `@EspanolRealSupportBot` in Telegram and send:
 
 The bot will reply with your chat ID. Put that value in `TELEGRAM_SUPPORT_ADMIN_CHAT_ID` in Netlify and redeploy.
 
-You can call `/api/telegram/support/setup` again after a domain or webhook-secret change.
+You can call `/api/telegram/support/setup` again after a domain or webhook-secret change. The setup response includes Telegram's `getWebhookInfo` result; check `url`, `pending_update_count`, and `last_error_message` if delivery is not working.
+
+## Replying to a user
+
+When a support message arrives in the admin chat, reply to that bot message directly in Telegram. The bot reads the Telegram ID from the support message, sends your reply back to that user, and confirms delivery in the admin chat. Only the configured `TELEGRAM_SUPPORT_ADMIN_CHAT_ID` can use this developer-reply path.
 
 ## What the developer receives
 

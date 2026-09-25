@@ -57,6 +57,20 @@ function callbackData(data: string | undefined): { category: SupportCategory; co
   };
 }
 
+
+function adminChatMatches(chatId: number): boolean {
+  const admin = supportAdminChatId();
+  return admin !== null && String(admin) === String(chatId);
+}
+
+function replyTargetFromAdminMessage(text: string | undefined, chatId: number): number | null {
+  if (!adminChatMatches(chatId) || !text) return null;
+  const match = text.match(/<b>Telegram ID:<\/b>\s*<code>(-?\d+)<\/code>/);
+  if (!match) return null;
+  const target = Number(match[1]);
+  return Number.isSafeInteger(target) ? target : null;
+}
+
 async function forwardToAdmin(
   user: SupportTelegramUser | undefined,
   category: SupportCategory,
@@ -124,6 +138,18 @@ export async function POST(request: NextRequest) {
       if (parsed.category) await askForMessage(chatId, parsed.category, parsed.context);
       else await showCategories(chatId, parsed.context);
       return jsonResponse({ ok: true, handled: "start" });
+    }
+
+    // The admin can reply directly to the forwarded support message.
+    // The forwarded message contains the user's Telegram ID, so no client-side
+    // state or database mapping is required. Only the configured admin chat may use this path.
+    const adminReplyTarget = replyTargetFromAdminMessage(message.reply_to_message?.text, chatId);
+    if (adminReplyTarget !== null) {
+      await supportSendMessage(adminReplyTarget, `👩‍💻 <b>Ответ разработчика:</b>\n\n${escapeTelegramHtml(text)}`, {
+        reply_markup: supportCategoryKeyboard(),
+      });
+      await supportSendMessage(chatId, "✅ Ответ отправлен пользователю.");
+      return jsonResponse({ ok: true, handled: "admin_reply" });
     }
 
     const reply = parseSupportReplyMarker(message.reply_to_message?.text);

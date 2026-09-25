@@ -48,6 +48,46 @@ check("public master license key was removed", !envExample.includes("NEXT_PUBLIC
 check("baseline security headers are configured", netlify.includes("Strict-Transport-Security") && netlify.includes("Content-Security-Policy =") && netlify.includes("X-Frame-Options"));
 check("Next.js security update is pinned", packageJson.dependencies.next === "16.3.3" && packageJson.devDependencies["eslint-config-next"] === "16.3.3");
 
+// --- Support Bot webhook security checks ------------------------------------
+const supportWebhook = read("src/app/api/telegram/support/webhook/route.ts");
+const supportSetup = read("src/app/api/telegram/support/setup/route.ts");
+const supportBot = read("src/lib/telegram/support-bot.ts");
+
+check(
+  "support webhook requires its own configured secret",
+  supportWebhook.includes('configuredSecret("TELEGRAM_SUPPORT_WEBHOOK_SECRET")') &&
+    supportWebhook.includes("if (!expected)"),
+);
+check(
+  "support webhook uses secretHeaderOk for timing-safe comparison",
+  supportWebhook.includes('secretHeaderOk(request, "x-telegram-bot-api-secret-token", expected)'),
+);
+check(
+  "support webhook secret is independent from main webhook secret",
+  !supportWebhook.includes('configuredSecret("TELEGRAM_WEBHOOK_SECRET")'),
+);
+check(
+  "support setup is POST-only and header-authenticated",
+  supportSetup.includes("export async function POST") &&
+    !supportSetup.includes("export async function GET") &&
+    supportSetup.includes("adminSecretOk(request)"),
+);
+check(
+  "support setup uses its own separate webhook secret",
+  supportSetup.includes('configuredSecret("TELEGRAM_SUPPORT_WEBHOOK_SECRET")') &&
+    !supportSetup.includes('configuredSecret("TELEGRAM_WEBHOOK_SECRET")'),
+);
+check(
+  "support bot token stays server-side only",
+  supportBot.includes("TELEGRAM_SUPPORT_BOT_TOKEN") &&
+    !supportBot.includes("NEXT_PUBLIC_TELEGRAM_SUPPORT_BOT_TOKEN"),
+);
+check(
+  "support webhook does not reflect internal exception messages",
+  !/\$\{\s*\(error as Error\)\.message\s*\}/.test(supportWebhook),
+);
+// ---------------------------------------------------------------------------
+
 const apiFiles = [];
 function walk(dir) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
