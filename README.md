@@ -183,6 +183,22 @@ SELECT id, payload, charge_id, status FROM orders WHERE user_id = <id>;
 Справочники (категории, этапы адаптации, уровни, достижения, XP, цены, FAQ, отзывы, навигация)
 лежат в `data/course.config.json` — тоже данные, а не код.
 
+## SEO / GEO
+
+Production domain: `https://espanolreal.es`. The project includes technical SEO and AI-search discovery without changing trainer, Telegram login, Stars payment, support bot or progress logic.
+
+- `src/app/layout.tsx` — canonical metadata, Open Graph/Twitter metadata and Schema.org `Course` + `WebApplication`.
+- `src/app/robots.ts` — allows normal crawlers and explicitly allows `OAI-SearchBot` while keeping `/api/` out of crawling.
+- `src/app/sitemap.ts` — indexes the homepage, public course pages, lessons and exams; private/progress screens are excluded.
+- `public/llms.txt` — concise machine-readable description and list of authoritative public URLs for AI/search systems.
+- `public/og.jpg` — Open Graph preview image.
+- Lesson pages expose `LearningResource` + `BreadcrumbList` structured data and stable canonical URLs.
+- Dashboard, mistakes, review, search, settings, statistics and certificate screens are marked `noindex` because they are utility/personal-state pages.
+
+For Bing, keep the sitemap submitted in Bing Webmaster Tools and enable IndexNow for future URL changes. Bing recommends both sitemap coverage and IndexNow for keeping content discoverable and fresh.
+
+For ChatGPT Search, do not block `OAI-SearchBot` in `robots.txt`; OpenAI states that this crawler is used to surface websites in ChatGPT search results.
+
 ## Сборка и деплой
 
 ```bash

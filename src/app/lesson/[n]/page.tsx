@@ -58,17 +58,32 @@ export default async function LessonPage({ params }: { params: Promise<{ n: stri
   const metas = getLessonMetas();
   const examReady = exam ? number >= exam.toLesson && metas.length >= exam.toLesson : false;
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://espanolreal.es";
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LearningResource",
+    "@id": `${siteUrl}/lesson/${lesson.lesson}#lesson`,
+    url: `${siteUrl}/lesson/${lesson.lesson}`,
     name: `Урок ${lesson.lesson}. ${lesson.title}`,
     description: lesson.summary,
-    inLanguage: "es-RU",
-    teaches: lesson.phrases.slice(0, 3).map((phrase) => phrase.spanish),
+    inLanguage: ["es", "ru"],
+    learningResourceType: "lesson",
+    teaches: lesson.phrases.slice(0, 5).map((phrase) => phrase.spanish),
     educationalLevel: lesson.difficulty,
     isAccessibleForFree: !trimmed,
-    hasCourseInstance: { "@type": "CourseInstance", courseMode: "online" },
-    isPartOf: { "@type": "Course", name: "Español Real" },
+    isPartOf: { "@type": "Course", "@id": `${siteUrl}/#course`, name: "Español Real" },
+    about: lesson.situation,
+    keywords: lesson.tags.join(", "),
+  };
+
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Español Real", item: siteUrl },
+      { "@type": "ListItem", position: 2, name: "Уроки", item: `${siteUrl}/learn/lessons` },
+      { "@type": "ListItem", position: 3, name: lesson.title, item: `${siteUrl}/lesson/${lesson.lesson}` },
+    ],
   };
 
   return (

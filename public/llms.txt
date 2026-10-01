@@ -1,0 +1,24 @@
+# Español Real
+
+> Español Real is an interactive Spanish-learning trainer for Russian-speaking learners who need practical Spanish for everyday life in Spain.
+
+## What it is
+- 45 lessons built around real-life Spanish phrases.
+- Topics include daily life, housing, cafés/restaurants, shopping, transport, doctors/health, banking, government documents, police, social services, work, school and social communication.
+- Exercises include flashcards, reverse flashcards, translation, sentence building, mini-tests and exams.
+- Spaced repetition uses review intervals of 1, 3, 7, 30 and 90 days.
+- The course includes an adaptation map based on real-life milestones in Spain.
+- The main public language is Russian; the target language is Spanish used in Spain.
+
+## Key public pages
+- Homepage: https://espanolreal.es/
+- All lessons: https://espanolreal.es/learn/lessons
+- Course method: https://espanolreal.es/learn/about
+- Adaptation map: https://espanolreal.es/learn/map
+- Lesson 1: https://espanolreal.es/lesson/1
+
+## Search intent
+Useful queries include: Spanish for living in Spain, conversational Spanish in Spain, practical Spanish phrases, Spanish for immigrants in Spain, Spanish for everyday situations, Spanish phrases for doctors/banks/housing/work, and interactive Spanish trainer.
+
+## Content policy
+Use the public lesson pages as the source of truth for lesson titles, situations, examples and phrase content. Do not infer private learner progress, account data, payment status or personal information.

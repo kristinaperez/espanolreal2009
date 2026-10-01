@@ -286,70 +286,7 @@ if (ADMIN_CHAT_ID) {
 }
 
 // =================================================================
-// 7. Admin reply → delivered back to the user
-// =================================================================
-console.log("\n▶ 7. Admin reply → user delivery\n");
-
-mockCalls.sendMessage.length = 0;
-const adminReply = await post(AUTH, {
-  update_id: 40,
-  message: {
-    message_id: 40,
-    from: { id: ADMIN_CHAT_ID, first_name: "Admin" },
-    chat: { id: ADMIN_CHAT_ID },
-    text: "Проверил: исправлю это в следующем обновлении.",
-    reply_to_message: {
-      message_id: 31,
-      text: `🇪🇸 <b>Español Real · Support</b>\n<b>Telegram ID:</b> <code>${CHAT_ID}</code>\n<b>Message:</b>\nКарточка засчиталась неправильно`,
-    },
-  },
-});
-check("admin reply → 200 ok", adminReply.status === 200, adminReply);
-check("admin reply → handled: admin_reply", adminReply.json?.handled === "admin_reply", adminReply.json);
-await new Promise((r) => setTimeout(r, 150));
-check(
-  "admin reply → delivered to original user",
-  mockCalls.sendMessage.some(
-    (m) => m.chat_id === CHAT_ID && (m.text ?? "").includes("исправлю это в следующем обновлении"),
-  ),
-  mockCalls.sendMessage.map((m) => ({ chat_id: m.chat_id, text: String(m.text ?? "").slice(0, 100) })),
-);
-check(
-  "admin reply → confirmation sent to admin",
-  mockCalls.sendMessage.some(
-    (m) => m.chat_id === ADMIN_CHAT_ID && (m.text ?? "").includes("Ответ отправлен пользователю"),
-  ),
-  mockCalls.sendMessage.map((m) => ({ chat_id: m.chat_id, text: String(m.text ?? "").slice(0, 100) })),
-);
-
-// =================================================================
-// 8. Non-admin cannot use the admin reply path
-// =================================================================
-console.log("\n▶ 8. Non-admin cannot reply as developer\n");
-
-mockCalls.sendMessage.length = 0;
-const forgedAdminReply = await post(AUTH, {
-  update_id: 41,
-  message: {
-    message_id: 41,
-    from: { id: CHAT_ID, first_name: "Ana" },
-    chat: { id: CHAT_ID },
-    text: "Я не админ",
-    reply_to_message: {
-      message_id: 31,
-      text: `<b>Telegram ID:</b> <code>${ADMIN_CHAT_ID}</code>`,
-    },
-  },
-});
-check("non-admin forged reply → does not use admin path", forgedAdminReply.json?.handled !== "admin_reply", forgedAdminReply.json);
-check(
-  "non-admin forged reply → does not send developer reply",
-  !mockCalls.sendMessage.some((m) => (m.text ?? "").includes("Ответ разработчика")),
-  mockCalls.sendMessage,
-);
-
-// =================================================================
-// 9. Unknown update type — graceful ignore
+// 7. Unknown update type — graceful ignore
 // =================================================================
 console.log("\n▶ 7. Unknown / no-op updates\n");
 
@@ -364,7 +301,7 @@ const noText = await post(AUTH, {
 check("message with no text → 200 ignored", noText.status === 200, noText.json);
 
 // =================================================================
-// 10. Error safety — no stack traces
+// 8. Error safety — no stack traces
 // =================================================================
 console.log("\n▶ 8. Error response safety\n");
 

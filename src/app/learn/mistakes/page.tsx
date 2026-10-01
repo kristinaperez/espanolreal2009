@@ -3,6 +3,7 @@ import { MistakesView } from "@/components/learn/phrase-study";
 import { getClientPhraseIndex } from "@/lib/content/loader";
 
 export const metadata: Metadata = {
+  robots: { index: false, follow: true },
   title: "Ошибки",
   description: "Все фразы, в которых вы ошибались, с планом повторения.",
   alternates: { canonical: "/learn/mistakes" },

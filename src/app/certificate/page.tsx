@@ -3,6 +3,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { CertificateView } from "@/components/learn/certificate-view";
 
 export const metadata: Metadata = {
+  robots: { index: false, follow: true },
   title: "Сертификат о прохождении",
   description: "Сертификат о прохождении курса Español Real с итоговыми XP, уровнем и точностью ответов.",
   alternates: { canonical: "/certificate" },

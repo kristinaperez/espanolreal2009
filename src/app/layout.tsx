@@ -10,7 +10,7 @@ import { course, payments } from "@/lib/content/config";
 import "./globals.css";
 import ServiceWorkerRegistration from "./ServiceWorkerRegistration";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://espanol-real.example.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://espanolreal.es";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -67,21 +67,44 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Course",
-    name: "Español Real",
-    description: course.subtitle,
-    inLanguage: "es",
-    educationalLevel: "A1-B2",
-    provider: { "@type": "Organization", name: course.author.name },
-    numberOfCredits: stats.phrases,
-    hasCourseInstance: {
-      "@type": "CourseInstance",
-      courseMode: "online",
-      courseWorkload: "PT15M",
-    },
-    offers: [
-      { "@type": "Offer", price: "0", priceCurrency: "XTR", name: "Free" },
-      { "@type": "Offer", price: String(payments.starsPrice), priceCurrency: "XTR", name: "Premium" },
+    "@graph": [
+      {
+        "@type": "Course",
+        "@id": `${siteUrl}/#course`,
+        name: "Español Real",
+        url: siteUrl,
+        description:
+          "Тренажёр разговорного испанского для жизни в Испании: реальные фразы, 45 уроков, практика, интервальное повторение и карта адаптации.",
+        inLanguage: ["ru", "es"],
+        educationalLevel: ["A1", "A2", "B1", "B2"],
+        provider: {
+          "@type": "Organization",
+          name: "Español Real",
+          url: siteUrl,
+        },
+        hasCourseInstance: {
+          "@type": "CourseInstance",
+          courseMode: "online",
+          courseWorkload: "PT15M",
+        },
+        teaches: [
+          "разговорный испанский в Испании",
+          "испанский для повседневных ситуаций",
+          "испанский для жилья, покупок, транспорта, врача, банка, документов и работы",
+        ],
+        isAccessibleForFree: true,
+      },
+      {
+        "@type": "WebApplication",
+        "@id": `${siteUrl}/#application`,
+        name: "Español Real",
+        url: siteUrl,
+        applicationCategory: "EducationalApplication",
+        operatingSystem: "Web",
+        inLanguage: "ru",
+        description: "Интерактивный тренажёр живого испанского языка для жизни в Испании.",
+        isAccessibleForFree: true,
+      },
     ],
   };
 

@@ -17,9 +17,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${siteUrl}/learn/lessons`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: `${siteUrl}/learn/map`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: `${siteUrl}/learn/about`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${siteUrl}/learn/review`, lastModified: now, changeFrequency: "monthly", priority: 0.4 },
-    { url: `${siteUrl}/learn/search`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
-    { url: `${siteUrl}/learn/settings`, lastModified: now, changeFrequency: "monthly", priority: 0.3 },
     { url: `${siteUrl}/certificate`, lastModified: now, changeFrequency: "monthly", priority: 0.4 },
   ];
 
