@@ -13,7 +13,10 @@ import ServiceWorkerRegistration from "./ServiceWorkerRegistration";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://espanolreal.es";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(siteUrl),  
+  verification: {
+    google: "XsPAnFMeuRke9Fc9xUfdFIEP0mJKmpbsC2_pgy7OkUE",
+  },
   title: {
     default: "Español Real — учим живой испанский для жизни в Испании",
     template: "%s · Español Real",
