@@ -113,6 +113,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
   return (
     <html lang="ru" suppressHydrationWarning>
+	  <head>
+        <meta
+        name="google-site-verification"
+        content="XsPAnFMeuRke9Fc9xUfdFIEP0mJKmpbsC2_pgy7OkUE"
+        />
+      </head>
       <body>
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
         <Script
