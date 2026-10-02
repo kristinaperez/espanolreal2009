@@ -10,13 +10,10 @@ import { course, payments } from "@/lib/content/config";
 import "./globals.css";
 import ServiceWorkerRegistration from "./ServiceWorkerRegistration";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://espanolreal.es";
+const siteUrl = "https://espanolreal.es";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),  
-  verification: {
-    google: "XsPAnFMeuRke9Fc9xUfdFIEP0mJKmpbsC2_pgy7OkUE",
-  },
+  metadataBase: new URL(siteUrl),
   title: {
     default: "Español Real — учим живой испанский для жизни в Испании",
     template: "%s · Español Real",
@@ -50,6 +47,9 @@ export const metadata: Metadata = {
     description: "Мастерство реальных фраз вместо заучивания грамматики. 45 уроков.",
   },
   robots: { index: true, follow: true },
+  verification: {
+    google: "XsPAnFMeuRke9Fc9xUfdFIEP0mJKmpbsC2_pgy7OkUE",
+  },
   icons: {
   icon: [{ url: "/icon.png", type: "image/png" }],
   apple: "/icon.png",
@@ -113,12 +113,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
   return (
     <html lang="ru" suppressHydrationWarning>
-	  <head>
-        <meta
-        name="google-site-verification"
-        content="XsPAnFMeuRke9Fc9xUfdFIEP0mJKmpbsC2_pgy7OkUE"
-        />
-      </head>
       <body>
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
         <Script

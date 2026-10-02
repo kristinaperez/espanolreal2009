@@ -82,8 +82,8 @@ export async function GET(request: NextRequest) {
   // Resolve canonical origin: prefer NEXT_PUBLIC_SITE_URL to avoid deploy-preview URLs.
   const requestUrl = new URL(request.url);
   const canonicalOrigin =
-    process.env.NEXT_PUBLIC_SITE_URL
-      ? new URL(process.env.NEXT_PUBLIC_SITE_URL).origin
+    process.env.NODE_ENV === "production"
+      ? "https://espanolreal.es"
       : requestUrl.origin;
 
   if (!sessionIsConfigured()) {

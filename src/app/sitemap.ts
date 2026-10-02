@@ -4,7 +4,7 @@ import { getExamBlocks, getLessonNumbers } from "@/lib/content/loader";
 // Required for `output: "export"` builds.
 export const dynamic = "force-static";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://espanolreal.es";
+const siteUrl = "https://espanolreal.es";
 
 /**
  * Public, indexable URLs only.

@@ -58,7 +58,7 @@ export default async function LessonPage({ params }: { params: Promise<{ n: stri
   const metas = getLessonMetas();
   const examReady = exam ? number >= exam.toLesson && metas.length >= exam.toLesson : false;
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://espanolreal.es";
+  const siteUrl = "https://espanolreal.es";
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LearningResource",
