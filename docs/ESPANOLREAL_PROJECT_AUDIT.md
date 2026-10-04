@@ -31,3 +31,11 @@ Landing → /learn or numbered lesson → intro → practice → result → cour
 ## Phase 1 implementation plan
 
 Add independent Teacher/TeacherLesson types, Drizzle tables, reviewed SQL and server-only demo fixture. Render /teachers, /teachers/[teacherSlug], /practice/[lessonSlug] outside student AppShell. Use separate practice state, safe text rendering, validated external URLs, explicit demo attribution, pending/noindex metadata, vendor-independent events. Append navigation entry without reordering existing items. Keep auth, payments, numbered lessons, progress, sitemap, manifest and service worker unchanged. Defer dashboard, AI, publication/indexing workflow and marketplace to their specified phases.
+
+## 2026-10-04 scope update — tutor social posts
+
+Re-read main e3e4d905 and open PR/Issues: PR4 Phase1 is still open at fa49ba8c; test PRs 2/3 are open; issue #1 is existing Telegram-login troubleshooting. `feature/responsive-wow-posts` starts from PR4 to preserve its lessons and targets main. No new TeacherLesson authoring or student-progress logic changes.
+
+New isolated TeacherPost author/publishing module; existing authenticated Telegram session is reused, author fields are never accepted from the client. Local drafts and templates support preview without account/server AI configuration. Public posts are noindex, not in the course/sitemap. Separate additive schema supports posting; no live migration was run.
+
+Mobile review found the root landing's oversized header and the statistics calendar's title/controls fixed in one row. Both layouts were updated without changing course calculations/content. Detailed architecture and deploy requirements: TEACHER_POSTS.md; reproducible checks: teacher-post-checks.mjs, e2e-teacher-posts.cjs, teacher-post-db-checks.mjs.

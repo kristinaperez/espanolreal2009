@@ -1,3 +1,9 @@
+# WOW social posts and mobile layout
+
+- Responsive landing header/hero, separate social post studio, structured edit/quiz and eight social export buttons.
+- Server-verified author CTA; optional AI adapter, labelled mock, separate post persistence/publication and device-local drafts.
+- Existing TeacherLesson/demo and student progress remain unchanged. See docs/TEACHER_POSTS.md.
+
 ## [2026-10-04] — Teacher Lesson Phase 1
 
 ### Added

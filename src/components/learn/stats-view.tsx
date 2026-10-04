@@ -51,9 +51,9 @@ export function StatsView() {
         <Metric label="Экзаменов" value={`${stats.examsPassed}`} />
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <Card>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm font-bold">Календарь занятий</p>
             <div className="flex items-center gap-1">
               <button
@@ -142,7 +142,7 @@ export function StatsView() {
             {stats.milestonesCompleted}/{stats.milestonesTotal}
           </Badge>
         </div>
-        <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+        <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {milestones.map((milestone) => (
             <li key={milestone.id} className="flex items-center gap-3 rounded-2xl bg-background-soft p-3">
               <span className="text-2xl">{milestone.emoji}</span>
@@ -166,7 +166,7 @@ export function StatsView() {
             {stats.achievementsUnlocked}/{achievementsConfig.length}
           </Badge>
         </div>
-        <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {achievementsConfig.map((achievement) => {
             const unlockedAt = state.achievements[achievement.id];
             return (
