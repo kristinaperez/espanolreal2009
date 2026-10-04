@@ -120,3 +120,15 @@ assert.equal(money.explanation.includes('Филиппа'),false);
 const legacy={title:'Legacy',hook:'Hook',example:'Example',explanation:'Explanation',interactiveQuestion:{question:'Q',options:['one','two'],correctIndex:0,feedback:'Feedback'}};
 assert.ok(model.parsePost(legacy),'old published JSON no longer readable');
 console.log('Three editorial 4C examples, content budgets, 5 distinct mechanics, grading, legacy compatibility, no fabricated media and separate answer export passed.');
+
+for (const variant of ['drama','expectation','deadpan']) {
+ const selected = {...money, visual:{...money.visual,variant,enabled:false,mediaUrl:'https://example.com/meme.gif'}};
+ assert.equal(model.parsePost(selected).visual.variant,variant);
+ assert.equal(model.parsePost(selected).visual.enabled,false);
+ assert.equal(model.formatPost(selected,null).includes('https://example.com/meme.gif'),false);
+}
+assert.equal(model.parsePost({...money,visual:{...money.visual,enabled:'false'}}),null);
+assert.equal(model.parsePost({...money,visual:{...money.visual,variant:'unknown'}}),null);
+assert.equal(model.parsePost({...money,visual:{...money.visual,uploadedImage:'data:image/svg+xml;base64,PHN2Zz4='}}),null);
+assert.equal(model.parsePost({...money,visual:{...money.visual,uploadedImage:'data:image/jpeg;base64,/9j/'+ 'A'.repeat(160000)}}),null);
+console.log('Meme selection/opt-out preserved; unsafe and oversized uploads rejected; no media link in text when hidden.');

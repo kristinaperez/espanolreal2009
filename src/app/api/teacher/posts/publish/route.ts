@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   if (limited) return limited;
   const user = await currentUser(request);
   if (!user) return errorResponse("Войдите через Telegram для публикации.", 401);
-  const body = await readJsonBody<{ draft?: unknown; post?: unknown; mode?: unknown }>(request);
+  const body = await readJsonBody<{ draft?: unknown; post?: unknown; mode?: unknown }>(request, 256 * 1024);
   const draft = parseDraft(body?.draft);
   const post = parsePost(body?.post);
   if (!draft || !post || !["ai", "mock"].includes(String(body?.mode))) return errorResponse("Проверьте текст поста и варианты мини-квиза.");

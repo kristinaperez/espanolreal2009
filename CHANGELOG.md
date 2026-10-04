@@ -1,3 +1,14 @@
+## [2026-10-04] — Context meme picker
+
+### Added
+- Three contextual original visual treatments, no-meme choice, bounded JPG/PNG/WebP upload, HTTPS replacement and restore-own-image action.
+### Changed
+- Preserve visual choices in local drafts and published JSON; export hides media URLs when opted out. Uploaded images download as JPEG; remote media opens its original URL.
+### Security
+- Raster upload is decoded/resized/re-encoded, with format/pixel/file/data limits. Server accepts only bounded JPEG data and safe HTTPS links; publish-only body limit is 256 KiB.
+### Tests
+- Production/typecheck, changed-file lint, model validation, Chromium picker/4C suites and actual Drizzle/PGlite round-trip checks.
+
 # WOW posts: 4C follow-up
 
 - Emotional visual hook, compact story, 1–2 core phrases and 4–5 varied micro-challenges with independent local progress.

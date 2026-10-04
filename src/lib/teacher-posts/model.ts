@@ -12,6 +12,7 @@ export interface LessonDraft {
 }
 export interface CorePhrase { phrase: string; meaning: string; note: string }
 export interface VisualHook {
+  enabled?: boolean; variant?: "drama" | "expectation" | "deadpan"; uploadedImage?: string;
   template: "wallet" | "clock" | "memory" | "reaction";
   emotion: string; concept: string; caption: string; searchQuery: string; mediaUrl: string;
 }
@@ -55,6 +56,10 @@ export function parseDraft(v: unknown): LessonDraft | null {
   if (v.includeCta && [v.teacherLessonsUrl, v.lessonUrl].some(u => typeof u === "string" && u.trim() && !safePostUrl(u))) return null;
   return { topic: (v.topic as string).trim(), sourceText: (v.sourceText as string).trim(), tone: v.tone as LessonDraft["tone"], level: v.level as LessonDraft["level"], includeCta: v.includeCta, teacherLessonsUrl: (v.teacherLessonsUrl as string).trim(), lessonUrl: (v.lessonUrl as string).trim(), lessonName: (v.lessonName as string).trim() };
 }
+export function safeUploadedImage(value: unknown): value is string {
+  // Only a bounded raster JPEG produced by the upload normalizer; never SVG/HTML.
+  return typeof value === "string" && value.length <= 160_000 && /^data:image\/jpeg;base64,\/9j\/[A-Za-z0-9+/]+={0,2}$/.test(value);
+}
 export function parsePost(v: unknown): WowPost | null {
   if (!record(v) || !text(v.title, 1, 180) || !text(v.hook, 1, 1000) || !text(v.example, 1, 2000) || !text(v.explanation, 1, 8000)) return null;
   const q = v.interactiveQuestion;
@@ -65,6 +70,10 @@ export function parsePost(v: unknown): WowPost | null {
   const visual = v.visual;
   for (const key of ["emotion", "concept", "caption", "searchQuery"]) if (!text(visual[key], 1, key === "concept" ? 600 : 180)) return null;
   if (!text(visual.mediaUrl, 0, 2048) || (visual.mediaUrl && !safePostUrl(visual.mediaUrl))) return null;
+  if (visual.enabled !== undefined && typeof visual.enabled !== "boolean") return null;
+  if (visual.variant !== undefined && !["drama", "expectation", "deadpan"].includes(String(visual.variant))) return null;
+  if (visual.uploadedImage !== undefined && visual.uploadedImage !== "" && !safeUploadedImage(visual.uploadedImage)) return null;
+  if (visual.mediaUrl && visual.uploadedImage) return null;
   if (!Array.isArray(v.core) || v.core.length < 1 || v.core.length > 2 || !v.core.every(c => record(c) && text(c.phrase, 1, 180) && text(c.meaning, 1, 300) && text(c.note, 0, 400))) return null;
   if (!Array.isArray(v.challenges) || v.challenges.length < 4 || v.challenges.length > 5) return null;
   const challenges = v.challenges.map(parseChallenge);
@@ -72,7 +81,7 @@ export function parsePost(v: unknown): WowPost | null {
   const first = challenges[0]!;
   if (first.kind !== "quiz" || first.prompt !== base.interactiveQuestion.question || first.correctIndex !== base.interactiveQuestion.correctIndex || JSON.stringify(first.options) !== JSON.stringify(base.interactiveQuestion.options) || first.feedback !== base.interactiveQuestion.feedback) return null;
   if (v.hook.length > 500 || v.example.length > 700 || v.explanation.length > 1800) return null;
-  return { ...base, formatVersion: 2, visual: { template: visual.template as VisualHook["template"], emotion: visual.emotion as string, concept: visual.concept as string, caption: visual.caption as string, searchQuery: visual.searchQuery as string, mediaUrl: visual.mediaUrl as string }, core: v.core.map(c => ({ phrase: c.phrase.trim(), meaning: c.meaning.trim(), note: c.note.trim() })), challenges: challenges as MicroChallenge[] };
+  return { ...base, formatVersion: 2, visual: { template: visual.template as VisualHook["template"], emotion: visual.emotion as string, concept: visual.concept as string, caption: visual.caption as string, searchQuery: visual.searchQuery as string, mediaUrl: visual.mediaUrl as string, ...(visual.enabled !== undefined ? { enabled: visual.enabled as boolean } : {}), ...(visual.variant !== undefined ? { variant: visual.variant as VisualHook["variant"] } : {}), ...(typeof visual.uploadedImage === "string" ? { uploadedImage: visual.uploadedImage } : {}) }, core: v.core.map(c => ({ phrase: c.phrase.trim(), meaning: c.meaning.trim(), note: c.note.trim() })), challenges: challenges as MicroChallenge[] };
 }
 /** Account identity must come from the server-verified Telegram session. */
 export function resolveCta(draft: LessonDraft, username: string | null, siteUrl: string): PostCta | null {
@@ -84,7 +93,7 @@ export function resolveCta(draft: LessonDraft, username: string | null, siteUrl:
 }
 export function formatPost(post: WowPost, cta: PostCta | null): string {
   if (post.formatVersion === 2 && post.challenges && post.core) {
-    return [post.title, post.hook, ...(post.visual?.mediaUrl ? [post.visual.mediaUrl] : []), post.explanation, post.example,
+    return [post.title, post.hook, ...(post.visual?.enabled !== false && post.visual?.mediaUrl ? [post.visual.mediaUrl] : []), post.explanation, post.example,
       post.core.map(c => `${c.phrase} — ${c.meaning}${c.note ? `\n${c.note}` : ""}`).join("\n\n"),
       "Быстрый вызов: попробуйте без подсказки 👇",
       ...post.challenges.map((c, i) => `${i + 1}. ${c.prompt}${c.options.length ? `\n${c.options.map((o, j) => `${String.fromCharCode(OPTION_LETTER_CODE + j)}) ${o}`).join("\n")}` : ""}`),

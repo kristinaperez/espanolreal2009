@@ -37,5 +37,16 @@ try {
  const author=(await client.query('SELECT id FROM teacher_post_authors')).rows[0].id;
  await assert.rejects(client.query("INSERT INTO teacher_posts(author_id,slug,post,mode) VALUES ($1,$2,'{}','mock')",[author,created.slug]));
  await assert.rejects(client.query("INSERT INTO teacher_posts(author_id,slug,post,mode) VALUES ('00000000-0000-0000-0000-000000000000','foreign','{}','mock')"));
+ const model=load("src/lib/teacher-posts/model.ts",{});
+ const templates=load("src/server/teacher-posts/templates.ts",{});
+ const examples=load("src/lib/teacher-posts/examples.ts",{}).wowExamples;
+ const v2=templates.templatePost({topic:"",sourceText:examples[1].sourceText,tone:"humor",level:"A1-A2"});
+ for (const visual of [ {...v2.visual,enabled:false,variant:"deadpan"}, {...v2.visual,enabled:true,variant:"expectation",uploadedImage:"data:image/jpeg;base64,/9j/AAAA"} ]) {
+   const content=model.parsePost({...v2,visual});assert.ok(content);
+   const saved=await repository.publishPost(user,draft,{post:content,cta:null,mode:"mock"});
+   const loaded=await repository.publicPost(saved.slug);
+   assert.deepEqual(JSON.parse(JSON.stringify(loaded.post)),JSON.parse(JSON.stringify(content)));
+ }
+ console.log('V2 meme choice, no-meme and bounded uploaded raster survive actual repository publish/read.');
  console.log('Real Drizzle/PGlite repository: publish/read, unique slug/identity, public projection, author ownership FK and transaction rollback passed.');
 } finally { await client.close(); }

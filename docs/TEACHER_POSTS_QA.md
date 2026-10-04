@@ -53,3 +53,9 @@ Production build/typecheck, changed-module ESLint, security regressions and stri
 Run `node scripts/e2e-wow-4c.cjs <baseURL>` with Playwright/Chromium configured as above. The original visual is an SVG/CSS loop; PNG export is static. External GIFs, copyrighted clip discovery and native social apps are not covered.
 
 The current 4C static export also passed; server API routes were restored afterward.
+
+## Follow-up: context meme picker
+
+`e2e-meme-picker.cjs` verifies three mutually exclusive variants, no-meme rendering, reload restoration, a real PNG file normalized into bounded JPEG, download, upload recovery, SVG rejection, unsafe URL rejection, HTTPS replacement, copy opt-out, mobile widths 320/390/768/1280, and unchanged student localStorage. Public UI is verified using controlled read responses, including both no-meme and uploaded image. Actual repository publish/read of v2 choice/opt-out/upload fields passes against isolated PGlite; this does not claim deployment of the production DB migration. Existing 4C suite, pure model/provider/auth checks, production build/TypeScript and changed-file lint pass. External social apps, remote GIF availability and real Safari/iPhone uploads are not tested.
+
+Reproduction: start production server and run `node scripts/e2e-meme-picker.cjs <baseURL>` with the same Playwright environment described above.

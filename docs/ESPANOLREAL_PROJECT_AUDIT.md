@@ -43,3 +43,7 @@ Mobile review found the root landing's oversized header and the statistics calen
 ## 4C post-generation follow-up
 
 Scope: isolated post schema/components, editorial mock packs and AI instructions; existing TeacherLesson, student progress, payment and authentication policy are unchanged. New risks reviewed: malformed AI exercises, accidental answer disclosure in social copy, invented media/history, and legacy stored JSON. Strict v2 validation, separate answer export, original/manual media and backward-compatible parsing address these risks. Live AI language quality and real-device media/share behavior remain unverified.
+
+## Context meme selection change record
+
+CHANGE/WHY: add three contextual meme choices plus custom upload/link and no-meme option so tutors control the visual rather than accepting one generated card. FILES: post model, picker/artwork/editor/preview/generator, publish body bound, isolated QA scripts. RISK: storage/body size, unsafe upload payload, stale async image, export/public opt-out mismatch. Mitigation: bounded re-encoded JPEG, safe HTTPS validation, no external server-side URL fetch, account/post guards and common parse/render rules. TEST/RESULT: strict model checks, production TypeScript/build, changed ESLint, Chromium responsive/upload/restore/public UI and Drizzle/PGlite JSON round trips pass. Real iPhone/Safari and live Telegram/publishing remain separate acceptance checks.
