@@ -80,3 +80,6 @@ assert.equal((await generateRoute.POST({...request("https://preview.example.com"
 assert.equal((await generateRoute.POST({...request("https://preview.example.com"),body:{...draft,mode:"mock"}})).body.mode,"mock");
 assert.equal(generateCalls[0],true);
 console.log("Configured AI is auth-gated; explicit guest mock never calls paid AI.");
+
+assert.ok(model.parseDraft({ ...draft, includeCta: false, teacherLessonsUrl: "not-a-url", lessonUrl: "javascript:bad" }));
+assert.equal(model.parseDraft({ ...draft, includeCta: true, teacherLessonsUrl: "not-a-url" }), null);

@@ -1,3 +1,9 @@
+# Generator follow-up
+
+- Guest generation starts the labelled mock directly; no separate unlock click.
+- Disabling lesson CTA disables link fields and skips URL validation for them.
+- Removed the account-specific KristinaPerez9 helper from the editor UI. Server CTA policy unchanged.
+
 # WOW social posts and mobile layout
 
 - Responsive landing header/hero, separate social post studio, structured edit/quiz and eight social export buttons.

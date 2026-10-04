@@ -41,3 +41,7 @@ Source: `feature/responsive-wow-posts`, based on open PR4/fa49ba8c. Local produc
 Real Telegram OAuth/domain setup, real AI language quality, production PostgreSQL and Safari/iPhone/PWA were not tested. Server secrets/model and post migration are required to enable real AI/publishing. In this session, test mode is usable with the mock; public API persistence was checked against PGlite through the actual repository and publication UI used controlled responses. Do not interpret a successful mocked UI flow as a deployed database migration or verified Telegram login.
 
 Full-project lint has known pre-existing failures in auth/providers/payment/confetti (see Phase1 QA); changed files pass. Platform social app behavior was not tested on real devices. Buttons use verified Telegram/WhatsApp sharing flows and native share/copy fallback for other platforms, without automatic sending. Static export has no server APIs.
+
+## Follow-up: inactive generation and account helper
+
+Verified in Chromium: guest enters source, leaves an invalid URL, unchecks lesson CTA, and generates directly without pressing the separate test-mode button. Generation is enabled, disabled URL fields do not participate in browser/server URL validation, and the guest output has no CTA. Re-enabling the checkbox restores URL validation. The account-specific KristinaPerez9 helper is absent from the UI; verified-server CTA policy is unchanged. Typecheck, changed-file lint, production build, pure checks and the expanded browser suite pass.

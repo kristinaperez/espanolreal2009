@@ -1,6 +1,6 @@
 # WOW social posts and responsive landing
 
-User scope update: keep existing TeacherLesson/demo practice unchanged; build a social post studio. Canonical generator: `/teacher/posts/new`; `/teacher/lessons/new` is a compatibility entry to the same post UI, not a lesson editor. `/teacher` provides Telegram login. Header links route unauthenticated visitors to the login gate; successful existing Telegram auth leaves them in the generator. Email/magic-link authentication is not added.
+User scope update: keep existing TeacherLesson/demo practice unchanged; build a social post studio. Canonical generator: `/teacher/posts/new`; `/teacher/lessons/new` is a compatibility entry to the same post UI, not a lesson editor. `/teacher` provides Telegram login. Header links open the generator; guests can generate a labelled template directly, with optional Telegram login for AI/publication; successful existing Telegram auth leaves them in the generator. Email/magic-link authentication is not added.
 
 ## Component architecture
 
@@ -49,8 +49,8 @@ Automated evidence: [TEACHER_POSTS_QA.md](TEACHER_POSTS_QA.md).
 
 ## Deploy/acceptance checklist
 
-1. Open the new PR's Netlify preview, then `/teacher/posts/new`.
-2. Try test mode; enter a real note (20–8000 chars), generate, edit title/quiz and copy the text.
+1. Open the PR's Netlify preview, then `/teacher/posts/new`.
+2. Enter a real note (20–8000 chars) and generate directly; guests get the labelled mock without an extra unlock click. Try disabling the lesson-link checkbox: its fields are disabled and their URLs do not block generation. Edit title/quiz and copy the text.
 3. Check mobile navigation in RU/FR, stacked panels, and widths 320/390/768/1280.
 4. Configure verified Telegram login on the preview domain (issue #1 is a pre-existing auth issue), server DB and the additive post migration for publication. Check another teacher and KristinaPerez9 for their CTA policies.
 5. Configure an approved AI model/key and verify real generated content. Review language accuracy before posting.

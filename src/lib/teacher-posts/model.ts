@@ -38,7 +38,7 @@ export function safePostUrl(value: string): string | null {
 export function parseDraft(v: unknown): LessonDraft | null {
   if (!record(v) || !text(v.topic, 0, 160) || !text(v.sourceText, 20, 8000) || !tones.includes(v.tone as LessonDraft["tone"]) || !levels.includes(v.level as LessonDraft["level"]) || typeof v.includeCta !== "boolean") return null;
   for (const field of ["teacherLessonsUrl", "lessonUrl", "lessonName"]) if (!text(v[field], 0, field === "lessonName" ? 120 : 2048)) return null;
-  if ([v.teacherLessonsUrl, v.lessonUrl].some(u => typeof u === "string" && u.trim() && !safePostUrl(u))) return null;
+  if (v.includeCta && [v.teacherLessonsUrl, v.lessonUrl].some(u => typeof u === "string" && u.trim() && !safePostUrl(u))) return null;
   return { topic: (v.topic as string).trim(), sourceText: (v.sourceText as string).trim(), tone: v.tone as LessonDraft["tone"], level: v.level as LessonDraft["level"], includeCta: v.includeCta, teacherLessonsUrl: (v.teacherLessonsUrl as string).trim(), lessonUrl: (v.lessonUrl as string).trim(), lessonName: (v.lessonName as string).trim() };
 }
 export function parsePost(v: unknown): WowPost | null {

@@ -25,7 +25,17 @@ const source = 'В баре можно сказать «Me pones un café con le
   }
   for (const width of [320,390]) for (const route of ['/learn','/learn/lessons','/learn/map','/learn/stats','/learn/settings']) await noOverflow(route,width);
   await noOverflow('/teacher/posts/new',390);
-  await page.getByRole('button',{name:'Попробовать тестовый режим'}).click();
+  assert.equal(await page.getByRole('button',{name:'Сгенерировать WOW-пост',exact:true}).isEnabled(),true);
+  assert.equal(await page.getByText(/Для аккаунта KristinaPerez9 сохраняется/).count(),0);
+  await page.getByLabel('Исходный пост или заметка').fill(source);
+  await page.getByLabel('Общая страница ваших уроков').fill('not-a-url');
+  await page.getByLabel('Добавить ссылку на мои уроки').uncheck();
+  assert.equal(await page.getByLabel('Общая страница ваших уроков').isDisabled(),true);
+  assert.equal(await page.getByRole('button',{name:'Сгенерировать WOW-пост',exact:true}).isEnabled(),true);
+  await page.getByRole('button',{name:'Сгенерировать WOW-пост',exact:true}).click();
+  await page.locator('article h2').waitFor();
+  assert.equal(await page.locator('article a').count(),0);
+  await page.getByLabel('Добавить ссылку на мои уроки').check();
   await page.getByLabel('Тема / ключевая фраза').fill('Me pones un café');
   await page.getByLabel('Исходный пост или заметка').fill(source);
   await page.getByLabel('Общая страница ваших уроков').fill('https://example.com/lessons');
