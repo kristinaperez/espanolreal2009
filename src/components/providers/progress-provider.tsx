@@ -44,12 +44,15 @@ export function ProgressProvider({
   const ref = useRef<ProgressState>(state);
 
   useEffect(() => {
+    const timer = window.setTimeout(() => {
     const loaded = loadState();
     if (loaded) {
       ref.current = loaded;
       setState(loaded);
     }
     setReady(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {

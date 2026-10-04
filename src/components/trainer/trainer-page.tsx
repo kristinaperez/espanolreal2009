@@ -94,7 +94,8 @@ export function TrainerPage({
   useEffect(() => {
     if (!protectedContent || locked) return;
     if (payloads) return;
-    void loadProtected();
+    const timer = window.setTimeout(() => { void loadProtected(); }, 0);
+    return () => window.clearTimeout(timer);
   }, [loadProtected, locked, payloads, protectedContent]);
 
   const activeLessons = useMemo(

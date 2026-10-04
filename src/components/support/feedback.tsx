@@ -97,12 +97,15 @@ function FeedbackDialog({
 
   useEffect(() => {
     if (!open) return;
+    const timer = window.setTimeout(() => {
     setType(initialType ?? null);
     setIssueReason("");
     setMessage("");
     setSending(false);
     setSent(false);
     setError(null);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [initialType, open]);
 
   useEffect(() => {
@@ -124,7 +127,7 @@ function FeedbackDialog({
     if (context?.lesson) bits.push(`l${context.lesson}`);
     if (context?.card) bits.push(`c${context.card}`);
     return bits.join("_").slice(0, 64);
-  }, [context?.card, context?.lesson, type]);
+  }, [context, type]);
 
   const botUrl = `https://t.me/${SUPPORT_BOT_USERNAME}?start=${encodeURIComponent(startPayload)}`;
   const canSubmit = Boolean(type && (message.trim() || (cardReport && issueReason)));

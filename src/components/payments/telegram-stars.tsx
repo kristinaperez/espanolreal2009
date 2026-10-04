@@ -150,7 +150,7 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
       setError((caught as Error).message);
       setPhase("error");
     }
-  }, [account?.productId, checkOrder, startPolling]);
+  }, [account, checkOrder, startPolling]);
 
   const restore = useCallback(async () => {
     setError(null);

@@ -121,14 +121,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           async
         />
         <script
-          // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var r=localStorage.getItem('espanol-real:progress:v1');var t=r?((JSON.parse(r).settings||{}).theme):'system';var d=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');}catch(e){}})();`,
           }}
         />
         <script
           type="application/ld+json"
-          // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
         />
         <LanguageProvider>
