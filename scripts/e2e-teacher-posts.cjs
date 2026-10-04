@@ -43,7 +43,7 @@ const source = 'В баре можно сказать «Me pones un café con le
   await page.waitForFunction(k=>localStorage.getItem(k),progressKey);
   const before=await page.evaluate(k=>localStorage.getItem(k),progressKey);
   await page.getByRole('button',{name:'Сгенерировать WOW-пост',exact:true}).click();
-  await page.getByRole('heading',{name:'🇪🇸 Me pones un café'}).waitFor();
+  await page.getByRole('heading',{name:'Me pones un café'}).waitFor();
   assert.ok(await page.getByRole('link',{name:'Уроки преподавателя →'}).isVisible());
   assert.equal(await page.getByRole('button',{name:'Опубликовать интерактивный пост'}).isDisabled(),true);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
@@ -60,7 +60,7 @@ const source = 'В баре можно сказать «Me pones un café con le
   assert.equal(await page.evaluate(()=>window.lastCopied),'https://example.com/lessons');
   await page.getByRole('button',{name:'Instagram',exact:true}).click();
   assert.ok((await page.evaluate(()=>window.lastCopied)).includes(source));
-  await page.waitForTimeout(800);await page.reload();await page.getByRole('heading',{name:'🇪🇸 Кофе без школьного испанского'}).waitFor();
+  await page.waitForTimeout(800);await page.reload();await page.getByRole('heading',{name:'Кофе без школьного испанского'}).waitFor();
   await page.getByRole('button',{name:'Попробовать тестовый режим'}).click();
   assert.equal(await page.getByLabel('Исходный пост или заметка').inputValue(),source);
   await page.getByLabel('Конкретный урок').fill('https://example.com/coffee');
@@ -85,6 +85,7 @@ const source = 'В баре можно сказать «Me pones un café con le
   // Simulated verified session + publish/read responses exercise UI only; actual ownership is covered by route/DB checks.
   await context.route('**/api/telegram/session',r=>r.fulfill({json:{ok:true,configured:true,botUsername:'test',starsPrice:500,productId:'premium-45',user:{telegramId:123,firstName:'QA',username:'KristinaPerez9'},premium:{active:false},orders:[]}}));
   await page.reload(); await page.getByRole('button',{name:'Сгенерировать WOW-пост',exact:true}).waitFor();
+  await page.waitForFunction(()=>Array.from(document.querySelectorAll('textarea')).some(e=>e.closest('label')?.textContent.includes('Исходный пост или заметка') && e.value===''));
   assert.equal(await page.getByLabel('Исходный пост или заметка').inputValue(),'','guest draft leaked to signed-in account');
   const dto={title:'Пост QA',hook:'Одна фраза — новый разговор',example:'Un café',explanation:source,interactiveQuestion:{question:'Что закажем?',options:['Кофе','Чай'],correctIndex:0,feedback:'Un café — кофе'}};
   const cta={label:'Продолжить в EspanolReal',url:'https://espanolreal.es/learn'};
@@ -97,7 +98,7 @@ const source = 'В баре можно сказать «Me pones un café con le
   await page.getByRole('link',{name:'Продолжить в EspanolReal →'}).waitFor();
   await page.getByRole('button',{name:'Опубликовать интерактивный пост'}).click();
   await page.getByRole('link',{name:'Открыть опубликованный пост →'}).click();
-  await page.getByRole('heading',{name:'🇪🇸 Пост QA'}).waitFor();
+  await page.getByRole('heading',{name:'Пост QA'}).waitFor();
   await page.getByRole('button',{name:'Кофе',exact:true}).click();await page.getByText(/Верно!/).waitFor();
   assert.equal(await page.evaluate(k=>localStorage.getItem(k),progressKey),before);
   await page.unroute('**/api/teacher/posts/public?**');

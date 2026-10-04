@@ -45,3 +45,11 @@ Full-project lint has known pre-existing failures in auth/providers/payment/conf
 ## Follow-up: inactive generation and account helper
 
 Verified in Chromium: guest enters source, leaves an invalid URL, unchecks lesson CTA, and generates directly without pressing the separate test-mode button. Generation is enabled, disabled URL fields do not participate in browser/server URL validation, and the guest output has no CTA. Re-enabling the checkbox restores URL validation. The account-specific KristinaPerez9 helper is absent from the UI; verified-server CTA policy is unchanged. Typecheck, changed-file lint, production build, pure checks and the expanded browser suite pass.
+
+## Follow-up: 4C post format
+
+Production build/typecheck, changed-module ESLint, security regressions and strict model/provider-contract checks passed. Both the existing browser suite and `scripts/e2e-wow-4c.cjs` passed against the production server. New checks cover all three source packs, five mechanics and feedback, accent-aware fill grading, open response without fake grading, editable first-question synchronization, source-specific titles, separate reader/answer clipboard export, PNG download, draft restoration/account hydration, reduced motion and widths 320/390/768/1280 without overflow. Exact course localStorage is unchanged. Legacy JSON remains accepted; malformed v2 core/task counts, unsafe media URL and mismatched legacy mirror are rejected. No live AI provider calls were made; tests verify the contract with stubs and actual guest template generation.
+
+Run `node scripts/e2e-wow-4c.cjs <baseURL>` with Playwright/Chromium configured as above. The original visual is an SVG/CSS loop; PNG export is static. External GIFs, copyrighted clip discovery and native social apps are not covered.
+
+The current 4C static export also passed; server API routes were restored afterward.

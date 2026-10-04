@@ -23,10 +23,11 @@ assert.equal(model.resolveCta({ ...draft, teacherLessonsUrl: "" }, null, "https:
 let providerBody;
 let providerResult;
 const env = {};
-const generator = load("src/server/teacher-posts/generate.ts", { process: { env }, require: name => name === "server-only" ? {} : model, fetch: async (_, init) => { providerBody = JSON.parse(init.body); return { ok: true, json: async () => providerResult }; } });
+const templates = load("src/server/teacher-posts/templates.ts");
+const generator = load("src/server/teacher-posts/generate.ts", { process: { env }, require: name => name === "server-only" ? {} : name.endsWith("templates") ? templates : model, fetch: async (_, init) => { providerBody = JSON.parse(init.body); return { ok: true, json: async () => providerResult }; } });
 const result = await generator.generatePost(draft);
 assert.equal(result.mode, "mock");
-assert.equal(result.post.explanation, draft.sourceText);
+assert.ok(result.post.explanation.includes(draft.sourceText));
 assert.ok(model.parsePost(result.post));
 const q = result.post.interactiveQuestion;
 for (const patch of [{ correctIndex: 7 }, { correctIndex: "0" }, { options: ["same", "same"] }, { options: [] }, { feedback: "" }]) assert.equal(model.parsePost({ ...result.post, interactiveQuestion: { ...q, ...patch } }), null);
@@ -83,3 +84,39 @@ console.log("Configured AI is auth-gated; explicit guest mock never calls paid A
 
 assert.ok(model.parseDraft({ ...draft, includeCta: false, teacherLessonsUrl: "not-a-url", lessonUrl: "javascript:bad" }));
 assert.equal(model.parseDraft({ ...draft, includeCta: true, teacherLessonsUrl: "not-a-url" }), null);
+
+const examples = load("src/lib/teacher-posts/examples.ts").wowExamples;
+const titles = [];
+for (const example of examples) {
+ const p = templates.templatePost({...draft, topic: "", sourceText: example.sourceText});
+ titles.push(p.title);
+ assert.ok(model.parsePost(p), example.name);
+ assert.equal(p.formatVersion,2);
+ assert.equal(p.core.length,2);
+ assert.equal(p.challenges.length,5);
+ assert.equal(new Set(p.challenges.map(t=>t.kind)).size,5);
+ assert.ok(p.explanation.length < example.sourceText.length + 400);
+ assert.equal(p.visual.mediaUrl, "");
+ const out = model.formatPost(p,null);
+ assert.equal(out.includes("Проверьте себя:"),false);
+ assert.equal(out.includes(p.challenges[0].feedback),false,'answers leaked in social copy');
+ assert.ok(model.formatAnswerKey(p).includes(p.challenges[0].feedback));
+ const first=p.challenges[0];
+ assert.equal(model.checkChallenge(first, first.correctIndex),true);
+ assert.equal(model.checkChallenge(first,(first.correctIndex+1)%first.options.length),false);
+ const filling=p.challenges.find(t=>t.kind==='fill');
+ assert.equal(model.checkChallenge(filling,' '+filling.acceptedAnswers[0].toUpperCase()+'! '),true);
+ assert.equal(model.checkChallenge(p.challenges.at(-1),'my own sentence'),null);
+ assert.equal(model.parsePost({...p,core:[...p.core,p.core[0]]}),null);
+ assert.equal(model.parsePost({...p,challenges:p.challenges.slice(0,3)}),null);
+ assert.equal(model.parsePost({...p,visual:{...p.visual,mediaUrl:'javascript:alert(1)'}}),null);
+ assert.equal(model.parsePost({...p,interactiveQuestion:{...p.interactiveQuestion,question:'out of sync'}}),null);
+}
+assert.equal(new Set(titles).size,3);
+const money=templates.templatePost({...draft,topic:'',sourceText:examples[1].sourceText});
+assert.equal(money.core[0].meaning,'Я на мели');
+assert.equal(money.core[1].meaning,'Это стоит целое состояние');
+assert.equal(money.explanation.includes('Филиппа'),false);
+const legacy={title:'Legacy',hook:'Hook',example:'Example',explanation:'Explanation',interactiveQuestion:{question:'Q',options:['one','two'],correctIndex:0,feedback:'Feedback'}};
+assert.ok(model.parsePost(legacy),'old published JSON no longer readable');
+console.log('Three editorial 4C examples, content budgets, 5 distinct mechanics, grading, legacy compatibility, no fabricated media and separate answer export passed.');

@@ -1,3 +1,10 @@
+# WOW posts: 4C follow-up
+
+- Emotional visual hook, compact story, 1–2 core phrases and 4–5 varied micro-challenges with independent local progress.
+- Three curated demo packs: aprovechar, money idioms, saber/saberse; honest basic fallback for other sources and stricter real AI prompt/schema.
+- Original animated cat visual, optional teacher-supplied image/GIF, static PNG download; editable challenges and separate answer-key export.
+- Existing legacy posts remain readable; no lesson/course progress or database migration changes.
+
 # Generator follow-up
 
 - Guest generation starts the labelled mock directly; no separate unlock click.

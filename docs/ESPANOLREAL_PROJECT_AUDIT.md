@@ -39,3 +39,7 @@ Re-read main e3e4d905 and open PR/Issues: PR4 Phase1 is still open at fa49ba8c; 
 New isolated TeacherPost author/publishing module; existing authenticated Telegram session is reused, author fields are never accepted from the client. Local drafts and templates support preview without account/server AI configuration. Public posts are noindex, not in the course/sitemap. Separate additive schema supports posting; no live migration was run.
 
 Mobile review found the root landing's oversized header and the statistics calendar's title/controls fixed in one row. Both layouts were updated without changing course calculations/content. Detailed architecture and deploy requirements: TEACHER_POSTS.md; reproducible checks: teacher-post-checks.mjs, e2e-teacher-posts.cjs, teacher-post-db-checks.mjs.
+
+## 4C post-generation follow-up
+
+Scope: isolated post schema/components, editorial mock packs and AI instructions; existing TeacherLesson, student progress, payment and authentication policy are unchanged. New risks reviewed: malformed AI exercises, accidental answer disclosure in social copy, invented media/history, and legacy stored JSON. Strict v2 validation, separate answer export, original/manual media and backward-compatible parsing address these risks. Live AI language quality and real-device media/share behavior remain unverified.

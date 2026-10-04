@@ -57,3 +57,13 @@ Automated evidence: [TEACHER_POSTS_QA.md](TEACHER_POSTS_QA.md).
 6. Publish, open the returned public URL in a separate browser, answer the quiz and copy/share. Confirm no course XP/SRS changes.
 
 Server APIs require the Next/Netlify server build. Static export preserves student functionality and renders the studio shell but cannot perform server generation/publication/login. Live Telegram login, real paid AI calls, production DB and Safari/PWA require deployment/device acceptance and are not claimed by local automated tests.
+
+## 4C output (follow-up)
+
+Version 2 retains legacy fields and adds `visual`, `core` and `challenges`. Runtime validation limits core to 1–2 phrases and challenges to 4–5, with at least four distinct mechanics, a first quiz and a final personal response. The first challenge mirrors the legacy question. Existing stored posts still parse and render; JSON persistence requires no new migration.
+
+`templates.ts` contains three source-matched editorial demo packs (aprovechar/ocasión, sin blanca/ojo de la cara, saber/saberse). Other mock inputs receive a labelled basic source-derived template, not a claim of semantic AI transformation. The configured AI adapter requests the same strict structure, short story, varied situational challenges and linguistic accuracy. It forbids invented etymology, media links and unsupported claims that standard Spanish is wrong. Real provider language quality still needs live evaluation.
+
+`VisualHook` renders an original short CSS/SVG emotional cat loop with reduced-motion support. Teachers may supply an HTTPS image/GIF URL; no external meme search or licensed clip is performed. The download is an original static PNG card, not an animated GIF. `ChallengeTrainer` uses private component state; it never sends answers or awards student XP/SRS. Choice/fill exercises provide feedback; the final personal response is not automatically graded. `ChallengeEditor` edits each prompt/options/feedback. Reader export hides answers; `formatAnswerKey` exports them separately for the teacher.
+
+The three source buttons fill the form for quick comparison. For money, the narrative distinguishes being broke from an expensive purchase rather than conflating the two idioms. No unsupported Philip II origin is asserted. For saber/saberse, `saber de memoria` is accepted as standard language.
