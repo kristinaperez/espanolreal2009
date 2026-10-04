@@ -7,8 +7,9 @@ import { TelegramLogin } from "@/components/auth/telegram-login";
 import { HeaderNavUpdate } from "@/components/layout/header-nav-update";
 import { emptyDraft, formatPost, formatAnswerKey, parseDraft, parsePost, safePostUrl, type GeneratedPost, type LessonDraft } from "@/lib/teacher-posts/model";
 import { wowExamples } from "@/lib/teacher-posts/examples";
-import { socialPlatforms, shareUrl, type SocialPlatform } from "@/lib/teacher-posts/share";
+import { shareUrl, type SocialPlatform } from "@/lib/teacher-posts/share";
 import { MemePicker } from "./meme-picker";
+import { ShareButton, shareNetworks } from "@/components/share/share-button";
 import { PostPreview } from "./post-preview";
 import { fieldClass, PostEditor } from "./post-editor";
 
@@ -146,7 +147,7 @@ export function TeacherPostGenerator() {
               <div className="grid gap-2 sm:grid-cols-2"><button type="button" className={secondary} disabled={!parsePost(generated.post)} onClick={() => void copy(exportText, "Текст поста скопирован")}><Copy size={16} />Скопировать текст для поста</button><button type="button" className={secondary} disabled={!shareLink || !safePostUrl(shareLink)} onClick={() => void copy(shareLink, "Ссылка скопирована")}>Скопировать ссылку</button></div>
             </div>
             <button type="button" className={`${secondary} mt-3 w-full`} disabled={!parsePost(generated.post)} onClick={() => void copy(formatAnswerKey(generated.post), "Ответы для преподавателя скопированы")}>Скопировать ответы отдельно</button>
-            <h3 className="mb-3 mt-7 text-xs font-bold uppercase tracking-widest text-stone-500">Поделиться в соцсетях</h3><div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{socialPlatforms.map(platform => <button type="button" key={platform} disabled={!parsePost(generated.post)} className={secondary} onClick={() => void share(platform)}>{platform}</button>)}</div><p className="mt-3 text-xs leading-5 text-stone-500">Telegram и WhatsApp откроют окно отправки. Остальные кнопки вызовут меню «Поделиться», где можно выбрать приложение, или скопируют текст для вставки. Отправку подтверждаете вы.</p>
+            <h3 className="mb-3 mt-7 text-xs font-bold uppercase tracking-widest text-stone-500">Поделиться в соцсетях</h3><div className="flex flex-wrap gap-2">{shareNetworks.map(network => <ShareButton key={network.name} network={network} disabled={!parsePost(generated.post)} onClick={platform => void share(platform)} />)}</div><p className="mt-3 text-xs leading-5 text-stone-500">Telegram и WhatsApp откроют окно отправки. Остальные кнопки вызовут меню «Поделиться», где можно выбрать приложение, или скопируют текст для вставки. Отправку подтверждаете вы.</p>
           </>}
           {manualCopy && <label className="mt-5 block text-sm font-bold">Текст для ручного копирования<textarea readOnly value={manualCopy} onFocus={e => e.target.select()} rows={8} className={fieldClass} /></label>}
         </section>
