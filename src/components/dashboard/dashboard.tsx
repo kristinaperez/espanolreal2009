@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Flame, Repeat, Sparkles, Trophy, Zap } from "lucide-react";
 import { Badge, Card, ProgressBar } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { achievementsConfig, categoryById } from "@/lib/content/config";
 import { addDays, dateKey, daysBetween } from "@/lib/utils";
 
 export function Dashboard() {
+  const router = useRouter();
   const { state, ready, metas, access } = useProgress();
   const { serverPremium } = useAuth();
   const stats = useStats();
@@ -103,7 +105,7 @@ export function Dashboard() {
               <button
                 key={goal}
                 type="button"
-                onClick={() => window.location.assign("/learn/settings#goal")}
+                onClick={() => router.push("/learn/settings#goal")}
                 className="rounded-full border border-line px-3 py-1 text-xs font-bold text-muted hover:border-primary hover:text-primary"
               >
                 {goal} XP

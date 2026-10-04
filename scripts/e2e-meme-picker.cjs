@@ -18,12 +18,12 @@ const base=process.argv[2]||'http://127.0.0.1:3100';
  await picker.getByRole('button',{name:'Без мема',exact:true}).click();assert.equal(await page.locator('article figure').count(),0);await picker.getByRole('button',{name:'Вернуть свою картинку',exact:true}).click();await image.waitFor();assert.equal(await image.getAttribute('src'),src);
  const dl=page.waitForEvent('download');await page.getByRole('button',{name:'Скачать свою картинку',exact:true}).click();assert.equal((await dl).suggestedFilename(),'wow-meme-upload.jpg');
  await page.waitForTimeout(750);await page.reload();await page.waitForFunction(()=>document.querySelector('article figure img')?.naturalWidth>0);assert.equal(await image.getAttribute('src'),src);
- await page.getByRole('button',{name:'Скопировать текст для поста'}).click();assert.equal((await page.evaluate(()=>window.copied)).includes('data:image'),false);
+ await page.getByRole('button',{name:'Скопировать текст',exact:true}).click();assert.equal((await page.evaluate(()=>window.copied)).includes('data:image'),false);
  await picker.getByLabel('Загрузить свою картинку',{exact:true}).setInputFiles({name:'unsafe.svg',mimeType:'image/svg+xml',buffer:Buffer.from('<svg/>')});await picker.getByRole('alert').waitFor();assert.equal(await image.getAttribute('src'),src);
  await picker.getByLabel('Ссылка на GIF').fill('javascript:alert(1)');await picker.getByRole('button',{name:'Использовать ссылку'}).click();await picker.getByText('Нужен полный публичный адрес https://…',{exact:true}).waitFor();
  await picker.getByLabel('Ссылка на GIF').fill('https://example.com/meme.gif');await picker.getByRole('button',{name:'Использовать ссылку'}).click();await picker.getByText('Выбрана своя картинка / GIF',{exact:true}).waitFor();
- await page.getByRole('button',{name:'Скопировать текст для поста'}).click();assert.ok((await page.evaluate(()=>window.copied)).includes('https://example.com/meme.gif'));
- await picker.getByRole('button',{name:'Без мема',exact:true}).click();await page.getByRole('button',{name:'Скопировать текст для поста'}).click();assert.equal((await page.evaluate(()=>window.copied)).includes('https://example.com/meme.gif'),false);
+ await page.getByRole('button',{name:'Скопировать текст',exact:true}).click();assert.ok((await page.evaluate(()=>window.copied)).includes('https://example.com/meme.gif'));
+ await picker.getByRole('button',{name:'Без мема',exact:true}).click();await page.getByRole('button',{name:'Скопировать текст',exact:true}).click();assert.equal((await page.evaluate(()=>window.copied)).includes('https://example.com/meme.gif'),false);
  await picker.getByRole('button',{name:'Без слов',exact:true}).click();
  for(const width of [320,390,768,1280]){await page.setViewportSize({width,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'picker overflow '+width);}
  await page.setViewportSize({width:390,height:844});await page.screenshot({path:process.env.MEME_QA_SCREENSHOT||'/tmp/meme-picker-qa.png',fullPage:true});

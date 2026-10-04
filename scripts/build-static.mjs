@@ -14,6 +14,7 @@ import path from "node:path";
 
 const API_DIR = path.join(process.cwd(), "src", "app", "api");
 const STASH = path.join(process.cwd(), ".telegram-api-stash");
+const SERVER_ROUTES = ["p", "media"].map(name => [path.join(process.cwd(), "src", "app", name), path.join(process.cwd(), `.static-${name}-stash`)]);
 
 function move(from, to) {
   if (!fs.existsSync(from)) return false;
@@ -31,7 +32,11 @@ if (fs.existsSync(STASH)) {
   move(STASH, API_DIR);
 }
 
+for (const [source, stash] of SERVER_ROUTES) {
+  if (fs.existsSync(stash)) { if (fs.existsSync(source)) throw new Error(`Both ${source} and ${stash} exist`); move(stash, source); }
+}
 try {
+  for (const [source, stash] of SERVER_ROUTES) move(source, stash);
   const stashed = move(API_DIR, STASH);
   if (stashed) {
     console.log("• Moved src/app/api aside (server routes are not exportable).");
@@ -46,6 +51,7 @@ try {
     },
   });
 } finally {
+  for (const [source, stash] of SERVER_ROUTES) if (fs.existsSync(stash) && !fs.existsSync(source)) move(stash, source);
   if (fs.existsSync(STASH) && !fs.existsSync(API_DIR)) {
     move(STASH, API_DIR);
     console.log("• Restored src/app/api.");

@@ -1,3 +1,16 @@
+## [2026-10-04] — Image and public-link sharing
+
+### Added
+- Eight accessible Simple Icons, typed shared buttons/config, RU/FR sharing labels.
+- Precomputed image File for mobile system sharing, caption clipboard fallback, cancellation handling and explicit image download.
+- Netlify Blobs immutable public snapshots, server-rendered /p/[id], specific OG/Twitter raster images and vertical Pinterest rendition.
+- Seven encoded desktop share intents, Instagram manual upload, preview retention/orphan cleanup.
+### Fixed
+- Image was never passed to share; non-WhatsApp buttons mostly copied text. Profiles are not required.
+- Existing full-project lint errors corrected separately without disabling rules; language persistence waits for hydration.
+### Tests
+- Full lint/typecheck/build, static export, security/model checks, Sharp/store unit checks and Chromium file/intent/OG tests. Installed apps and live authenticated storage writes remain manual acceptance.
+
 ## [2026-10-04] — Context meme picker
 
 ### Added

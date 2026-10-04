@@ -10,23 +10,23 @@ export function Confetti({ active, pieces = 42 }: { active: boolean; pieces?: nu
 
   useEffect(() => {
     if (!active) return;
-    setVisible(true);
+    const start = window.setTimeout(() => setVisible(true), 0);
     const timer = window.setTimeout(() => setVisible(false), 2200);
-    return () => window.clearTimeout(timer);
+    return () => { window.clearTimeout(start); window.clearTimeout(timer); };
   }, [active]);
 
   const items = useMemo(
     () =>
       Array.from({ length: pieces }, (_, index) => ({
         id: index,
-        left: Math.random() * 100,
-        dx: (Math.random() - 0.5) * 220,
-        delay: Math.random() * 0.35,
-        duration: 1.1 + Math.random() * 0.9,
+        left: ((Math.sin((index + 1) * 127.1) + 1) / 2) * 100,
+        dx: (((Math.sin((index + 1) * 127.1) + 1) / 2) - 0.5) * 220,
+        delay: ((Math.sin((index + 1) * 127.1) + 1) / 2) * 0.35,
+        duration: 1.1 + ((Math.sin((index + 1) * 127.1) + 1) / 2) * 0.9,
         color: COLORS[index % COLORS.length],
-        size: 6 + Math.random() * 8,
+        size: 6 + ((Math.sin((index + 1) * 127.1) + 1) / 2) * 8,
       })),
-    [pieces, active],
+    [pieces],
   );
 
   if (!visible) return null;

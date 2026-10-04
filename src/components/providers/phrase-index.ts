@@ -6,9 +6,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 
 export function useAuthorizedPhraseIndex(initial: IndexedPhrase[]): IndexedPhrase[] {
   const { serverPremium, status } = useAuth();
-  const [phrases, setPhrases] = useState(initial);
-
-  useEffect(() => setPhrases(initial), [initial]);
+  const [remote, setRemote] = useState<{ initial: IndexedPhrase[]; phrases: IndexedPhrase[] } | null>(null);
 
   useEffect(() => {
     if (status !== "server" || !serverPremium) return;
@@ -19,13 +17,13 @@ export function useAuthorizedPhraseIndex(initial: IndexedPhrase[]): IndexedPhras
         return response.json() as Promise<{ phrases?: IndexedPhrase[] }>;
       })
       .then((payload) => {
-        if (!cancelled && Array.isArray(payload.phrases)) setPhrases(payload.phrases);
+        if (!cancelled && Array.isArray(payload.phrases)) setRemote({ initial, phrases: payload.phrases });
       })
       .catch(() => undefined);
     return () => {
       cancelled = true;
     };
-  }, [serverPremium, status]);
+  }, [initial, serverPremium, status]);
 
-  return phrases;
+  return status === "server" && serverPremium && remote?.initial === initial ? remote.phrases : initial;
 }

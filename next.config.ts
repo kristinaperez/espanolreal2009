@@ -11,6 +11,7 @@ const staticExport = process.env.STATIC_EXPORT === "true";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  htmlLimitedBots: /.*/, // Post OG metadata must be present in the first HTML response.
   poweredByHeader: false,
   images: { unoptimized: true },
   ...(staticExport ? { output: "export" as const, trailingSlash: true } : {}),

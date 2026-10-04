@@ -173,11 +173,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const clean = `${url.pathname}${url.search}${url.hash}`;
     window.history.replaceState({}, "", clean);
 
+    const timer = window.setTimeout(() => {
     if (telegram === "ok") {
       void refresh();
     } else if (telegram === "error") {
       setError("Не удалось подтвердить вход через Telegram. Проверьте домен в BotFather и попробуйте снова.");
     }
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [refresh]);
 
   // Initial load + Mini App auto-login.

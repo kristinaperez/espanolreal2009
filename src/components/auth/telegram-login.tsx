@@ -22,7 +22,8 @@ export function TelegramLogin({ variant = "full" }: { variant?: "full" | "compac
   const [hostname, setHostname] = useState<string | null>(null);
 
   useEffect(() => {
-    setHostname(window.location.hostname);
+    const timer = window.setTimeout(() => setHostname(window.location.hostname), 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {

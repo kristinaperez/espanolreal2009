@@ -54,11 +54,13 @@ const source = 'В баре можно сказать «Me pones un café con le
   await page.getByRole('button',{name:'Редактировать ✎'}).click();
   await page.getByLabel('Заголовок', {exact:true}).fill('Кофе без школьного испанского');
   await page.getByRole('button',{name:'Предпросмотр',exact:true}).click();
-  await page.getByRole('button',{name:'Скопировать текст для поста'}).click();
+  await page.getByRole('button',{name:'Скопировать текст',exact:true}).click();
   assert.ok((await page.evaluate(()=>window.lastCopied)).includes('Кофе без школьного испанского'));
   await page.getByRole('button',{name:'Скопировать ссылку',exact:true}).click();
-  assert.equal(await page.evaluate(()=>window.lastCopied),'https://example.com/lessons');
-  await page.getByRole('button',{name:'Instagram',exact:true}).click();
+  await page.getByText('Для публичной ссылки войдите через Telegram. Картинку и текст можно сохранить сейчас',{exact:true}).waitFor();
+  await page.setViewportSize({width:1280,height:900});
+  await page.waitForFunction(()=>[...document.querySelectorAll('button')].some(b=>b.getAttribute('aria-label')==='Поделиться в Instagram'&&!b.disabled));
+  await page.getByRole('button',{name:'Поделиться в Instagram',exact:true}).click();
   assert.ok((await page.evaluate(()=>window.lastCopied)).includes(source));
   await page.waitForTimeout(800);await page.reload();await page.getByRole('heading',{name:'Кофе без школьного испанского'}).waitFor();
   await page.getByRole('button',{name:'Попробовать тестовый режим'}).click();

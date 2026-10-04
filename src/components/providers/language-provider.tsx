@@ -15,15 +15,21 @@ const STORAGE_KEY = "espanol-real:interface-language";
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<AppLanguage>("ru");
 
+  const [ready, setReady] = useState(false);
   useEffect(() => {
+    const timer = window.setTimeout(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY);
     if (saved === "fr" || saved === "ru") setLanguage(saved);
+    setReady(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
+    if (!ready) return;
     window.localStorage.setItem(STORAGE_KEY, language);
     document.documentElement.lang = language;
-  }, [language]);
+  }, [language, ready]);
 
   return <LanguageContext.Provider value={{ language, setLanguage }}>{children}</LanguageContext.Provider>;
 }
