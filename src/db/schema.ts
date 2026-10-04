@@ -106,3 +106,8 @@ export const licensesRelations = relations(licenses, ({ one }) => ({
 export type TelegramUserRow = typeof telegramUsers.$inferSelect;
 export type OrderRow = typeof orders.$inferSelect;
 export type LicenseRow = typeof licenses.$inferSelect;
+
+// Independent teacher-owned content; existing billing tables are unchanged.
+export * from "./teacher-schema";
+
+export * from "./teacher-posts-schema";
