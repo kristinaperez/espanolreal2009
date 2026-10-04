@@ -262,6 +262,7 @@ function ThemeToggle({
 }
 
 const NAV_FR: Record<string, string> = {
+  "/teachers": "Professeurs",
   "/learn": "Accueil",
   "/learn/lessons": "Leçons",
   "/learn/map": "Parcours",

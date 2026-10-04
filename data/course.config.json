@@ -589,7 +589,8 @@
       "href": "/learn/about",
       "label": "О курсе",
       "icon": "info"
-    }
+    },
+    { "href": "/teachers", "label": "Учителя", "icon": "book" }
   ],
   "payments": {
     "premiumProductId": "premium-45",
