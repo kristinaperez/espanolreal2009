@@ -5,11 +5,10 @@ import { ArrowLeft, Copy, LoaderCircle, Sparkles } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { TelegramLogin } from "@/components/auth/telegram-login";
 import { HeaderNavUpdate } from "@/components/layout/header-nav-update";
-import { emptyDraft, formatPost, formatAnswerKey, parseDraft, parsePost, safePostUrl, type GeneratedPost, type LessonDraft } from "@/lib/teacher-posts/model";
+import { emptyDraft, formatAnswerKey, parseDraft, parsePost, type GeneratedPost, type LessonDraft } from "@/lib/teacher-posts/model";
 import { wowExamples } from "@/lib/teacher-posts/examples";
-import { shareUrl, type SocialPlatform } from "@/lib/teacher-posts/share";
 import { MemePicker } from "./meme-picker";
-import { ShareButton, shareNetworks } from "@/components/share/share-button";
+import { PostSharePanel } from "@/components/share/post-share-panel";
 import { PostPreview } from "./post-preview";
 import { fieldClass, PostEditor } from "./post-editor";
 
@@ -106,20 +105,9 @@ export function TeacherPostGenerator() {
       if (version === revision.current) setError(caught instanceof Error && caught.name !== "AbortError" ? caught.message : "Запрос прерван. Черновик сохранён — попробуйте снова.");
     } finally { clearTimeout(timeout); if (activeRequest.current === controller) { setBusy(null); activeRequest.current = null; } }
   }
-  const exportText = generated ? formatPost(generated.post, generated.cta) : "";
-  const shareLink = publishedUrl || generated?.cta?.url || "";
   async function copy(text: string, message: string) {
     try { await navigator.clipboard.writeText(text); toast(message); }
     catch { setManualCopy(text); toast("Выделите текст ниже и скопируйте вручную."); }
-  }
-  async function share(platform: SocialPlatform) {
-    const url = shareUrl(platform, exportText, publishedUrl);
-    if (url) { window.open(url, "_blank", "noopener,noreferrer"); return; }
-    if (navigator.share) {
-      try { await navigator.share({ title: generated!.post.title, text: exportText, ...(publishedUrl ? { url: publishedUrl } : {}) }); return; }
-      catch (caught) { if (caught instanceof Error && caught.name === "AbortError") return; }
-    }
-    await copy(exportText, `Текст скопирован. Откройте ${platform} и вставьте в новую публикацию.`);
   }
   const unlocked = !!user || demo;
   if (loadedKey !== draftKey) return <div className="min-h-dvh bg-[#FAF8F5] text-stone-900"><HeaderNavUpdate /><main className="mx-auto max-w-7xl px-4 py-10"><p role="status">Загружаем черновик…</p></main></div>;
@@ -144,10 +132,10 @@ export function TeacherPostGenerator() {
             {editing ? <PostEditor post={generated.post} onChange={post => { revision.current++; setGenerated({ ...generated, post }); setPublishedUrl(""); }} /> : <PostPreview key={JSON.stringify(generated.post.challenges ?? generated.post.interactiveQuestion)} post={generated.post} cta={generated.cta} />}
             {!generated.cta && <p className="mt-3 text-xs text-stone-500">Ссылка не добавлена. После изменения ссылок повторите генерацию или опубликуйте пост, чтобы обновить призыв.</p>}
             <div className="mt-5 grid gap-3"><button type="button" className={accent} disabled={!!busy || !user || !parsePost(generated.post) || !!publishedUrl} onClick={() => void request("publish")}>{busy === "publish" ? <><LoaderCircle size={18} className="animate-spin" />Публикуем…</> : publishedUrl ? "Пост опубликован" : "Опубликовать интерактивный пост"}</button>{!user && <p className="text-xs text-stone-500">Для публикации нужен вход через Telegram. Экспорт текста доступен сейчас.</p>}{publishedUrl && <Link href={publishedUrl} className="break-all text-sm font-bold text-[#9E2A2B]">Открыть опубликованный пост →</Link>}
-              <div className="grid gap-2 sm:grid-cols-2"><button type="button" className={secondary} disabled={!parsePost(generated.post)} onClick={() => void copy(exportText, "Текст поста скопирован")}><Copy size={16} />Скопировать текст для поста</button><button type="button" className={secondary} disabled={!shareLink || !safePostUrl(shareLink)} onClick={() => void copy(shareLink, "Ссылка скопирована")}>Скопировать ссылку</button></div>
+
             </div>
             <button type="button" className={`${secondary} mt-3 w-full`} disabled={!parsePost(generated.post)} onClick={() => void copy(formatAnswerKey(generated.post), "Ответы для преподавателя скопированы")}>Скопировать ответы отдельно</button>
-            <h3 className="mb-3 mt-7 text-xs font-bold uppercase tracking-widest text-stone-500">Поделиться в соцсетях</h3><div className="flex flex-wrap gap-2">{shareNetworks.map(network => <ShareButton key={network.name} network={network} disabled={!parsePost(generated.post)} onClick={platform => void share(platform)} />)}</div><p className="mt-3 text-xs leading-5 text-stone-500">Telegram и WhatsApp откроют окно отправки. Остальные кнопки вызовут меню «Поделиться», где можно выбрать приложение, или скопируют текст для вставки. Отправку подтверждаете вы.</p>
+            <PostSharePanel generated={generated} draft={draft} onNotice={toast} />
           </>}
           {manualCopy && <label className="mt-5 block text-sm font-bold">Текст для ручного копирования<textarea readOnly value={manualCopy} onFocus={e => e.target.select()} rows={8} className={fieldClass} /></label>}
         </section>

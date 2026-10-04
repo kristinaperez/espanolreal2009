@@ -28,7 +28,7 @@ const base=process.argv[2]||'http://127.0.0.1:3100';
   await trainer.getByRole('button',{name:'No puedo, estoy sin blanca.',exact:true}).click();await trainer.getByRole('button',{name:'Следующее задание →'}).click();
   assert.equal(await trainer.getByRole('button',{name:'Завершить вызов'}).isDisabled(),true);
   await trainer.getByLabel('Ваша реплика').fill('El alquiler cuesta un ojo de la cara.');await trainer.getByRole('button',{name:'Завершить вызов'}).click();await trainer.getByText('4 из 4 проверяемых заданий',{exact:true}).waitFor();
-  await page.getByRole('button',{name:'Скопировать текст для поста'}).click();const copied=await page.evaluate(()=>window.copied);assert.ok(copied.includes('5. Что в последнее время'));assert.equal(copied.includes('Первая часть — про дорогой билет'),false);
+  await page.getByRole('button',{name:'Скопировать текст',exact:true}).click();const copied=await page.evaluate(()=>window.copied);assert.ok(copied.includes('5. Что в последнее время'));assert.equal(copied.includes('Первая часть — про дорогой билет'),false);
   await page.getByRole('button',{name:'Скопировать ответы отдельно'}).click();assert.ok((await page.evaluate(()=>window.copied)).includes('Первая часть — про дорогой билет'));
   const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Скачать мем-карточку PNG'}).click();const download=await downloadPromise;assert.equal(download.suggestedFilename(),'wow-meme-card.png');assert.equal(await download.failure(),null);
   for(const width of [320,390,768,1280]){await page.setViewportSize({width,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'4C overflow '+width);}
@@ -36,7 +36,7 @@ const base=process.argv[2]||'http://127.0.0.1:3100';
   await page.getByLabel('Задание 1',{exact:true}).fill('Друг зовёт на дорогой концерт. Какая реакция?');
   await page.getByLabel('Подпись на меме',{exact:true}).fill('Планы на вечер / Баланс: 1 €');
   await page.getByRole('button',{name:'Предпросмотр',exact:true}).click();await trainer.getByText('Друг зовёт на дорогой концерт. Какая реакция?',{exact:true}).waitFor();
-  assert.equal(await page.getByRole('button',{name:'Скопировать текст для поста'}).isEnabled(),true,'editing failed to sync first quiz');
+  assert.equal(await page.getByRole('button',{name:'Скопировать текст',exact:true}).isEnabled(),true,'editing failed to sync first quiz');
   await page.waitForTimeout(750);await page.reload();await page.getByText('Планы на вечер / Баланс: 1 €',{exact:true}).waitFor();
   for(const [name,title]of [['Aprovechar','У тебя 20 минут до поезда. Пролистать ленту или поймать шанс?'],['Saber / saberse','Знаешь песню — или уже поёшь за весь вагон?']]){
    await page.getByRole('button',{name,exact:true}).click();await page.getByRole('button',{name:'Сгенерировать WOW-пост',exact:true}).click();await page.getByRole('heading',{name:title,exact:true}).waitFor();assert.equal(await trainer.getByText('1 / 5',{exact:true}).count(),1);

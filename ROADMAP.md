@@ -1,3 +1,12 @@
+# Sharing scope update
+
+## NOW
+- Review icon/file/public-link sharing PR and automated/preview OG evidence.
+## NEXT
+- Real Android/iPhone and signed-in network composer checks from docs/SHARING.md; verify Netlify authenticated write and production cleanup execution.
+## LATER
+- Optional cover editor for edge-to-edge OG composition and author-managed public snapshot deletion.
+
 # Scope update: social WOW posts
 
 Current priority: responsive landing and tutor social posts. Existing Phase 1 demo lessons retained. Teacher lesson authoring expansion is deferred. Post studio implementation is ready for preview; real Telegram, configured AI, post migration and Safari device acceptance remain deployment checks. See docs/TEACHER_POSTS.md.
