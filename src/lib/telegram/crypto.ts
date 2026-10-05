@@ -39,9 +39,9 @@ export function isTelegramConfigured(): boolean {
   return getBotToken() !== null;
 }
 
-function dataCheckString(entries: Record<string, string>): string {
+function dataCheckString(entries: Record<string, string>, includeSignature = false): string {
   return Object.keys(entries)
-    .filter((key) => key !== "hash" && key !== "signature")
+    .filter((key) => key !== "hash" && (includeSignature || key !== "signature"))
     .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
     .map((key) => `${key}=${entries[key]}`)
     .join("\n");
@@ -206,7 +206,7 @@ export function verifyInitData(initData: string): { user: TelegramAuthUser; auth
   if (!hash) return null;
 
   const secret = createHmac("sha256", "WebAppData").update(token).digest();
-  const expected = createHmac("sha256", secret).update(dataCheckString(entries)).digest("hex");
+  const expected = createHmac("sha256", secret).update(dataCheckString(entries, true)).digest("hex");
   if (!safeEqual(expected, hash)) return null;
 
   const authDate = Number(entries.auth_date ?? 0);
