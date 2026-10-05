@@ -1,3 +1,13 @@
+# Mobile acceptance update — 2026-10-05
+
+## NOW
+- Review feedback PR: UI simplification, Mini App signature fix, network-specific sharing and lossless long-post export.
+## NEXT
+- Real iPhone Telegram launch and Xiaomi WhatsApp community checks after deployment; signed-in AI/storage QA.
+- Enable production AI with server-only provider/model configuration, then evaluate original tutor inputs.
+## LATER
+- Language selection in settings; authenticated Threads reply-chain integration if the manual export proves useful.
+
 # Sharing scope update
 
 ## NOW

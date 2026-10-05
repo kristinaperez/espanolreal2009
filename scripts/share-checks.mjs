@@ -1,7 +1,8 @@
 import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';import {createRequire} from 'node:module';import ts from 'typescript';
 const require=createRequire(import.meta.url);
 function load(path,aliases={},globals={}){const output=ts.transpileModule(fs.readFileSync(path,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,esModuleInterop:true,target:ts.ScriptTarget.ES2022}}).outputText;const exports={};vm.runInNewContext(output,{exports,require:n=>n in aliases?aliases[n]:require(n),Buffer,process,URL,Response,Date,...globals});return exports}
-const calls=[];const share=load('src/lib/share.ts',{}, {navigator:{canShare:()=>true,clipboard:{writeText:()=>{calls.push('copy');return Promise.resolve()}},share:async data=>{calls.push('share');assert.equal(data.files[0],file)}},setTimeout});const file={name:'post.jpg'};
+const parts=load('src/lib/share-parts.ts',{}, {Intl});
+const calls=[];const share=load('src/lib/share.ts',{'./share-parts':parts}, {navigator:{canShare:()=>true,clipboard:{writeText:()=>{calls.push('copy');return Promise.resolve()}},share:async data=>{calls.push('share');assert.equal(data.files[0],file)}},setTimeout});const file={name:'post.jpg'};
 assert.equal(share.supportsFileShare(file),true);await share.sharePreparedFile(file,'Title','Text',()=>{},()=>{});assert.deepEqual(calls,['copy','share']);
 const data={id:'id',url:'https://example.com/p/id?a=1&b=2',imageUrl:'https://example.com/img.jpg',pinterestImageUrl:'https://example.com/pin.jpg'};
 for(const platform of ['Telegram','Facebook','Threads','Max','Вконтакте','WhatsApp','Pinterest']){const u=new URL(share.desktopShareUrl(platform,data,'Café & ¿qué?','😀 texto & fin'));assert.ok(u.search.length);if(platform==='Pinterest')assert.equal(u.searchParams.get('media'),data.pinterestImageUrl);if(platform==='Facebook')assert.equal(u.searchParams.get('u'),data.url)}assert.equal(share.desktopShareUrl('Instagram',data,'',''),null);
@@ -14,3 +15,20 @@ for(const [name,w,h] of [['og.jpg',1200,630],['pin.jpg',1000,1500]]){const meta=
 await assert.rejects(store.saveSnapshot({post,mode:'mock',cta:null},'QA','https://example.com','data:image/svg+xml;base64,AA=='));assert.equal(await store.readSnapshot('../bad'),null);
 const route=load('src/app/api/teacher/posts/share/route.ts',{'@/server/http':{currentUser:async()=>null,errorResponse:(error,status=400)=>({error,status}),rateLimit:()=>null,readJsonBody:async()=>null},'@/server/teacher-posts/origin':{samePostOrigin:()=>true},'@/lib/teacher-posts/model':model,'@/server/share/store':store});assert.equal((await route.POST({})).status,401);
 console.log('Share URLs/encoding, synchronous clipboard→file gesture, sharp dimensions, immutable random IDs, original-specific image URLs, raster rejection and auth gate passed.');
+
+const longText=('Русский абзац café 👩🏽‍💻 🇪🇸\n\n').repeat(100);
+const rawParts=parts.splitShareText(longText,450);
+assert.equal(rawParts.join(''),longText);
+assert.ok(rawParts.every(p=>p.length<=450));
+for(const platform of ['Threads','Pinterest']) {
+ const blocks=parts.shareTextParts(longText,platform,data.url);
+ assert.ok(blocks.length>1);
+ assert.ok(blocks.every(p=>p.length <= (platform==='Threads'?500:800)));
+ const restored=blocks.map((p,i)=>p.replace(/^\d+\/\d+\n/,'').replace(i===0?'\n\n'+data.url:'###nonexistent','')).join('');
+ assert.equal(restored,longText);
+}
+const tg=new URL(share.desktopShareUrl('Telegram',data,'Café & ¿qué?',longText));
+assert.equal(tg.searchParams.get('text'),'Café & ¿qué?');assert.ok(tg.href.length<1000);
+console.log('Lossless Unicode/paragraph multi-part exports and bounded Telegram request passed.');
+
+const pathological='a'+'\u0301'.repeat(900);assert.equal(parts.splitShareText(pathological,450).join(''),pathological);
