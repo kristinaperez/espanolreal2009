@@ -1,3 +1,14 @@
+## [2026-10-06] — Teacher cabinet and social profiles
+
+### Changed
+- Remove melting-face emoji from money template and restored mock drafts.
+- Move interactive publication button into authenticated /teacher/posts/publish; guest generator has no publication control.
+### Added
+- Authenticated cabinet settings for eight network profile/channel links, per-user private Netlify Blobs storage and explicit profile-opening actions in sharing panel.
+- Immediate draft save before cabinet handoff; server owner derives exclusively from session.
+### Tests
+- Lint/typecheck/build, URL/ownership/auth/origin checks, security/model/share checks; browser evidence in PR. Real Netlify settings persistence and account-side publishing remain manual QA.
+
 ## [2026-10-05] — Mobile sharing feedback
 
 ### Changed

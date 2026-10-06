@@ -56,3 +56,8 @@ CHANGE: icon-only RU/FR buttons and file/link sharing, isolated Netlify Blobs sn
 ## 2026-10-05 mobile feedback review
 
 Main inspected at ea281b63e02cb14012a79f90bc609d221042a8b4, related issue #1 remains open until real Mini App acceptance. Existing PRs #2/#3 are workflow tests. Code verified against GitHub tree before edits. See docs/MOBILE_SHARING_FEEDBACK.md for CHANGE/WHY/FILES/RISK/TEST/RESULT and platform limitations. No production changes are deployed by this follow-up PR until review/merge.
+
+
+## 2026-10-06 cabinet review
+
+Main e3ef31c83003610c7de3c25caabfce0994c87707 inspected with open issues/PRs. Existing publication was already server-authenticated but guest UI showed a disabled control. Teacher cabinet lacked persistent social settings. Follow-up in separate feature branch; see docs/TEACHER_CABINET.md for CHANGE/WHY/FILES/RISK/TEST/RESULT. Manual profile-link approach confirmed by user; no OAuth automation added.

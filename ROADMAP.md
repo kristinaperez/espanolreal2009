@@ -1,3 +1,12 @@
+# Cabinet follow-up — 2026-10-06
+
+## NOW
+- Review cabinet publication and saved social profile settings PR.
+## NEXT
+- Real signed-in settings save/restore on espanolreal.es after merge; device acceptance.
+## LATER
+- Optional server-side draft sync across devices, authenticated social posting only if separately scoped.
+
 # Mobile acceptance update — 2026-10-05
 
 ## NOW
