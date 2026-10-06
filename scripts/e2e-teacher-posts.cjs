@@ -45,7 +45,7 @@ const source = 'В баре можно сказать «Me pones un café con le
   await page.getByRole('button',{name:'Сгенерировать WOW-пост',exact:true}).click();
   await page.getByRole('heading',{name:'Me pones un café'}).waitFor();
   assert.ok(await page.getByRole('link',{name:'Уроки преподавателя →'}).isVisible());
-  assert.equal(await page.getByRole('button',{name:'Опубликовать интерактивный пост'}).isDisabled(),true);
+  assert.equal(await page.getByRole('button',{name:'Опубликовать тренажёр на сайте'}).isDisabled(),true);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
   await page.getByRole('button',{name:'Этой фразы в примере не было',exact:true}).click();
   await page.getByText(/Попробуйте ещё раз/).waitFor();
@@ -98,7 +98,7 @@ const source = 'В баре можно сказать «Me pones un café con le
   await page.getByLabel('Исходный пост или заметка').fill(source);
   await page.getByRole('button',{name:'Сгенерировать WOW-пост',exact:true}).click();
   await page.getByRole('link',{name:'Продолжить в EspanolReal →'}).waitFor();
-  await page.getByRole('button',{name:'Опубликовать интерактивный пост'}).click();
+  await page.getByRole('button',{name:'Опубликовать тренажёр на сайте'}).click();
   await page.getByRole('link',{name:'Открыть опубликованный пост →'}).click();
   await page.getByRole('heading',{name:'Пост QA'}).waitFor();
   await page.getByRole('button',{name:'Кофе',exact:true}).click();await page.getByText(/Верно!/).waitFor();

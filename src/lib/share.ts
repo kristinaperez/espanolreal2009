@@ -1,14 +1,17 @@
 import type { SocialPlatform } from "./teacher-posts/share";
+import { shareTextParts } from "./share-parts";
 export interface ShareSnapshot { id: string; url: string; imageUrl: string; pinterestImageUrl: string }
 export function desktopShareUrl(platform: SocialPlatform, data: ShareSnapshot, title: string, text: string): string | null {
  const e = encodeURIComponent; const combined = `${text}\n\n${data.url}`;
  switch (platform) {
   case "Facebook": return `https://www.facebook.com/sharer/sharer.php?u=${e(data.url)}`;
-  case "Pinterest": return `https://www.pinterest.com/pin/create/button/?url=${e(data.url)}&media=${e(data.pinterestImageUrl)}&description=${e(text.slice(0,500))}`;
-  case "Telegram": return `https://t.me/share/url?url=${e(data.url)}&text=${e(text)}`;
+  case "Pinterest": return `https://www.pinterest.com/pin/create/button/?url=${e(data.url)}&media=${e(data.pinterestImageUrl)}&description=${e(shareTextParts(text,"Pinterest")[0])}`;
+  // The full post is on the public page. Sending thousands of percent-encoded
+  // Cyrillic characters can exceed the Telegram web server's request-line limit.
+  case "Telegram": return `https://t.me/share/url?url=${e(data.url)}&text=${e(title)}`;
   case "Вконтакте": return `https://vk.com/share.php?url=${e(data.url)}&title=${e(title)}`;
   case "WhatsApp": return `https://wa.me/?text=${e(combined)}`;
-  case "Threads": return `https://www.threads.net/intent/post?text=${e(text.slice(0,Math.max(0,500-data.url.length-2))+'\n\n'+data.url)}`;
+  case "Threads": return `https://www.threads.net/intent/post?text=${e(shareTextParts(text,"Threads",data.url)[0])}`;
   case "Max": return `https://max.ru/:share?text=${e(combined)}`;
   default: return null;
  }
@@ -23,5 +26,9 @@ export function sharePreparedFile(file: File, title: string, text: string, onCop
  return navigator.share({ files: [file], title, text });
 }
 export function downloadShareFile(file: File) {
- const url = URL.createObjectURL(file); const a = document.createElement("a"); a.href = url; a.download = file.name; a.click(); setTimeout(() => URL.revokeObjectURL(url),1000);
+ const url = URL.createObjectURL(file); const a = document.createElement("a"); a.href = url; a.download = file.name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url),30_000);
+}
+
+export function downloadPostText(text: string) {
+ downloadShareFile(new File([text], "espanolreal-post.txt", { type: "text/plain;charset=utf-8" }));
 }

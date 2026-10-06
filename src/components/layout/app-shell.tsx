@@ -25,7 +25,6 @@ import { achievementById } from "@/components/providers/progress-provider";
 import { courseConfig } from "@/lib/content/config";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/components/providers/language-provider";
-import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { FeedbackButton } from "@/components/support/feedback";
 
 const ICONS: Record<string, typeof Home> = {
@@ -226,7 +225,7 @@ function SidebarFooter() {
   return (
     <div className="mt-3 space-y-3">
       <div className="rounded-2xl bg-background-soft p-4">
-        <div className="flex items-center justify-between gap-2"><p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">{fr ? "Progression du cours" : "Прогресс курса"}</p><LanguageSwitcher compact /></div>
+        <div className="flex items-center justify-between gap-2"><p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">{fr ? "Progression du cours" : "Прогресс курса"}</p></div>
         <p className="mt-1 text-2xl font-extrabold">{ready ? `${stats.coursePercent}%` : "—"}</p>
         <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-surface">
           <div className="h-full rounded-full bg-primary transition-[width] duration-500" style={{ width: `${stats.coursePercent}%` }} />

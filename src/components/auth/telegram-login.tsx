@@ -129,6 +129,7 @@ export function TelegramLogin({ variant = "full" }: { variant?: "full" | "compac
         data-telegram-login-widget
         className="flex min-h-[40px] items-center justify-center overflow-hidden"
       />
+      {!miniApp && /^[A-Za-z0-9_]+$/.test(botUsername) && <a href={`https://t.me/${botUsername}?startapp`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm font-bold transition-shadow hover:shadow-md">Открыть приложение в Telegram</a>}
       {authenticating ? (
         <p className="flex items-center gap-2 text-sm font-semibold text-primary">
           <Star className="h-4 w-4 animate-flame" /> Подтверждаем данные Telegram…

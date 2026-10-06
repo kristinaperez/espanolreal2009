@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Menu, Plus, X } from "lucide-react";
 import { useState } from "react";
-import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { useLanguage } from "@/components/providers/language-provider";
 import { useAuth } from "@/components/providers/auth-provider";
 
@@ -30,7 +29,6 @@ export function HeaderNavUpdate() {
           {links.map(([href, label]) => <Link key={href} href={href}>{label}</Link>)}
         </nav>
         <div className="flex shrink-0 items-center gap-2">
-          <LanguageSwitcher compact />
           <Link href="/teacher/posts/new" className="hidden min-h-11 items-center gap-1 rounded-full bg-[#9E2A2B] px-4 text-sm font-bold text-white sm:inline-flex"><Plus size={16} />{fr ? "Créer un post" : "Создать пост"}</Link>
           <Link href="/teacher" className="hidden min-h-11 items-center rounded-full border border-stone-200 px-4 text-sm font-bold lg:inline-flex">{user ? (fr ? "Mon espace" : "Кабинет") : (fr ? "Connexion" : "Войти")}</Link>
           <button type="button" aria-expanded={open} aria-controls="mobile-site-nav" aria-label={open ? "Закрыть меню" : "Открыть меню"} onClick={() => setOpen(!open)} className="grid h-11 w-11 place-items-center rounded-xl border border-stone-200 xl:hidden">{open ? <X size={20} /> : <Menu size={20} />}</button>

@@ -1,3 +1,18 @@
+## [2026-10-05] — Mobile sharing feedback
+
+### Changed
+- Russian-only visible interface; translations retained for future settings.
+- Hide visual search notes and sharing implementation text, remove duplicate dashboard CTA; colored network icons with hover shadow and truthful upload status.
+- Clarify on-site trainer publication; offer opening the configured Telegram Mini App from web login.
+### Fixed
+- Mini App HMAC includes signature-bearing payloads while retaining freshness/integrity checks and Login Widget compatibility.
+- Bound Telegram URL to title/public link; mobile link-capable network buttons use their own composer, WhatsApp avoids file payload.
+- First copy-link attempts copy after publication; robust download anchor lifecycle.
+### Added
+- Lossless numbered Threads/Pinterest exports and complete TXT download.
+### Tests
+- Lint/typecheck/build, protocol/security/share/model tests; Chromium acceptance evidence in PR. Real iOS/Android app delivery and production AI require device/configuration acceptance.
+
 ## [2026-10-04] — Image and public-link sharing
 
 ### Added

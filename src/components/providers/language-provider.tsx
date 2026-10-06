@@ -18,8 +18,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     const timer = window.setTimeout(() => {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (saved === "fr" || saved === "ru") setLanguage(saved);
+    // Russian-only launch. Keep translations for the future settings selector.
+    setLanguage("ru");
     setReady(true);
     }, 0);
     return () => window.clearTimeout(timer);

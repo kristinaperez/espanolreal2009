@@ -51,3 +51,8 @@ CHANGE/WHY: add three contextual meme choices plus custom upload/link and no-mem
 ## Sharing change record
 
 CHANGE: icon-only RU/FR buttons and file/link sharing, isolated Netlify Blobs snapshots with server OG. WHY: previous intents carried no File and most networks fell back to copy. FILES: share utilities/components/translations, image builder, share endpoint/store/public SSR/media, cleanup function, static build and QA/docs. RISK: Safari activation, remote CORS, popup blocking, stored-public content, preview scope/retention and old lint debt. Controls: precompute File, synchronous share call, synchronous popup reservation, raster limits/re-encoding, verified auth/CTA, UUID immutable snapshots, context-specific stores, bounded reads and explicit fallbacks. TEST: full lint/TypeScript/build/static export and security/model/browser checks; controlled mobile APIs and blob adapter distinguished from real platform acceptance. RESULT: no direct main update; PR review required. Existing lint debt addressed in an independent commit: hydration callbacks, correct memo dependencies, deterministic decorative confetti, safe Next navigation. Student content/progress/payment contracts remain unchanged.
+
+
+## 2026-10-05 mobile feedback review
+
+Main inspected at ea281b63e02cb14012a79f90bc609d221042a8b4, related issue #1 remains open until real Mini App acceptance. Existing PRs #2/#3 are workflow tests. Code verified against GitHub tree before edits. See docs/MOBILE_SHARING_FEEDBACK.md for CHANGE/WHY/FILES/RISK/TEST/RESULT and platform limitations. No production changes are deployed by this follow-up PR until review/merge.
