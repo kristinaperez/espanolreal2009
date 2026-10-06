@@ -6,6 +6,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { formatPost, parsePost, type GeneratedPost, type LessonDraft } from "@/lib/teacher-posts/model";
 import { preparePostImage, fileDataUrl } from "@/lib/post-image";
 import { desktopShareUrl, downloadPostText, downloadShareFile, sharePreparedFile, supportsFileShare, type ShareSnapshot } from "@/lib/share";
+import { parseTeacherSocialLinks, type TeacherSocialLinks } from "@/lib/teacher-socials";
 import { shareTextParts } from "@/lib/share-parts";
 import { shareTranslations } from "@/lib/share-translations";
 import type { SocialPlatform } from "@/lib/teacher-posts/share";
@@ -19,6 +20,9 @@ export function PostSharePanel({ generated, draft, onNotice }: { generated: Gene
  const [snapshot, setSnapshot] = useState<{ key: string; data: ShareSnapshot } | null>(null);
  const [publishing, setPublishing] = useState(false), [manual, setManual] = useState("");
  const [exportPlatform, setExportPlatform] = useState<"Threads" | "Pinterest" | null>(null);
+ const [profiles,setProfiles]=useState<{owner:number;links:TeacherSocialLinks}|null>(null);
+ useEffect(()=>{if(!user)return;let active=true;const owner=user.telegramId;void fetch("/api/teacher/settings",{cache:"no-store"}).then(async r=>{if(!r.ok)throw Error();return r.json()}).then(result=>{if(active)setProfiles({owner,links:parseTeacherSocialLinks(result.links)??{}})},()=>{});return()=>{active=false}},[user]);
+ const profileLinks=profiles?.owner===user?.telegramId?profiles?.links:{};
  const key = JSON.stringify({ generated, draft, owner: user?.telegramId ?? "guest" });
  const latest = useRef(key);
  useEffect(() => { latest.current = key; }, [key]);
@@ -87,6 +91,7 @@ export function PostSharePanel({ generated, draft, onNotice }: { generated: Gene
   <h3 className="text-sm font-extrabold">{t.share}</h3>
   <button type="button" disabled={!file || !valid || publishing} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#9E2A2B] px-5 py-3 font-bold text-white transition-shadow hover:shadow-md disabled:opacity-40 md:hidden" onClick={() => click()}><Share2 size={20} />{t.share}</button>
   <div className="flex flex-wrap gap-2">{shareNetworks.map(network => <ShareButton key={network.name} network={network} disabled={!valid || !file || publishing} onClick={click} />)}</div>
+  {user && shareNetworks.some(n=>profileLinks?.[n.name]) && <div className="space-y-2"><h4 className="text-sm font-bold">Мои профили и каналы</h4><div className="flex flex-wrap gap-2">{shareNetworks.map(n=>profileLinks?.[n.name] && <a key={n.name} href={profileLinks[n.name]} target="_blank" rel="noopener noreferrer" className={button}>Открыть мой {n.name === "Вконтакте" ? "ВКонтакте" : n.name}</a>)}</div></div>}
   {!file && <p role="status" className="text-sm">{failure === key ? t.unavailable : t.preparing}</p>}
   <p className="text-xs leading-5 text-stone-500 md:hidden">{t.fileHint}</p>
   {publishing && <p role="status">{t.publishing}</p>}

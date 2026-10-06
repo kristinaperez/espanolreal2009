@@ -16,7 +16,7 @@ const accent = "inline-flex min-h-12 items-center justify-center gap-2 rounded-f
 const secondary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm font-semibold disabled:opacity-50";
 const panel = "min-w-0 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:p-7";
 const storageKey = "espanolreal:teacher-posts:draft:v1";
-export function TeacherPostGenerator() {
+export function TeacherPostGenerator({ publicationInCabinet = false }: { publicationInCabinet?: boolean }) {
   const { user, status, botUsername } = useAuth();
   const [demo, setDemo] = useState(false);
   const [draft, setDraft] = useState<LessonDraft>(emptyDraft);
@@ -52,7 +52,7 @@ export function TeacherPostGenerator() {
         if (candidate && typeof data.draft.sourceText === "string" && data.draft.sourceText.length <= 8000) nextDraft = { ...candidate, sourceText: data.draft.sourceText };
         // Only restore text; revalidate account-sensitive CTA on the next generation/publication.
         const post = parsePost(data.generated?.post);
-        if (post) nextGenerated = { post, cta: null, mode: data.generated.mode === "ai" ? "ai" : "mock" };
+        if (post) nextGenerated = { post: data.generated.mode === "ai" ? post : { ...post, hook: post.hook.replace(/🫠/gu, "").trim() }, cta: null, mode: data.generated.mode === "ai" ? "ai" : "mock" };
       }
     } catch { /* Corrupt/unavailable storage must not block the editor. */ }
     revision.current++;
@@ -110,11 +110,12 @@ export function TeacherPostGenerator() {
     catch { setManualCopy(text); toast("Выделите текст ниже и скопируйте вручную."); }
   }
   const unlocked = !!user || demo;
+  if (publicationInCabinet && !user) return <div className="min-h-dvh bg-[#FAF8F5]"><HeaderNavUpdate /><main className="mx-auto max-w-xl p-6"><h1 className="mb-4 text-2xl font-bold">Войдите в кабинет для публикации</h1>{status === "loading" ? <p>Проверяем вход…</p> : <TelegramLogin variant="compact" />}</main></div>;
   if (loadedKey !== draftKey) return <div className="min-h-dvh bg-[#FAF8F5] text-stone-900"><HeaderNavUpdate /><main className="mx-auto max-w-7xl px-4 py-10"><p role="status">Загружаем черновик…</p></main></div>;
   return <div className="min-h-dvh bg-[#FAF8F5] text-stone-900"><HeaderNavUpdate />
     <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 text-sm"><Link href="/teacher" className="inline-flex min-h-11 items-center gap-2 font-semibold"><ArrowLeft size={16} />В кабинет</Link><span className="text-stone-500">{saved === "недоступно" ? "Автосохранение недоступно" : saved ? `Черновик на этом устройстве · ${saved}` : "Черновик на этом устройстве"}</span></div>
-      <div className="mb-8 max-w-3xl"><p className="mb-3 text-xs font-bold uppercase tracking-widest text-[#9E2A2B]">Студия преподавателя</p><h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Из обычной заметки — в WOW-пост</h1><p className="mt-3 leading-7 text-stone-600">Зацепите внимание, объясните живой испанский и пригласите читателя попробовать. Ваш голос — в каждом посте.</p></div>
+      <div className="mb-8 max-w-3xl"><p className="mb-3 text-xs font-bold uppercase tracking-widest text-[#9E2A2B]">Студия преподавателя</p><h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">{publicationInCabinet ? "Публикация тренажёра из кабинета" : "Из обычной заметки — в WOW-пост"}</h1><p className="mt-3 leading-7 text-stone-600">Зацепите внимание, объясните живой испанский и пригласите читателя попробовать. Ваш голос — в каждом посте.</p></div>
       {!unlocked && <section className={`${panel} mb-6 max-w-xl`}><h2 className="text-xl font-bold">Войдите для AI-генерации и публикации</h2><p className="mb-5 mt-2 text-sm leading-6 text-stone-600">Без входа кнопка генерации создаст тестовый пост. Telegram нужен для AI-генерации и публикации.</p>{status === "loading" ? <p role="status">Проверяем вход…</p> : botUsername ? <TelegramLogin variant="compact" /> : <p className="text-sm text-stone-600">Вход временно недоступен. Можно попробовать тестовый генератор.</p>}<button type="button" className={`${secondary} mt-4`} onClick={() => setDemo(true)}>Попробовать тестовый режим</button><p className="mt-3 text-xs text-stone-500">Тестовый режим использует шаблон. Публикация доступна после входа.</p></section>}
       <div className="grid items-start gap-6 lg:grid-cols-2">
         <section className={panel}><h2 className="mb-6 text-lg font-extrabold">1. Ваш исходный материал</h2><div className="mb-5"><p className="mb-2 text-xs font-bold text-stone-500">Попробовать пример 4C</p><div className="flex flex-wrap gap-2">{wowExamples.map(item => <button key={item.name} type="button" disabled={!!busy} className={secondary} onClick={() => updateDraft({ topic: "", sourceText: item.sourceText })}>{item.name}</button>)}</div></div><form onSubmit={e => { e.preventDefault(); if (!user) setDemo(true); void request("generate"); }} className="grid gap-5">
@@ -131,9 +132,8 @@ export function TeacherPostGenerator() {
             {generated.post.visual && <MemePicker key={`${ownerKey}:${generated.post.title}`} plan={generated.post.visual} disabled={!!busy} onChange={visual => { revision.current++; setGenerated({ ...generated, post: { ...generated.post, visual } }); setPublishedUrl(""); }} />}
             {editing ? <PostEditor post={generated.post} onChange={post => { revision.current++; setGenerated({ ...generated, post }); setPublishedUrl(""); }} /> : <PostPreview key={JSON.stringify(generated.post.challenges ?? generated.post.interactiveQuestion)} post={generated.post} cta={generated.cta} />}
             {!generated.cta && <p className="mt-3 text-xs text-stone-500">Ссылка не добавлена. После изменения ссылок повторите генерацию или опубликуйте пост, чтобы обновить призыв.</p>}
-            <div className="mt-5 grid gap-3"><p className="text-sm text-stone-600">Создаёт страницу Español Real с вашим постом и заданиями. Публикация в соцсети — кнопками ниже.</p><button type="button" className={accent} disabled={!!busy || !user || !parsePost(generated.post) || !!publishedUrl} onClick={() => void request("publish")}>{busy === "publish" ? <><LoaderCircle size={18} className="animate-spin" />Публикуем…</> : publishedUrl ? "Пост опубликован" : "Опубликовать тренажёр на сайте"}</button>{!user && <p className="text-xs text-stone-500">Для публикации нужен вход через Telegram. Экспорт текста доступен сейчас.</p>}{publishedUrl && <Link href={publishedUrl} className="break-all text-sm font-bold text-[#9E2A2B]">Открыть опубликованный пост →</Link>}
+            {publicationInCabinet ? <div className="mt-5 grid gap-3"><button type="button" className={accent} disabled={!!busy || !user || !parsePost(generated.post) || !!publishedUrl} onClick={() => void request("publish")}>{busy === "publish" ? "Публикуем…" : publishedUrl ? "Пост опубликован" : "Опубликовать тренажёр на сайте"}</button>{publishedUrl && <Link href={publishedUrl} className="break-all text-sm font-bold text-[#9E2A2B]">Открыть опубликованный пост →</Link>}</div> : user ? <Link href="/teacher/posts/publish" onClick={e => { try { localStorage.setItem(draftKey, JSON.stringify({ draft, generated: { post: generated.post, mode: generated.mode } })); } catch { e.preventDefault(); toast("Не удалось сохранить черновик для кабинета. Скопируйте текст перед переходом."); } }} className={`${secondary} mt-5`}>Перейти к публикации в кабинете →</Link> : null}
 
-            </div>
             <button type="button" className={`${secondary} mt-3 w-full`} disabled={!parsePost(generated.post)} onClick={() => void copy(formatAnswerKey(generated.post), "Ответы для преподавателя скопированы")}>Скопировать ответы отдельно</button>
             <PostSharePanel generated={generated} draft={draft} onNotice={toast} />
           </>}
