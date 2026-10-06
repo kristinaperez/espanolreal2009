@@ -228,7 +228,7 @@ export function TrainerPage({
             <Badge tone="info">Premium</Badge>
           ) : null}
         </div>
-        <IntroHeading className="text-3xl font-extrabold tracking-tight sm:text-4xl">{fullLesson.title}</IntroHeading>
+        <IntroHeading className="text-3xl font-extrabold tracking-tight sm:text-4xl">{mode === "exam" ? `${fr ? "Examen" : "Экзамен"} ${blockNumber}` : fullLesson.title}</IntroHeading>
         {fullLesson.subtitle ? <p className="text-base text-muted">{fullLesson.subtitle}</p> : null}
         {fullLesson.summary ? <p className="max-w-2xl text-base">{fullLesson.summary}</p> : null}
       </header>
