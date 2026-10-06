@@ -28,11 +28,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.9,
   }));
 
-  const examRoutes: MetadataRoute.Sitemap = getExamBlocks().map((block) => ({
-    url: `${siteUrl}/exam/${block.block}`,
-    changeFrequency: "monthly",
-    priority: 0.7,
-  }));
 
-  return [...staticRoutes, ...lessonRoutes, ...examRoutes];
+  return [...staticRoutes, ...lessonRoutes];
 }
