@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getExamBlocks, getLessonNumbers } from "@/lib/content/loader";
+import { getLessonNumbers } from "@/lib/content/loader";
 
 // Required for `output: "export"` builds.
 export const dynamic = "force-static";
