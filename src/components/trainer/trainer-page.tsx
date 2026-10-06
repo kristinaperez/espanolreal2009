@@ -37,6 +37,7 @@ export function TrainerPage({
   reviewHref,
   blockNumber,
   protectedContent = false,
+  introHeadingLevel = "h1",
 }: {
   mode: "lesson" | "exam";
   lessons: Lesson[];
@@ -45,6 +46,7 @@ export function TrainerPage({
   reviewHref?: string;
   blockNumber?: number;
   protectedContent?: boolean;
+  introHeadingLevel?: "h1" | "h2";
 }) {
   const { state, dispatch, access } = useProgress();
   const { serverPremium } = useAuth();
@@ -207,6 +209,7 @@ export function TrainerPage({
   }
 
   const fullLesson = displayLessons[0];
+  const IntroHeading = introHeadingLevel;
 
   return (
     <div className="flex flex-col gap-5">
@@ -225,7 +228,7 @@ export function TrainerPage({
             <Badge tone="info">Premium</Badge>
           ) : null}
         </div>
-        <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">{fullLesson.title}</h1>
+        <IntroHeading className="text-3xl font-extrabold tracking-tight sm:text-4xl">{fullLesson.title}</IntroHeading>
         {fullLesson.subtitle ? <p className="text-base text-muted">{fullLesson.subtitle}</p> : null}
         {fullLesson.summary ? <p className="max-w-2xl text-base">{fullLesson.summary}</p> : null}
       </header>
