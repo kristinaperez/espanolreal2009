@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { TrainerPage } from "@/components/trainer/trainer-page";
+import { LessonIntro } from "@/components/seo/lesson-intro";
 import {
   getAdjacent,
   getExamBlockForLesson,
@@ -53,7 +54,7 @@ export default async function LessonPage({ params }: { params: Promise<{ n: stri
   const { lesson, trimmed } = protectLesson(source);
   const pool = poolForLesson(lesson, trimmed);
 
-  const { next } = getAdjacent(number);
+  const { prev, next } = getAdjacent(number);
   const exam = getExamBlockForLesson(number);
   const metas = getLessonMetas();
   const examReady = exam ? number >= exam.toLesson && metas.length >= exam.toLesson : false;
@@ -89,11 +90,14 @@ export default async function LessonPage({ params }: { params: Promise<{ n: stri
   return (
     <AppShell>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd).replace(/</g, "\\u003c") }} />
+      <LessonIntro lesson={lesson} prev={prev} next={next} protectedContent={trimmed} />
       <TrainerPage
         mode="lesson"
         lessons={[lesson]}
         pool={pool}
         protectedContent={trimmed}
+        introHeadingLevel="h2"
         nextHref={examReady && exam ? `/exam/${exam.block}` : next ? `/lesson/${next.lesson}` : undefined}
       />
     </AppShell>
