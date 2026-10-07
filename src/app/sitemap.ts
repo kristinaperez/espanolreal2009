@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getLessonNumbers } from "@/lib/content/loader";
+import { topics } from "@/lib/seo/topics";
 
 // Required for `output: "export"` builds.
 export const dynamic = "force-static";
@@ -23,6 +24,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${siteUrl}/for-teachers`, changeFrequency: "monthly", priority: 0.7 },
   ];
 
+  const topicRoutes: MetadataRoute.Sitemap = topics.map((topic) => ({
+    url: `${siteUrl}/topics/${topic.slug}`,
+    changeFrequency: "monthly",
+    priority: 0.7,
+  }));
+
   const lessonRoutes: MetadataRoute.Sitemap = getLessonNumbers().map((lesson) => ({
     url: `${siteUrl}/lesson/${lesson}`,
     changeFrequency: "monthly",
@@ -30,5 +37,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
 
 
-  return [...staticRoutes, ...lessonRoutes];
+  return [...staticRoutes, ...topicRoutes, ...lessonRoutes];
 }
