@@ -22,6 +22,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${siteUrl}/learn/map`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${siteUrl}/learn/about`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${siteUrl}/for-teachers`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${siteUrl}/about-author`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${siteUrl}/contacts`, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${siteUrl}/privacy`, changeFrequency: "yearly", priority: 0.2 },
+    { url: `${siteUrl}/terms`, changeFrequency: "yearly", priority: 0.2 },
   ];
 
   const topicRoutes: MetadataRoute.Sitemap = topics.map((topic) => ({
