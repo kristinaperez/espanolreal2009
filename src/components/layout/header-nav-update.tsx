@@ -16,7 +16,7 @@ export function HeaderNavUpdate() {
     ["/#method", fr ? "Méthode" : "Метод"],
     ["/#pricing", fr ? "Tarifs" : "Цена"],
     ["/#community", fr ? "Communauté" : "Сообщество"],
-    ["/teacher", fr ? "Enseignants" : "Преподавателям"],
+    ["/for-teachers", fr ? "Enseignants" : "Преподавателям"],
   ];
   return <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/95 text-stone-900 backdrop-blur-xl">
     <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">

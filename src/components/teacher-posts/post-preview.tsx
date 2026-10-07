@@ -3,12 +3,13 @@ import { VisualHook } from "./visual-hook";
 import { ChallengeTrainer } from "./challenge-trainer";
 import { useState } from "react";
 import type { PostCta, WowPost } from "@/lib/teacher-posts/model";
-export function PostPreview({ post, cta }: { post: WowPost; cta: PostCta | null }) {
+export function PostPreview({ post, cta, headingLevel = "h2" }: { post: WowPost; cta: PostCta | null; headingLevel?: "h1" | "h2" }) {
   const [answer, setAnswer] = useState<number | null>(null);
   const q = post.interactiveQuestion;
+  const Heading = headingLevel;
   return <article className="min-w-0 space-y-5 break-words rounded-2xl border border-stone-200 bg-[#FAF8F5] p-5 sm:p-6 [overflow-wrap:anywhere]">
     <p className="text-xs font-bold uppercase tracking-widest text-[#9E2A2B]">Испанский, который живёт</p>
-    <h2 className="text-2xl font-extrabold leading-tight">{post.title}</h2>
+    <Heading className="text-2xl font-extrabold leading-tight">{post.title}</Heading>
     {post.visual && post.visual.enabled !== false && <VisualHook key={`${post.visual.mediaUrl}:${post.visual.uploadedImage}:${post.visual.variant}`} plan={post.visual} />}
     <p className="whitespace-pre-wrap text-lg font-semibold">{post.hook}</p>
     <blockquote className="rounded-xl border-l-4 border-[#9E2A2B] bg-white p-4 text-lg font-bold">{post.example}</blockquote>
