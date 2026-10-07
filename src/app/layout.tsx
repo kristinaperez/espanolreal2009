@@ -5,8 +5,8 @@ import { AuthProvider } from "@/components/providers/auth-provider";
 import { ProgressProvider } from "@/components/providers/progress-provider";
 import { LanguageProvider } from "@/components/providers/language-provider";
 import { PwaRegister } from "@/components/providers/pwa-register";
-import { getCourseStats, getLessonMetas } from "@/lib/content/loader";
-import { course, payments } from "@/lib/content/config";
+import { getLessonMetas } from "@/lib/content/loader";
+import { course } from "@/lib/content/config";
 import "./globals.css";
 import ServiceWorkerRegistration from "./ServiceWorkerRegistration";
 
@@ -65,50 +65,6 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   const metas = getLessonMetas();
-  const stats = getCourseStats();
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Course",
-        "@id": `${siteUrl}/#course`,
-        name: "Español Real",
-        url: siteUrl,
-        description:
-          "Тренажёр разговорного испанского для жизни в Испании: реальные фразы, 45 уроков, практика, интервальное повторение и карта адаптации.",
-        inLanguage: ["ru", "es"],
-        educationalLevel: ["A1", "A2", "B1", "B2"],
-        provider: {
-          "@type": "Organization",
-          name: "Español Real",
-          url: siteUrl,
-        },
-        hasCourseInstance: {
-          "@type": "CourseInstance",
-          courseMode: "online",
-          courseWorkload: "PT15M",
-        },
-        teaches: [
-          "разговорный испанский в Испании",
-          "испанский для повседневных ситуаций",
-          "испанский для жилья, покупок, транспорта, врача, банка, документов и работы",
-        ],
-        isAccessibleForFree: true,
-      },
-      {
-        "@type": "WebApplication",
-        "@id": `${siteUrl}/#application`,
-        name: "Español Real",
-        url: siteUrl,
-        applicationCategory: "EducationalApplication",
-        operatingSystem: "Web",
-        inLanguage: "ru",
-        description: "Интерактивный тренажёр живого испанского языка для жизни в Испании.",
-        isAccessibleForFree: true,
-      },
-    ],
-  };
 
   return (
     <html lang="ru" suppressHydrationWarning>
@@ -123,10 +79,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var r=localStorage.getItem('espanol-real:progress:v1');var t=r?((JSON.parse(r).settings||{}).theme):'system';var d=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');}catch(e){}})();`,
           }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
         />
         <LanguageProvider>
           <ProgressProvider metas={metas}>
