@@ -25,7 +25,7 @@ export default function LandingPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
-      { "@type": "Course", "@id": `${siteUrl}/#course`, name: "Español Real", url: siteUrl, description: "Тренажёр разговорного испанского для жизни в Испании: реальные фразы, 45 уроков, практика и повторение.", inLanguage: ["ru", "es"], educationalLevel: ["A1", "A2", "B1", "B2"], provider: { "@type": "Organization", name: "Español Real", url: siteUrl } },
+      { "@type": "Course", "@id": `${siteUrl}/#course`, name: "Español Real", url: siteUrl, description: "Тренажёр разговорного испанского для жизни в Испании: реальные фразы, 45 уроков, практика и повторение.", inLanguage: ["ru", "es"], educationalLevel: ["A1", "A2", "B1", "B2"], creator: { "@type": "Person", name: "Cristina Pérez", url: `${siteUrl}/about-author` } },
       { "@type": "WebApplication", "@id": `${siteUrl}/#application`, name: "Español Real", url: siteUrl, applicationCategory: "EducationalApplication", operatingSystem: "Web", inLanguage: "ru", description: "Интерактивный тренажёр живого испанского языка для жизни в Испании." },
       { "@type": "FAQPage", "@id": `${siteUrl}/#faq`, mainEntity: publicFaq.map((item) => ({ "@type": "Question", name: item.q, acceptedAnswer: { "@type": "Answer", text: item.a } })) },
     ],

@@ -28,13 +28,16 @@ export async function generateMetadata({
   const lesson = getLesson(Number(n));
   if (!lesson) return { title: "Урок не найден" };
   const category = categoryById.get(lesson.category);
-  const description = `${lesson.summary ?? lesson.subtitle} · ${lesson.phrases.length} живых фраз уровня ${lesson.difficulty} с переводом и примерами.`;
+  const intent = (lesson.summary ?? lesson.subtitle ?? lesson.situation ?? lesson.title).replace(/[.!?]+$/, "");
+  const title = `${intent}: ${lesson.title}`;
+  const access = lesson.lesson <= 7 ? "Упражнения доступны бесплатно." : "Упражнения доступны в Premium.";
+  const description = `${intent}. Испанские фразы с переводом и контекстом для жизни в Испании. ${access}`;
   return {
-    title: `Урок ${lesson.lesson}. ${lesson.title}`,
+    title,
     description,
     alternates: { canonical: `/lesson/${lesson.lesson}` },
     openGraph: {
-      title: `Урок ${lesson.lesson}. ${lesson.title}`,
+      title,
       description,
       url: `/lesson/${lesson.lesson}`,
       type: "article",
