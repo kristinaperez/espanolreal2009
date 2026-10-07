@@ -20,6 +20,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${siteUrl}/learn/lessons`, changeFrequency: "weekly", priority: 0.8 },
     { url: `${siteUrl}/learn/map`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${siteUrl}/learn/about`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${siteUrl}/for-teachers`, changeFrequency: "monthly", priority: 0.7 },
   ];
 
   const lessonRoutes: MetadataRoute.Sitemap = getLessonNumbers().map((lesson) => ({
