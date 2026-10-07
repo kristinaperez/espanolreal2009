@@ -33,7 +33,6 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ru_RU",
-    url: siteUrl,
     siteName: "Español Real",
     title: "Español Real — живой испанский для жизни в Испании",
     description:
