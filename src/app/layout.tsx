@@ -30,7 +30,6 @@ export const metadata: Metadata = {
   ],
   applicationName: "Español Real",
   authors: [{ name: course.author.name }],
-  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     locale: "ru_RU",
