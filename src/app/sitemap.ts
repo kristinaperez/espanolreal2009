@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getExamBlocks, getLessonNumbers } from "@/lib/content/loader";
+import { getLessonNumbers } from "@/lib/content/loader";
 
 // Required for `output: "export"` builds.
 export const dynamic = "force-static";
@@ -28,11 +28,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.9,
   }));
 
-  const examRoutes: MetadataRoute.Sitemap = getExamBlocks().map((block) => ({
-    url: `${siteUrl}/exam/${block.block}`,
-    changeFrequency: "monthly",
-    priority: 0.7,
-  }));
 
-  return [...staticRoutes, ...lessonRoutes, ...examRoutes];
+  return [...staticRoutes, ...lessonRoutes];
 }

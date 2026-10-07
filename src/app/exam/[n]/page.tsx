@@ -29,6 +29,7 @@ export async function generateMetadata({
     title: block.title,
     description: `Экзамен по урокам ${block.fromLesson}–${block.toLesson}: ${block.phraseCount} фраз, смешанные упражнения и оценка результата.`,
     alternates: { canonical: `/exam/${block.block}` },
+    robots: { index: false, follow: true },
   };
 }
 

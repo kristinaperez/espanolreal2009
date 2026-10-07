@@ -115,42 +115,52 @@ export function LessonList({ examBlocks }: { examBlocks: { block: number; fromLe
                 const unlocked = access(meta.lesson) || serverPremium;
                 const categoryItem = categoryById.get(meta.category);
                 return (
-                  <Link
+                  <div
                     key={meta.lesson}
-                    href={unlocked ? `/lesson/${meta.lesson}` : "/learn/settings#premium"}
                     className={cn(
-                      "group flex flex-col gap-2 rounded-3xl border border-line bg-surface p-4 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_10px_30px_rgba(28,21,18,0.08)]",
+                      "flex flex-col rounded-3xl border border-line bg-surface transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_10px_30px_rgba(28,21,18,0.08)]",
                       !unlocked && "opacity-80",
                     )}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="text-xs font-bold text-muted">Урок {meta.lesson}</span>
-                      {lessonState?.completed ? (
-                        <span className="grid h-6 w-6 place-items-center rounded-full bg-success text-white">
-                          <Check className="h-4 w-4" />
-                        </span>
-                      ) : unlocked ? (
-                        <span className="grid h-6 w-6 place-items-center rounded-full bg-background-soft text-xs font-bold text-muted">
-                          {meta.difficulty}
-                        </span>
-                      ) : (
-                        <Lock className="h-5 w-5 text-muted" />
-                      )}
-                    </div>
-                    <p className="text-base font-extrabold leading-snug tracking-tight">{meta.title}</p>
-                    <p className="line-clamp-2 text-sm text-muted">{meta.summary ?? meta.subtitle}</p>
-                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                      <Badge>
-                        {categoryItem?.emoji} {categoryItem?.labelRu}
-                      </Badge>
-                      <Badge>{meta.phraseCount} фраз</Badge>
-                      {lessonState?.bestScore ? (
-                        <Badge tone="success">
-                          {lessonState.bestScore}/{lessonState.bestTotal || meta.phraseCount * 2}
+                    <Link
+                      href={unlocked ? `/lesson/${meta.lesson}` : "/learn/settings#premium"}
+                      className="group flex flex-1 flex-col gap-2 p-4 pb-2"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="text-xs font-bold text-muted">Урок {meta.lesson}</span>
+                        {lessonState?.completed ? (
+                          <span className="grid h-6 w-6 place-items-center rounded-full bg-success text-white">
+                            <Check className="h-4 w-4" />
+                          </span>
+                        ) : unlocked ? (
+                          <span className="grid h-6 w-6 place-items-center rounded-full bg-background-soft text-xs font-bold text-muted">
+                            {meta.difficulty}
+                          </span>
+                        ) : (
+                          <Lock className="h-5 w-5 text-muted" />
+                        )}
+                      </div>
+                      <p className="text-base font-extrabold leading-snug tracking-tight">{meta.title}</p>
+                      <p className="line-clamp-2 text-sm text-muted">{meta.summary ?? meta.subtitle}</p>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        <Badge>
+                          {categoryItem?.emoji} {categoryItem?.labelRu}
                         </Badge>
-                      ) : null}
-                    </div>
-                  </Link>
+                        <Badge>{meta.phraseCount} фраз</Badge>
+                        {lessonState?.bestScore ? (
+                          <Badge tone="success">
+                            {lessonState.bestScore}/{lessonState.bestTotal || meta.phraseCount * 2}
+                          </Badge>
+                        ) : null}
+                      </div>
+                    </Link>
+                    <Link
+                      href={`/lesson/${meta.lesson}`}
+                      className="mx-4 mb-4 mt-1 text-sm font-bold text-primary underline decoration-primary/40 underline-offset-4"
+                    >
+                      О содержании урока
+                    </Link>
+                  </div>
                 );
               })}
             </div>
