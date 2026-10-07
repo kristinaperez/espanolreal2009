@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { categoryById } from "@/lib/content/config";
 import type { Lesson, LessonMeta } from "@/lib/content/types";
+import { getTopicForLesson } from "@/lib/seo/topics";
 
 export function LessonIntro({
   lesson,
@@ -15,6 +16,7 @@ export function LessonIntro({
   protectedContent: boolean;
 }) {
   const category = categoryById.get(lesson.category);
+  const topic = getTopicForLesson(lesson.lesson);
   const summary = lesson.summary ?? lesson.subtitle ?? lesson.situation;
   const heading = summary ? `${summary.replace(/[.!?]+$/, "")} — ${lesson.title}` : `Урок ${lesson.lesson}: ${lesson.title}`;
 
@@ -60,6 +62,7 @@ export function LessonIntro({
 
       <nav aria-label="Навигация по урокам" className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
         <Link href="/learn/lessons" className="font-bold text-primary underline decoration-primary/40">Все уроки</Link>
+        {topic ? <Link href={`/topics/${topic.slug}`} className="font-bold text-primary underline decoration-primary/40">Тема: {topic.title}</Link> : null}
         {prev ? <Link href={`/lesson/${prev.lesson}`} className="font-bold text-primary underline decoration-primary/40">← Урок {prev.lesson}</Link> : null}
         {next ? <Link href={`/lesson/${next.lesson}`} className="font-bold text-primary underline decoration-primary/40">Урок {next.lesson} →</Link> : null}
       </nav>
