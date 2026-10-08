@@ -40,11 +40,12 @@ export function FlipCard({
         <button
           type="button"
           onClick={() => {
-            setFlipped(true);
+            setFlipped((value) => !value);
             setRevealed(true);
           }}
           className={cn("flip w-full text-left", flipped && "is-flipped")}
-          aria-label={fr ? "Afficher la traduction" : "Показать перевод"}
+          aria-label={flipped ? (fr ? "Afficher la phrase" : "Показать фразу") : (fr ? "Afficher la traduction" : "Показать перевод")}
+          aria-pressed={flipped}
         >
           <div className="flip-inner min-h-[270px]">
             <div className="flip-face flex min-h-[270px] flex-col items-center justify-center rounded-[24px] border-2 border-dashed border-line bg-background-soft p-7 text-center transition hover:border-primary/40 sm:p-10">
