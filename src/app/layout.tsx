@@ -71,8 +71,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
         <Script
           src="https://static.userguiding.com/media/user-guiding-8SS114332UJ2ID-embedded.js"
-          strategy="beforeInteractive"
-          async
+          strategy="afterInteractive"
         />
         <script
           dangerouslySetInnerHTML={{
