@@ -9,6 +9,7 @@ import { getLessonMetas } from "@/lib/content/loader";
 import { course } from "@/lib/content/config";
 import "./globals.css";
 import ServiceWorkerRegistration from "./ServiceWorkerRegistration";
+import { ConsentAnalytics } from "@/components/analytics/consent-analytics";
 
 const siteUrl = "https://espanolreal.es";
 
@@ -83,6 +84,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <AuthProvider>{children}</AuthProvider>
           </ProgressProvider>
         </LanguageProvider>
+        <ConsentAnalytics />
         <PwaRegister />
       </body>
     </html>
