@@ -15,10 +15,10 @@ const siteUrl = "https://espanolreal.es";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Español Real",
+    default: "Español Real — учим живой испанский для жизни в Испании",
     template: "%s · Español Real",
   },
-  description: "Испанский для жизни в Испании",
+  description: "Мастерство реальных испанских фраз вместо заучивания грамматики. 45 уроков по учебнику «Español Real»: квартира, банк, врач, документы, работа.",
   keywords: [
     "испанский язык",
     "испанский для жизни в Испании",
@@ -33,16 +33,15 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ru_RU",
     siteName: "Español Real",
-    title: "Español Real",
-    description: "Испанский для жизни в Испании",
-    url: siteUrl,
-    images: [{ url: "/og-preview.png", width: 1200, height: 630, alt: "Español Real — Испанский для жизни в Испании" }],
+    title: "Español Real — живой испанский для жизни в Испании",
+    description: "Реальные фразы, которые слышно на улицах Испании. Карта адаптации, повторение по расписанию, 45 уроков.",
+    images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "Español Real" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Español Real",
-    description: "Испанский для жизни в Испании",
-    images: ["/og-preview.png"],
+    title: "Español Real — живой испанский для жизни в Испании",
+    description: "Мастерство реальных фраз вместо заучивания грамматики. 45 уроков.",
+    images: ["/og.jpg"],
   },
   robots: { index: true, follow: true },
   verification: {
