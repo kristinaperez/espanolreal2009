@@ -17,11 +17,18 @@ export function ConsentAnalytics() {
   const pathname = usePathname();
 
   useEffect(() => {
-    try {
-      const value = localStorage.getItem(KEY);
-      setChoice(value === "accepted" || value === "rejected" ? value : null);
-    } catch { setChoice(null); }
-    setReady(true);
+    // Read persisted consent after mount without synchronous state updates in an effect.
+    const readConsent = () => {
+      try {
+        const value = localStorage.getItem(KEY);
+        setChoice(value === "accepted" || value === "rejected" ? value : null);
+      } catch {
+        setChoice(null);
+      }
+      setReady(true);
+    };
+    const frame = window.requestAnimationFrame(readConsent);
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {
