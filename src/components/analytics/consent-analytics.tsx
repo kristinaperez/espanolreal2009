@@ -56,18 +56,20 @@ export function ConsentAnalytics() {
         window.gtag("config", GA, { send_page_view: false });
         setGaReady(true);
       }} />
-      <Script id="espanolreal-ym" strategy="afterInteractive" onReady={() => {
-        window.ym = window.ym || ((...args: unknown[]) => {
-          const fn = window.ym as ((...a: unknown[]) => void) & { a?: unknown[][] };
-          (fn.a = fn.a || []).push(args);
-        });
-        const script = document.createElement("script");
-        script.async = true;
-        script.src = `https://mc.yandex.ru/metrika/tag.js?id=${YM}`;
-        document.head.appendChild(script);
-        window.ym(YM, "init", { clickmap: true, trackLinks: true, accurateTrackBounce: true, webvisor: false, defer: true });
-        setYmReady(true);
-      }} />
+      <Script
+        id="espanolreal-ym"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `(function(w,d,id){
+            w.ym=w.ym||function(){(w.ym.a=w.ym.a||[]).push(arguments)};
+            var s=d.createElement('script');s.async=true;
+            s.src='https://mc.yandex.ru/metrika/tag.js?id='+id;
+            d.head.appendChild(s);
+            w.ym(id,'init',{clickmap:true,trackLinks:true,accurateTrackBounce:true,webvisor:false,defer:true});
+          })(window,document,${YM});`,
+        }}
+        onReady={() => setYmReady(true)}
+      />
     </>}
     {ready && choice === null && <div role="dialog" aria-label="Согласие на аналитику" className="fixed bottom-4 left-4 right-4 z-[100] mx-auto max-w-xl rounded-xl border border-gray-300 bg-white p-4 text-gray-900 shadow-xl">
       <p className="text-sm">Google Analytics и Яндекс Метрика помогают улучшать EspañolReal. Они запускаются только с вашего согласия. Отказ не влияет на уроки. <a href="/privacy" className="underline">Подробнее</a>.</p>
