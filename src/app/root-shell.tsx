@@ -8,7 +8,7 @@ import { PwaRegister } from "@/components/providers/pwa-register";
 import { getLessonMetas } from "@/lib/content/loader";
 import { course } from "@/lib/content/config";
 import "./globals.css";
-import ServiceWorkerRegistration from "./ServiceWorkerRegistration";
+
 import { ConsentAnalytics } from "@/components/analytics/consent-analytics";
 
 const siteUrl = "https://espanolreal.es";
@@ -62,11 +62,11 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export function LocaleRoot({ children, language = "ru" }: { children: ReactNode; language?: "ru" | "ar" }) {
   const metas = getLessonMetas();
 
   return (
-    <html lang="ru" suppressHydrationWarning>
+    <html lang={language} dir={language === "ar" ? "rtl" : "ltr"} suppressHydrationWarning>
       <body>
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
         <Script
@@ -79,7 +79,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             __html: `(function(){try{var r=localStorage.getItem('espanol-real:progress:v1');var t=r?((JSON.parse(r).settings||{}).theme):'system';var d=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');}catch(e){}})();`,
           }}
         />
-        <LanguageProvider>
+        <LanguageProvider initialLanguage={language}>
           <ProgressProvider metas={metas}>
             <AuthProvider>{children}</AuthProvider>
           </ProgressProvider>

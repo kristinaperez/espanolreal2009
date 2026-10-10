@@ -11,9 +11,9 @@ function check(label, condition) {
   if (!condition) failures += 1;
 }
 
-const searchPage = read("src/app/learn/search/page.tsx");
-const reviewPage = read("src/app/learn/review/page.tsx");
-const mistakesPage = read("src/app/learn/mistakes/page.tsx");
+const searchPage = read("src/app/(main)/learn/search/page.tsx");
+const reviewPage = read("src/app/(main)/learn/review/page.tsx");
+const mistakesPage = read("src/app/(main)/learn/mistakes/page.tsx");
 const lessonApi = read("src/app/api/lessons/[n]/route.ts");
 const trainer = read("src/components/trainer/trainer-page.tsx");
 const webhook = read("src/app/api/telegram/webhook/route.ts");
