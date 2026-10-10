@@ -1,4 +1,5 @@
 "use client";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -76,6 +77,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <SidebarFooter />
       </aside>
 
+      <div className="fixed bottom-20 end-4 z-40 rounded-full bg-surface shadow-sm lg:bottom-6 lg:end-20"><LanguageSwitcher compact /></div>
       {/* ---------- mobile header ---------- */}
       <div className="lg:hidden">
         <header className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-line bg-surface/95 px-4 py-3 backdrop-blur">

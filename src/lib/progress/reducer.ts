@@ -143,6 +143,25 @@ export function reduce(
   metas: LessonMeta[],
 ): ProgressState {
   const today = dateKey();
+  if ("scope" in event && event.scope === "situations") {
+    const previous = state.situations ?? { lessons: {}, phrases: {}, cards: 0 };
+    if (event.type === "answer") {
+      const id = phraseId(event.lesson, event.phraseIndex);
+      const old = previous.phrases[id] ?? { ...emptySrs(), lesson: event.lesson, learned: false };
+      return { ...state, situations: { ...previous, phrases: { ...previous.phrases, [id]: { ...advance(old, event.correct, today), lesson: event.lesson, learned: old.learned || event.correct } } } };
+    }
+    if (event.type === "flashcard") return { ...state, situations: { ...previous, cards: previous.cards + 1 } };
+    if (event.type === "lessonComplete") {
+      const key = String(event.lesson);
+      const old = previous.lessons[key];
+      const improved = !old || event.correct / Math.max(1, event.total) >= old.bestScore / Math.max(1, old.bestTotal);
+      return { ...state, situations: { ...previous, lessons: { ...previous.lessons, [key]: {
+        completed: true, completedAt: today, attempts: (old?.attempts ?? 0) + 1,
+        bestScore: improved ? event.correct : old.bestScore, bestTotal: improved ? event.total : old.bestTotal,
+        perfect: Boolean(old?.perfect) || (event.total > 0 && event.correct === event.total),
+      } } } };
+    }
+  }
   let next = regenHearts(state);
 
   switch (event.type) {
