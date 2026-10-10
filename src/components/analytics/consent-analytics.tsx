@@ -49,13 +49,17 @@ export function ConsentAnalytics() {
   return <>
     {choice === "accepted" && <>
       <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA}`} strategy="afterInteractive" />
-      <Script id="espanolreal-ga" strategy="afterInteractive" onReady={() => {
-        window.dataLayer = window.dataLayer || [];
-        window.gtag = (...args: unknown[]) => { window.dataLayer?.push(args); };
-        window.gtag("js", new Date());
-        window.gtag("config", GA, { send_page_view: false });
-        setGaReady(true);
-      }} />
+      <Script
+        id="espanolreal-ga"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `window.dataLayer=window.dataLayer||[];
+            window.gtag=function(){window.dataLayer.push(arguments)};
+            window.gtag('js',new Date());
+            window.gtag('config','${GA}',{send_page_view:false});`,
+        }}
+        onReady={() => setGaReady(true)}
+      />
       <Script
         id="espanolreal-ym"
         strategy="afterInteractive"
@@ -65,7 +69,7 @@ export function ConsentAnalytics() {
             var s=d.createElement('script');s.async=true;
             s.src='https://mc.yandex.ru/metrika/tag.js?id='+id;
             d.head.appendChild(s);
-            w.ym(id,'init',{clickmap:true,trackLinks:true,accurateTrackBounce:true,webvisor:false,defer:true});
+            w.ym(id,'init',{clickmap:true,trackLinks:true,accurateTrackBounce:true,webvisor:false});
           })(window,document,${YM});`,
         }}
         onReady={() => setYmReady(true)}
