@@ -46,7 +46,7 @@ check("entitlement requires a currently paid order", /findPaidLicenseForUser[\s\
 check("account payload does not expose license keys", !/premium:[\s\S]{0,180}key:/.test(account));
 check("public master license key was removed", !envExample.includes("NEXT_PUBLIC_MASTER_LICENSE_KEY"));
 check("baseline security headers are configured", netlify.includes("Strict-Transport-Security") && netlify.includes("Content-Security-Policy =") && netlify.includes("X-Frame-Options"));
-check("Next.js security update is pinned", packageJson.dependencies.next === "16.3.3" && packageJson.devDependencies["eslint-config-next"] === "16.3.3");
+check("Next.js security update is pinned", packageJson.dependencies.next === "16.3.8" && packageJson.devDependencies["eslint-config-next"] === "16.3.8");
 
 // --- Support Bot webhook security checks ------------------------------------
 const supportWebhook = read("src/app/api/telegram/support/webhook/route.ts");

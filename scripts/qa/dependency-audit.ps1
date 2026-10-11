@@ -34,3 +34,4 @@ try {
     }
 } finally { Pop-Location }
 if ($blocked) { exit 1 }
+exit 0
