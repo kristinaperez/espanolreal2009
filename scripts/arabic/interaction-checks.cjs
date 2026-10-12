@@ -8,7 +8,7 @@ global.IS_REACT_ACT_ENVIRONMENT = true;
 window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} });
 const React = require('react'); const { act } = React; const { createRoot } = require('react-dom/client');
 const { load, configure } = require('./load-module.cjs');
-configure({ globals: { window, document, localStorage: window.localStorage, Event: window.Event, URLSearchParams: window.URLSearchParams }, mocks: { 'next/link': { __esModule: true, default: ({ children, href, ...props }) => React.createElement('a', { ...props, href }, children) } } });
+configure({ globals: { AbortController, window, document, localStorage: window.localStorage, Event: window.Event, URLSearchParams: window.URLSearchParams }, mocks: { 'next/link': { __esModule: true, default: ({ children, href, ...props }) => React.createElement('a', { ...props, href }, children) } } });
 const { SituationTrainer } = load('src/components/arabic/situation-trainer.tsx');
 const { LanguageProvider } = load('src/components/providers/language-provider.tsx');
 const { ProgressProvider } = load('src/components/providers/progress-provider.tsx');

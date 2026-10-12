@@ -14,16 +14,21 @@ const audioStream = () => ({ getTracks: () => [{ stop: () => stopped++ }] });
 let acquire = async () => audioStream();
 Object.defineProperty(window.navigator, 'mediaDevices', { value: { getUserMedia: async options => { requests++; assert.deepEqual(JSON.parse(JSON.stringify(options)), { audio: true, video: false }); return acquire(); } } });
 let limitCallback;
+let uploads = 0;
 class Recorder {
   static isTypeSupported(type) { return type === 'audio/mp4'; }
   constructor(stream, options) { this.state = 'inactive'; this.mimeType = options.mimeType; lastRecorder = this; }
   start() { this.state = 'recording'; }
   stop() { this.state = 'inactive'; this.ondataavailable?.({ data: new Blob(['voice'], { type: this.mimeType }) }); this.onstop?.(); }
 }
-configure({ globals: { window, document, navigator: window.navigator, MediaRecorder: Recorder, Blob,
+configure({ globals: { AbortController,
+  fetch: async (url, options) => {
+    if (options?.method === 'POST') { uploads++; return { ok: true, json: async () => ({ ok: true, score: 7.8, words: [{ word: 'Hola', accuracy: 78, error: 'None' }] }) }; }
+    return { json: async () => ({ enabled: true }) };
+  }, window, document, navigator: window.navigator, MediaRecorder: Recorder, Blob,
   URL: { createObjectURL: () => 'blob:voice-' + ++created, revokeObjectURL: url => revoked.push(url) },
   setInterval: () => 1, clearInterval() {}, setTimeout: callback => { limitCallback = callback; return 2; }, clearTimeout() {},
-}, mocks: { './audio-button': { AudioButton: () => React.createElement('button', null, 'sample') } } });
+}, mocks: { '@/lib/audio/wav': { recordingToWav: async blob => blob }, 'next/link': { __esModule: true, default: ({ children, href, ...props }) => React.createElement('a', { ...props, href }, children) }, './audio-button': { AudioButton: () => React.createElement('button', null, 'sample') } } });
 const { PronunciationPractice } = load('src/components/arabic/pronunciation-practice.tsx');
 let root;
 async function mount() { root = createRoot(document.getElementById('root')); await act(async () => root.render(React.createElement(PronunciationPractice, { lessonId: 'housing', phrases: ['Hola', 'Gracias'] }))); }
@@ -38,11 +43,15 @@ async function click(text) { await act(async () => button(text).click()); }
   assert(![...document.querySelectorAll('button')].some(b => b.textContent === 'sample'), 'sample must not play during recording');
   await act(async () => limitCallback()); assert.equal(lastRecorder.state, 'inactive'); assert.equal(stopped, 1, '15 second limit must release microphone');
   assert(document.querySelector('audio').src.startsWith('blob:voice-')); assert(document.body.textContent.includes('لا توجد درجة'));
+  assert.equal(uploads, 0, 'recording must not upload automatically');
+  assert(button('قيّم نطقي').disabled, 'explicit consent is required');
+  await act(async () => document.querySelector('input[type=checkbox]').click());
+  await click('قيّم نطقي'); assert.equal(uploads, 1); assert(document.querySelector('meter')); assert.equal(document.querySelector('meter').value, 7.8);
   await click('احذف التسجيل'); assert.equal(revoked.length, 1); assert.equal(document.querySelector('audio'), null);
   await click('سجّل صوتك'); await act(async () => root.unmount()); assert.equal(stopped, 2, 'leaving exercise must stop capture');
   await mount(); let resolvePermission;
   acquire = () => new Promise(resolve => { resolvePermission = resolve; });
   await click('سجّل صوتك'); await act(async () => root.unmount());
   await act(async () => resolvePermission(audioStream())); assert.equal(stopped, 3, 'late permission response must release microphone');
-  console.log('PASS: permission denial, explicit recording, format selection, auto-stop, local playback, deletion, unmount and late-permission cleanup; no fabricated score. Real device recording still pending.');
+  console.log('PASS: permission denial, explicit recording, format selection, auto-stop, local playback, per-recording consent before upload, assessment display, deletion, unmount and late-permission cleanup; provider mocked. Real device recording still pending.');
 })().catch(error => { console.error(error); process.exitCode = 1; }).finally(() => dom.window.close());

@@ -33,7 +33,7 @@ const server = process.env.ARABIC_QA_BASE ? null : spawn(process.execPath, ['nod
     }
     assert.deepEqual(errors,[]);
     await page.getByRole('button',{name:'Русский',exact:true}).click();await page.waitForURL(base+'/');assert.equal(await page.locator('html').getAttribute('dir'),'ltr');
-    await page.getByRole('button',{name:'Français',exact:true}).click();await page.getByRole('link',{name:'Commencer gratuitement',exact:true}).first().waitFor();
+    await page.goto(base+'/learn/settings');await page.getByRole('button',{name:'Français',exact:true}).click();await page.goto(base+'/');await page.getByRole('link',{name:'Commencer gratuitement',exact:true}).first().waitFor();
     await page.reload();await page.getByRole('link',{name:'Commencer gratuitement',exact:true}).first().waitFor();
     await context.close();
     const nojs=await browser.newContext({javaScriptEnabled:false,serviceWorkers:'block'});const staticPage=await nojs.newPage();
