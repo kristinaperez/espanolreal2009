@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     google: "XsPAnFMeuRke9Fc9xUfdFIEP0mJKmpbsC2_pgy7OkUE",
   },
   icons: {
-  icon: [{ url: "/icon.png", type: "image/png" }],
+  icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
   apple: "/icon.png",
   },
   manifest: "/manifest.webmanifest",
