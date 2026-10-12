@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { AudioButton } from "./audio-button";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { recordingToWav } from "@/lib/audio/wav";
+import type { PronunciationResult } from "@/server/pronunciation/azure";
 
 type CaptureState = "idle" | "requesting" | "recording" | "ready";
 const MAX_SECONDS = 15;
@@ -15,13 +18,19 @@ function captureError(error: unknown) {
   return "تعذّر التسجيل. حاول مجددًا أو تابع الدرس دون تسجيل.";
 }
 
-/** Local recording prototype. No upload, recognition or synthetic assessment score. */
+/** Audio stays local until explicit consent and assessment submission. */
 export function PronunciationPractice({ phrases, lessonId }: { phrases: string[]; lessonId: string }) {
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [state, setState] = useState<CaptureState>("idle");
   const [seconds, setSeconds] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [enabled, setEnabled] = useState(false);
+  const [consent, setConsent] = useState(false);
+  const [evaluating, setEvaluating] = useState(false);
+  const [result, setResult] = useState<PronunciationResult | null>(null);
+  const recordingBlob = useRef<Blob | null>(null);
+  const evaluation = useRef<AbortController | null>(null);
   const recorder = useRef<MediaRecorder | null>(null);
   const stream = useRef<MediaStream | null>(null);
   const objectUrl = useRef<string | null>(null);
@@ -41,8 +50,12 @@ export function PronunciationPractice({ phrases, lessonId }: { phrases: string[]
 
   useEffect(() => {
     mounted.current = true;
+    const config = new AbortController();
+    if (typeof fetch !== "undefined") void fetch("/api/pronunciation", { signal: config.signal }).then(response => response.json()).then(value => { if (mounted.current) setEnabled(value.enabled === true); }).catch(() => {});
     return () => {
       mounted.current = false;
+      config.abort();
+      evaluation.current?.abort();
       if (timer.current) clearInterval(timer.current);
       if (deadline.current) clearTimeout(deadline.current);
       const active = recorder.current;
@@ -58,6 +71,11 @@ export function PronunciationPractice({ phrases, lessonId }: { phrases: string[]
   }, []);
 
   function discard() {
+    evaluation.current?.abort();
+    recordingBlob.current = null;
+    setEvaluating(false);
+    setConsent(false);
+    setResult(null);
     if (objectUrl.current) URL.revokeObjectURL(objectUrl.current);
     objectUrl.current = null;
     setAudioUrl(null);
@@ -108,6 +126,7 @@ export function PronunciationPractice({ phrases, lessonId }: { phrases: string[]
         if (!mounted.current || failed) return;
         const blob = new Blob(chunks, { type: active.mimeType || chunks[0]?.type || "audio/webm" });
         if (!blob.size) { setState("idle"); setError("لم يتم تسجيل صوت. حاول مجددًا."); return; }
+        recordingBlob.current = blob;
         const url = URL.createObjectURL(blob);
         objectUrl.current = url;
         setAudioUrl(url);
@@ -126,10 +145,40 @@ export function PronunciationPractice({ phrases, lessonId }: { phrases: string[]
     }
   }
 
-  const busy = state === "recording" || state === "requesting";
+  async function assess() {
+    if (!consent || !recordingBlob.current || evaluating) return;
+    const controller = new AbortController();
+    evaluation.current = controller;
+    setEvaluating(true); setError(""); setResult(null);
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    try {
+      const wav = await recordingToWav(recordingBlob.current);
+      if (controller.signal.aborted || !mounted.current) return;
+      const response = await fetch(`/api/pronunciation?lesson=${encodeURIComponent(lessonId)}&phrase=${phraseIndex}`, { method: "POST", headers: { "Content-Type": "audio/wav" }, body: wav, signal: controller.signal });
+      const payload = await response.json();
+      if (!mounted.current || controller.signal.aborted) return;
+      if (!response.ok || payload.ok !== true) {
+        const messages: Record<string, string> = {
+          login_required: "سجّل الدخول عبر Telegram في صفحة الحساب لتقييم النطق، ثم عد إلى الدرس. يبقى التسجيل متاحًا دون تسجيل دخول.",
+          unconfigured: "خدمة تقييم النطق غير مفعّلة حاليًا. يمكنك متابعة الدرس.",
+          rate_limited: "وصلت إلى الحد المؤقت للتقييم. حاول لاحقًا.",
+          no_speech: "الصوت منخفض جدًا أو لم يتم تسجيل كلام. سجّل محاولة جديدة في مكان هادئ.",
+          no_assessment: "لم نحصل على تقييم موثوق. حاول نطق العبارة كاملة مجددًا.",
+          format: "تعذّر تجهيز الصوت للتقييم. حاول في Safari أو Chrome.",
+        };
+        setError(messages[payload.code] ?? "التقييم غير متاح الآن. حاول لاحقًا؛ لم تُحسب درجة.");
+        return;
+      }
+      if (typeof payload.score !== "number" || !Number.isFinite(payload.score) || payload.score < 0 || payload.score > 10 || !Array.isArray(payload.words)) throw new Error("Invalid assessment");
+      setResult(payload as PronunciationResult);
+    } catch { if (mounted.current) setError("تعذّر تقييم التسجيل. حاول لاحقًا أو استخدم Safari أو Chrome؛ لم تُحسب درجة."); }
+    finally { clearTimeout(timeout); if (mounted.current) setEvaluating(false); }
+  }
+
+  const busy = state === "recording" || state === "requesting" || evaluating;
   return <div className="space-y-4 rounded-2xl border border-line bg-background-soft p-4 sm:p-6">
     <h3 className="text-xl font-bold">تدرّب على النطق بصوتك</h3>
-    <p className="text-sm leading-7">استمع، سجّل صوتك ثم استمع إلى تسجيلك. يبقى التسجيل مؤقتًا في هذا المتصفح ولا يُرسل إلى الخادم. مدة التسجيل القصوى 15 ثانية.</p>
+    <p className="text-sm leading-7">استمع، سجّل صوتك ثم استمع إلى تسجيلك. يبقى التسجيل مؤقتًا في هذا المتصفح حتى تختار إرساله للتقييم. مدة التسجيل القصوى 15 ثانية.</p>
     <label className="block space-y-2"><span>اختر كلمة أو عبارة</span>
       <select aria-label="اختر كلمة أو عبارة" dir="ltr" lang="es" disabled={busy} value={phraseIndex} onChange={event => { discard(); setPhraseIndex(Number(event.target.value)); }} className="w-full min-w-0 rounded-xl border border-line bg-surface p-3">
         {phrases.map((phrase, index) => <option value={index} key={`${index}-${phrase}`}>{phrase}</option>)}
@@ -138,16 +187,25 @@ export function PronunciationPractice({ phrases, lessonId }: { phrases: string[]
     <p lang="es" dir="ltr" className="break-words text-xl font-bold">{phrases[phraseIndex]}</p>
     {!busy && <AudioButton spanish={phrases[phraseIndex]} lessonId={lessonId} />}
     <div className="flex flex-wrap gap-3">
-      {state === "recording" ? <Button onClick={stop}>أوقف التسجيل</Button> : <Button disabled={state === "requesting"} onClick={start}>{state === "requesting" ? "جارٍ طلب الميكروفون…" : audioUrl ? "سجّل محاولة جديدة" : "سجّل صوتك"}</Button>}
-      {audioUrl && <Button variant="secondary" onClick={discard}>احذف التسجيل</Button>}
+      {state === "recording" ? <Button onClick={stop}>أوقف التسجيل</Button> : <Button disabled={state === "requesting" || evaluating} onClick={start}>{state === "requesting" ? "جارٍ طلب الميكروفون…" : audioUrl ? "سجّل محاولة جديدة" : "سجّل صوتك"}</Button>}
+      {audioUrl && <Button variant="secondary" disabled={evaluating} onClick={discard}>احذف التسجيل</Button>}
     </div>
     {state === "recording" && <p role="status">جارٍ التسجيل… <bdi dir="ltr">{seconds} / {MAX_SECONDS}</bdi></p>}
     {error && <p role="alert" className="text-sm leading-7">{error}</p>}
     {audioUrl && <div className="space-y-2"><p>استمع إلى تسجيلك</p><audio aria-label="تسجيلك" controls src={audioUrl} className="w-full" /></div>}
-    <div className="rounded-xl border border-line bg-surface p-4">
-      <p className="font-bold">تقييم النطق بالذكاء الاصطناعي: غير متاح بعد</p>
-      <p className="mt-2 text-sm leading-7">بعد تفعيل خدمة التقييم، ستظهر دقة النطق على مقياس من 0 إلى 10 وملاحظات على الكلمات. لا توجد درجة لهذه المحاولة الآن. يمكنك متابعة الدرس دون تقييم.</p>
-      <ol aria-label="مقياس التقييم غير مفعّل" dir="ltr" className="mt-3 grid grid-cols-10 gap-1">{Array.from({ length: 10 }, (_, index) => <li key={index} className="rounded bg-background-soft py-2 text-center text-xs text-muted">{index + 1}</li>)}</ol>
+    <div className="space-y-3 rounded-xl border border-line bg-surface p-4">
+      <p className="font-bold">{enabled ? "تقييم النطق بالذكاء الاصطناعي" : "تقييم النطق بالذكاء الاصطناعي: غير متاح بعد"}</p>
+      {enabled && audioUrl && <>
+        <label className="flex items-start gap-2 text-sm leading-7"><input type="checkbox" checked={consent} disabled={evaluating} onChange={event => setConsent(event.target.checked)} className="mt-2" /><span>أوافق على إرسال هذا التسجيل إلى Microsoft Azure Speech لتقييم نطقي. لا يحفظ EspañolReal الملف في قاعدة بياناته. <a className="underline" href="https://learn.microsoft.com/azure/ai-services/speech-service/speech-to-text-data-privacy-security" target="_blank" rel="noopener noreferrer">معلومات معالجة الصوت</a></span></label>
+        <Button disabled={!consent || evaluating} onClick={assess}>{evaluating ? "جارٍ التقييم…" : "قيّم نطقي"}</Button>
+        <Link href="/ar/account" className="block text-sm underline">الحساب / تسجيل الدخول عبر Telegram</Link>
+      </>}
+      {result ? <>
+        <p role="status" className="text-2xl font-bold">دقة النطق: <bdi dir="ltr">{result.score.toFixed(1)} / 10</bdi></p>
+        <meter aria-label="دقة النطق" min={0} max={10} value={result.score} className="h-5 w-full" />
+        <ul dir="ltr" lang="es" className="flex flex-wrap gap-2">{result.words.map((word, index) => <li key={index} className={`rounded-lg border px-3 py-2 ${word.error === "Omission" || word.error === "Insertion" || (word.accuracy !== null && word.accuracy < 60) ? "border-amber-600 bg-amber-50 text-amber-950" : "border-line"}`}><b>{word.word}</b>{word.accuracy !== null && <span> · {(word.accuracy / 10).toFixed(1)}</span>}{word.error === "Omission" && <span lang="ar"> · كلمة غير منطوقة</span>}{word.error === "Insertion" && <span lang="ar"> · كلمة إضافية</span>}</li>)}</ul>
+        <p className="text-sm leading-7">الدرجة تقدير آلي مقارنة بنموذج الإسبانية في إسبانيا، وليست اختبارًا رسميًا. أعد الكلمات المظلّلة ثم جرّب مجددًا.</p>
+      </> : <p className="text-sm leading-7">لا توجد درجة لهذه المحاولة الآن. يمكنك متابعة الدرس دون تقييم.</p>}
     </div>
   </div>;
 }

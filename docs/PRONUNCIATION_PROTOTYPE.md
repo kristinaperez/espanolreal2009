@@ -1,5 +1,7 @@
 # Arabic pronunciation prototype — 2026-10-12
 
+Historical first step. For the subsequent Azure integration and current behavior, see [AZURE_PRONUNCIATION.md](AZURE_PRONUNCIATION.md).
+
 ## Scope
 
 The listening stage of all three Arabic lessons now includes a local microphone exercise: select a vocabulary word or lesson phrase, hear the existing es-ES TTS sample, record up to 15 seconds, listen back, delete or retry. Recording is optional and does not affect lesson completion, course progress or Premium access.

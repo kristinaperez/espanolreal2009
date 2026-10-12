@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { useRef, useState } from "react";
 import { Download, ShieldCheck, Star, Upload } from "lucide-react";
 import { Badge, Card, Input, Switch } from "@/components/ui/card";
@@ -55,6 +56,8 @@ export function SettingsView() {
           покупки на другом устройстве.
         </p>
       </header>
+
+      <Card className="flex flex-col gap-4"><p className="text-sm font-bold">Язык интерфейса / لغة الواجهة</p><LanguageSwitcher allLanguages /></Card>
 
       <Card className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-3">
