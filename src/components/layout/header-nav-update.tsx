@@ -1,4 +1,5 @@
 "use client";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 
 import Link from "next/link";
 import { Menu, Plus, X } from "lucide-react";
@@ -34,6 +35,7 @@ export function HeaderNavUpdate() {
           <button type="button" aria-expanded={open} aria-controls="mobile-site-nav" aria-label={open ? "Закрыть меню" : "Открыть меню"} onClick={() => setOpen(!open)} className="grid h-11 w-11 place-items-center rounded-xl border border-stone-200 xl:hidden">{open ? <X size={20} /> : <Menu size={20} />}</button>
         </div>
       </div>
+      <div className="mt-3 flex justify-end"><LanguageSwitcher /></div>
       <Link href="/teacher/posts/new" className="mt-3 flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#9E2A2B] px-4 text-sm font-bold text-white sm:hidden"><Plus size={16} />{fr ? "Créer un post" : "Создать пост"}</Link>
       {open && <nav id="mobile-site-nav" aria-label="Мобильная навигация" className="mt-3 grid gap-1 border-t border-stone-200 pt-3 xl:hidden">
         {links.map(([href, label]) => <Link key={href} href={href} onClick={() => setOpen(false)} className="rounded-xl px-3 py-3 text-sm font-semibold hover:bg-stone-50">{label}</Link>)}

@@ -1,3 +1,17 @@
+## [2026-10-10] — Arabic SEO MVP (draft)
+
+### Added
+- Ten public server-rendered Arabic SEO pages, Arabic sharing card, semantic RTL/LTR, related links, sitemap and reciprocal RU/AR home alternatives.
+- Three free six-stage situation lessons sharing the course generator/runner, multilingual phrase data and persistent isolated situation progress/review.
+- Arabic account/checkout presentation, visible locale selector and consent-gated Arabic funnel events.
+### Changed
+- Original page routes moved into `(main)` without changing URLs; shared root shell serves RU/LTR and AR/RTL before hydration.
+- Backward-compatible local progress migration; course statistics/certificates/access remain separate from new situation records.
+### Security
+- Original Telegram/session/payment/webhook/API policies retained; Premium Arabic translation coverage is explicitly limited to three free lessons.
+### Tests
+- Production build, typecheck/lint/security, Arabic content/progress/HTTP checks and real React DOM interaction suite. Browser/mobile/Safari/real audio/live integrations and native Arabic review remain pending; see docs/ARABIC_SEO_MVP.md.
+
 ## [2026-10-06] — Teacher cabinet and social profiles
 
 ### Changed

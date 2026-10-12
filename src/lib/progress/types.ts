@@ -33,6 +33,7 @@ export interface DayLog {
 }
 
 export interface ProgressState {
+  situations: { lessons: Record<string, LessonProgress>; phrases: Record<string, PhraseProgress>; cards: number };
   version: number;
   createdAt: string;
   xp: number;
@@ -59,9 +60,9 @@ export interface ProgressState {
 }
 
 export type ProgressEvent =
-  | { type: "answer"; lesson: number; phraseIndex: number; correct: boolean }
-  | { type: "flashcard"; lesson: number; phraseIndex: number; reverse?: boolean }
-  | { type: "lessonComplete"; lesson: number; correct: number; total: number }
+  | { type: "answer"; lesson: number; phraseIndex: number; correct: boolean; scope?: "situations" }
+  | { type: "flashcard"; lesson: number; phraseIndex: number; reverse?: boolean; scope?: "situations" }
+  | { type: "lessonComplete"; lesson: number; correct: number; total: number; scope?: "situations" }
   | { type: "examComplete"; block: number; correct: number; total: number }
   | { type: "reviewComplete"; correct: number; total: number }
   | { type: "setDailyGoal"; value: number }
@@ -73,6 +74,7 @@ export const STORAGE_KEY = "espanol-real:progress:v1";
 
 export function defaultState(heartsEnabled = false, maxHearts = 5): ProgressState {
   return {
+    situations: { lessons: {}, phrases: {}, cards: 0 },
     version: 1,
     createdAt: new Date().toISOString(),
     xp: 0,

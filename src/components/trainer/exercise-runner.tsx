@@ -40,6 +40,8 @@ export function ExerciseRunner({
   level,
   nextHref,
   onFinish,
+  progressScope,
+  exitHref = "/",
 }: {
   exercises: Exercise[];
   mode: Mode;
@@ -49,10 +51,13 @@ export function ExerciseRunner({
   level?: string;
   nextHref?: string;
   onFinish: (result: SessionResult) => void;
+  progressScope?: "situations";
+  exitHref?: string;
 }) {
   const { state, dispatch } = useProgress();
   const { language } = useLanguage();
   const fr = language === "fr";
+  const ar = language === "ar";
   const [queue, setQueue] = useState<Exercise[]>(exercises);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -68,7 +73,7 @@ export function ExerciseRunner({
 
   const total = exercises.length;
   const current = queue[index];
-  const showHearts = state.settings.hearts;
+  const showHearts = !progressScope && state.settings.hearts;
   const heartsLeft = state.hearts.count;
   const outOfHearts = showHearts && heartsLeft <= 0;
 
@@ -90,11 +95,11 @@ export function ExerciseRunner({
         firstAttempts.current[exercise.id] = correct;
       }
       if (!correct) mistakeIds.current.add(exercise.id);
-      dispatch({ type: "answer", lesson: exercise.lesson, phraseIndex: exercise.phraseIndex, correct });
+      dispatch({ type: "answer", lesson: exercise.lesson, phraseIndex: exercise.phraseIndex, correct, scope: progressScope });
       if (state.settings.sound) playFeedback(correct ? "correct" : "wrong");
       setResult(correct ? "correct" : "wrong");
     },
-    [dispatch, state.settings.sound],
+    [dispatch, progressScope, state.settings.sound],
   );
 
   const submit = useCallback(() => {
@@ -175,8 +180,8 @@ export function ExerciseRunner({
   if (total === 0) {
     return (
       <div className="mx-auto max-w-2xl rounded-[24px] border border-line bg-surface p-10 text-center shadow-[0_12px_40px_rgba(26,26,26,0.06)]">
-        <p className="text-lg font-bold">{fr ? "Aucun exercice pour cette session." : "Нет упражнений для этой сессии."}</p>
-        <p className="mt-2 text-sm text-muted">{fr ? "Revenez après avoir terminé quelques leçons." : "Загляните сюда после того, как пройдёте несколько уроков."}</p>
+        <p className="text-lg font-bold">{ar ? "لا توجد تمارين في هذه الجلسة." : fr ? "Aucun exercice pour cette session." : "Нет упражнений для этой сессии."}</p>
+        <p className="mt-2 text-sm text-muted">{ar ? "عُد بعد إكمال بعض الدروس." : fr ? "Revenez après avoir terminé quelques leçons." : "Загляните сюда после того, как пройдёте несколько уроков."}</p>
       </div>
     );
   }
@@ -187,16 +192,16 @@ export function ExerciseRunner({
     return (
       <div className="mx-auto max-w-2xl rounded-[24px] border border-line bg-surface p-8 text-center shadow-[0_12px_40px_rgba(26,26,26,0.06)] sm:p-12">
         <p className="text-4xl">💔</p>
-        <h2 className="mt-4 text-2xl font-black">{fr ? "Vous n'avez plus de cœurs" : "Сердечки закончились"}</h2>
+        <h2 className="mt-4 text-2xl font-black">{ar ? "نفدت القلوب" : fr ? "Vous n'avez plus de cœurs" : "Сердечки закончились"}</h2>
         <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
-          {fr ? "Ils se reconstituent avec le temps. Vous pouvez continuer sans cœurs : désactivez ce mode dans les réglages." : "Они восстанавливаются со временем. Вы можете продолжить без сердечек — режим отключается в настройках."}
+          {ar ? "تُستعاد القلوب مع الوقت. يمكنك المتابعة دون قلوب." : fr ? "Ils se reconstituent avec le temps. Vous pouvez continuer sans cœurs : désactivez ce mode dans les réglages." : "Они восстанавливаются со временем. Вы можете продолжить без сердечек — режим отключается в настройках."}
         </p>
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
           <Link href="/learn" className="inline-flex h-12 items-center justify-center rounded-full border-2 border-line bg-surface px-6 text-sm font-extrabold transition hover:bg-background-soft active:scale-95">
-            {fr ? "Quitter" : "Выйти"}
+            {ar ? "خروج" : fr ? "Quitter" : "Выйти"}
           </Link>
           <Button size="lg" onClick={() => dispatch({ type: "setSettings", patch: { hearts: false } })}>
-            {fr ? "Continuer sans cœurs" : "Продолжить без сердечек"}
+            {ar ? "المتابعة دون قلوب" : fr ? "Continuer sans cœurs" : "Продолжить без сердечек"}
           </Button>
         </div>
       </div>
@@ -236,17 +241,17 @@ export function ExerciseRunner({
       <header className="sticky top-0 z-20 -mx-4 border-b border-line/70 bg-background/90 px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10">
         <div className="mx-auto flex max-w-3xl items-center gap-3">
           <Link
-            href="/"
-            aria-label={fr ? "Retour à l'accueil" : "Вернуться на главную"}
+            href={exitHref}
+            aria-label={ar ? "العودة إلى الصفحة الرئيسية" : fr ? "Retour à l'accueil" : "Вернуться на главную"}
             className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line bg-surface text-foreground transition hover:border-primary hover:text-primary active:scale-95"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className={cn("h-5 w-5", ar && "rotate-180")} />
           </Link>
 
           <div className="min-w-0 flex-1">
             <div className="mb-1 flex items-center justify-between gap-3 text-xs font-bold">
-              <span className="text-muted">{Math.min(index + 1, total)} {fr ? "sur" : "из"} {total}</span>
-              <span className="text-primary">+{state.combo >= 2 ? comboBonusPercent(state.combo) : 0} XP</span>
+              <span className="text-muted">{Math.min(index + 1, total)} {ar ? "من" : fr ? "sur" : "из"} {total}</span>
+              {!progressScope && <span className="text-primary">+{state.combo >= 2 ? comboBonusPercent(state.combo) : 0} XP</span>}
             </div>
             <ProgressBar value={percent} className="h-2.5" />
           </div>
@@ -262,7 +267,7 @@ export function ExerciseRunner({
       <div className="px-0.5">
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded-full bg-primary px-3 py-1.5 text-xs font-extrabold text-white">
-            {lessonLabel ?? (fr ? MODE_LABEL_FR[mode] : MODE_LABEL[mode])}
+            {lessonLabel ?? (ar ? "تدريب" : fr ? MODE_LABEL_FR[mode] : MODE_LABEL[mode])}
           </span>
           <span className="rounded-full bg-background-soft px-3 py-1.5 text-xs font-extrabold text-muted">
             {level ?? (mode === "exam" ? "A1" : "A0–A1")}
@@ -276,7 +281,7 @@ export function ExerciseRunner({
         {isFlashcard ? (
           <div>
             <p className="mb-3 text-center text-sm font-extrabold text-foreground">
-              {current.kind === "reverse-flashcard" ? (fr ? "Comment le dire en espagnol ?" : "Как сказать по-испански?") : (fr ? "Que signifie cette phrase ?" : "Что означает эта фраза?")}
+              {current.kind === "reverse-flashcard" ? (ar ? "كيف تقول ذلك بالإسبانية؟" : fr ? "Comment le dire en espagnol ?" : "Как сказать по-испански?") : (ar ? "ما معنى هذه العبارة؟" : fr ? "Que signifie cette phrase ?" : "Что означает эта фраза?")}
             </p>
             <FlipCard
               phrase={current.phrase}
@@ -290,6 +295,7 @@ export function ExerciseRunner({
                   lesson: current.lesson,
                   phraseIndex: current.phraseIndex,
                   reverse: current.kind === "reverse-flashcard",
+                  scope: progressScope,
                 });
                 next();
               }}
@@ -301,6 +307,7 @@ export function ExerciseRunner({
                   lesson: current.lesson,
                   phraseIndex: current.phraseIndex,
                   reverse: current.kind === "reverse-flashcard",
+                  scope: progressScope,
                 });
                 next();
               }}
@@ -310,18 +317,18 @@ export function ExerciseRunner({
           <div className={cn(result === "wrong" && "animate-shake")}>
             <p className="mb-3 text-center text-sm font-extrabold text-foreground">
               {current.kind === "choice"
-                ? (fr ? "Choisissez la bonne traduction" : "Выберите правильный перевод")
+                ? (ar ? "اختر الترجمة الصحيحة" : fr ? "Choisissez la bonne traduction" : "Выберите правильный перевод")
                 : current.kind === "fill"
-                  ? (fr ? "Complétez avec le mot manquant" : "Вставьте пропущенное слово")
+                  ? (ar ? "أكمل بالكلمة الناقصة" : fr ? "Complétez avec le mot manquant" : "Вставьте пропущенное слово")
                   : current.kind === "truefalse"
-                    ? (fr ? "La traduction est-elle correcte ?" : "Верный ли перевод?")
+                    ? (ar ? "هل الترجمة صحيحة؟" : fr ? "La traduction est-elle correcte ?" : "Верный ли перевод?")
                     : current.kind === "build"
-                      ? (fr ? "Remettez les mots dans l'ordre" : "Составьте фразу из слов")
-                      : (fr ? "Écrivez en espagnol" : "Напишите по-испански")}
+                      ? (ar ? "رتّب الكلمات لتكوين العبارة" : fr ? "Remettez les mots dans l'ordre" : "Составьте фразу из слов")
+                      : (ar ? "اكتب بالإسبانية" : fr ? "Écrivez en espagnol" : "Напишите по-испански")}
             </p>
 
             <div className="rounded-[24px] border border-line bg-background-soft p-6 text-center sm:p-8">
-              <p className="text-2xl font-black leading-tight tracking-tight sm:text-3xl">{prompt}</p>
+              <p dir={current.kind === "fill" || current.kind === "truefalse" || (current.kind === "choice" && current.direction === "es-ru") ? "ltr" : ar ? "rtl" : "ltr"} lang={current.kind === "fill" || current.kind === "truefalse" || (current.kind === "choice" && current.direction === "es-ru") ? "es" : language} className="text-2xl font-black leading-tight tracking-tight sm:text-3xl">{prompt}</p>
 
               {current.kind === "truefalse" ? (
                 <p className="mt-4 text-lg font-bold text-foreground">
@@ -336,6 +343,7 @@ export function ExerciseRunner({
                     <OptionButton
                       key={`${option}-${optionIndex}`}
                       label={option}
+                      direction={current.kind === "fill" || current.direction === "ru-es" ? "ltr" : ar ? "rtl" : "ltr"}
                       index={optionIndex}
                       disabled={Boolean(result)}
                       selected={selected === optionIndex}
@@ -360,7 +368,7 @@ export function ExerciseRunner({
                 <div className="grid grid-cols-2 gap-3">
                   <AnswerButton
                     icon={<X className="h-5 w-5" />}
-                    label={fr ? "Faux" : "Неверно"}
+                    label={ar ? "خطأ" : fr ? "Faux" : "Неверно"}
                     selected={boolAnswer === false}
                     disabled={Boolean(result)}
                     correct={Boolean(result) && current.isTrue === false}
@@ -369,7 +377,7 @@ export function ExerciseRunner({
                   />
                   <AnswerButton
                     icon={<Check className="h-5 w-5" />}
-                    label={fr ? "Vrai" : "Верно"}
+                    label={ar ? "صحيح" : fr ? "Vrai" : "Верно"}
                     selected={boolAnswer === true}
                     disabled={Boolean(result)}
                     correct={Boolean(result) && current.isTrue === true}
@@ -381,9 +389,9 @@ export function ExerciseRunner({
 
               {current.kind === "build" ? (
                 <>
-                  <div className="min-h-20 rounded-[20px] border-2 border-dashed border-line bg-surface p-3">
+                  <div dir="ltr" lang="es" className="min-h-20 rounded-[20px] border-2 border-dashed border-line bg-surface p-3">
                     {built.length === 0 ? (
-                      <span className="text-sm text-muted">{fr ? "Cliquez sur les mots ci-dessous…" : "Нажимайте слова ниже…"}</span>
+                      <span className="text-sm text-muted">{ar ? "اضغط على الكلمات أدناه…" : fr ? "Cliquez sur les mots ci-dessous…" : "Нажимайте слова ниже…"}</span>
                     ) : (
                       <div className="flex flex-wrap gap-2">
                         {built.map((token, tokenIndex) => (
@@ -400,7 +408,7 @@ export function ExerciseRunner({
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div dir="ltr" lang="es" className="flex flex-wrap gap-2">
                     {current.tokens.map((token, tokenIndex) => {
                       const used = built.filter((item) => item === token).length;
                       const available = current.tokens.filter((item) => item === token).length;
@@ -421,13 +429,13 @@ export function ExerciseRunner({
               ) : null}
 
               {current.kind === "translate" ? (
-                <input
+                <input dir="ltr" lang="es"
                   id="translation-answer"
                   name="translation-answer"
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
                   disabled={Boolean(result)}
-                  placeholder={fr ? "Écrivez en espagnol…" : "Escribe en español…"}
+                  placeholder={ar ? "اكتب بالإسبانية…" : fr ? "Écrivez en espagnol…" : "Escribe en español…"}
                   autoComplete="off"
                   autoCapitalize="off"
                   spellCheck={false}
@@ -439,7 +447,7 @@ export function ExerciseRunner({
         )}
       </section>
 
-      <CardFeedbackButton
+      {!ar && <CardFeedbackButton
         context={{
           lesson: current.lesson,
           card: current.phraseIndex + 1,
@@ -447,7 +455,7 @@ export function ExerciseRunner({
           translation: current.phrase.translation,
           exerciseKind: current.kind,
         }}
-      />
+      />}
 
       {result && current.gradable ? (
         <div
@@ -462,15 +470,15 @@ export function ExerciseRunner({
             </span>
             <div className="min-w-0">
               <p className={cn("text-base font-black", result === "correct" ? "text-success" : "text-danger")}>
-                {result === "correct" ? (fr ? "🎉 Excellent !" : "🎉 Отлично!") : (fr ? "💡 Presque !" : "💡 Почти!")}
+                {result === "correct" ? (ar ? "🎉 ممتاز!" : fr ? "🎉 Excellent !" : "🎉 Отлично!") : (ar ? "💡 حاول مرة أخرى!" : fr ? "💡 Presque !" : "💡 Почти!")}
               </p>
               <p className="mt-1 text-sm font-semibold">
-                {current.kind === "build" || current.kind === "translate" ? current.answer : current.phrase.spanish}
+                <bdi lang="es" dir="ltr">{current.kind === "build" || current.kind === "translate" ? current.answer : current.phrase.spanish}</bdi>
                 {" — "}
                 {current.phrase.translation}
               </p>
               {result === "wrong" ? (
-                <p className="mt-2 text-xs font-bold text-muted">{fr ? "Nous reverrons cette phrase plus tard 🔄" : "Мы повторим эту фразу позже 🔄"}</p>
+                <p className="mt-2 text-xs font-bold text-muted">{ar ? "سنراجع هذه العبارة لاحقًا 🔄" : fr ? "Nous reverrons cette phrase plus tard 🔄" : "Мы повторим эту фразу позже 🔄"}</p>
               ) : null}
             </div>
           </div>
@@ -485,13 +493,13 @@ export function ExerciseRunner({
           disabled={!result && !canSubmit}
           className="h-14 rounded-full text-base font-extrabold shadow-[0_4px_0_0_var(--primary-strong)] transition active:scale-95"
         >
-          {result ? (index + 1 >= queue.length ? (fr ? "Terminer la leçon" : "Завершить урок") : (fr ? "Suivant →" : "Далее →")) : (fr ? "Vérifier" : "Проверить")}
+          {result ? (index + 1 >= queue.length ? (ar ? "إنهاء المرحلة" : fr ? "Terminer la leçon" : "Завершить урок") : (ar ? "التالي ←" : fr ? "Suivant →" : "Далее →")) : (ar ? "تحقّق" : fr ? "Vérifier" : "Проверить")}
         </Button>
       ) : null}
 
       {nextHref ? (
         <p className="flex items-center justify-center gap-1 text-xs text-muted">
-          <RotateCcw className="h-3.5 w-3.5" /> {fr ? "Les erreurs reviennent automatiquement dans les révisions" : "Ошибки возвращаются в повторение автоматически"}
+          <RotateCcw className="h-3.5 w-3.5" /> {ar ? "تُضاف الأخطاء إلى المراجعة تلقائيًا" : fr ? "Les erreurs reviennent automatiquement dans les révisions" : "Ошибки возвращаются в повторение автоматически"}
         </p>
       ) : null}
     </div>
@@ -505,6 +513,7 @@ const MODE_LABEL_FR: Record<Mode, string> = {
 };
 
 function OptionButton({
+  direction = "ltr",
   label,
   index,
   selected,
@@ -513,6 +522,7 @@ function OptionButton({
   onClick,
 }: {
   label: string;
+  direction?: "ltr" | "rtl";
   index: number;
   selected: boolean;
   state: "idle" | "correct" | "wrong";
@@ -525,7 +535,7 @@ function OptionButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "flex min-h-14 items-center gap-3 rounded-[18px] border-2 bg-surface px-4 py-3 text-left text-[15px] font-bold transition hover:border-primary/50 active:scale-[0.98]",
+        "flex min-h-14 items-center gap-3 rounded-[18px] border-2 bg-surface px-4 py-3 text-start text-[15px] font-bold transition hover:border-primary/50 active:scale-[0.98]",
         state === "correct" && "border-success bg-success-soft text-success",
         state === "wrong" && "border-danger bg-danger-soft text-danger",
         state === "idle" && selected && "border-primary bg-primary/10",
@@ -543,7 +553,7 @@ function OptionButton({
       >
         {index + 1}
       </span>
-      <span className="leading-snug">{label}</span>
+      <span dir={direction} className="leading-snug">{label}</span>
     </button>
   );
 }

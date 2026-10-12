@@ -1,3 +1,4 @@
+import { arabicSeoPages, arabicPath } from "@/lib/arabic/seo-content";
 import type { MetadataRoute } from "next";
 import { getLessonNumbers } from "@/lib/content/loader";
 import { topics } from "@/lib/seo/topics";
@@ -41,5 +42,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
 
 
-  return [...staticRoutes, ...topicRoutes, ...lessonRoutes];
+  const arabicRoutes: MetadataRoute.Sitemap = arabicSeoPages.map(page => ({ url: `${siteUrl}${arabicPath(page.slug)}`, changeFrequency: "monthly", priority: page.slug ? 0.7 : 0.9 }));
+  return [...staticRoutes, ...topicRoutes, ...lessonRoutes, ...arabicRoutes];
 }

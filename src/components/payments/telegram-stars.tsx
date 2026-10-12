@@ -1,4 +1,6 @@
 "use client";
+import { trackArabicEvent } from "@/lib/arabic/analytics";
+import { useLanguage } from "@/components/providers/language-provider";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -41,11 +43,14 @@ const POLL_ATTEMPTS = 40;
  */
 export function TelegramStarsPayment({ compact = false }: { compact?: boolean }) {
   const { user, starsPrice, status: authStatus, refresh, serverPremium, account } = useAuth();
+  const { language } = useLanguage();
+  const ar = language === "ar";
   const [phase, setPhase] = useState<Phase>("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [openedIn, setOpenedIn] = useState<"webapp" | "browser" | null>(null);
+  const trackedOrders = useRef(new Set<number>());
   const pollRef = useRef<number | null>(null);
 
   const stopPolling = useCallback(() => {
@@ -59,9 +64,9 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
 
   const activate = useCallback(() => {
     setPhase("paid");
-    setMessage("Premium активирован!");
+    setMessage((ar ? "تم تفعيل Premium!" : "Premium активирован!"));
     void refresh();
-  }, [refresh]);
+  }, [refresh, ar]);
 
   const checkOrder = useCallback(
     async (orderId: number): Promise<boolean> => {
@@ -74,10 +79,11 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
         });
         const payload = (await response.json()) as StatusResponse;
         if (!response.ok) {
-          setError(payload.error ?? "Не удалось проверить оплату.");
+          setError(payload.error ?? (ar ? "تعذّر التحقق من الدفع." : "Не удалось проверить оплату."));
           return false;
         }
         if (payload.status === "paid" && payload.premium) {
+          if (ar && !trackedOrders.current.has(orderId)) { trackedOrders.current.add(orderId); trackArabicEvent("arabic_purchase"); }
           activate();
           return true;
         }
@@ -87,7 +93,7 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
         return false;
       }
     },
-    [activate],
+    [activate, ar],
   );
 
   const startPolling = useCallback(
@@ -102,13 +108,13 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
           if (!paid) {
             setPhase("idle");
             setMessage(
-              "Оплата ещё не подтверждена. Нажмите «Проверить оплату» через несколько секунд.",
+              (ar ? "لم يُؤكّد الدفع بعد. اضغط على «تحقّق من الدفع» بعد بضع ثوانٍ." : "Оплата ещё не подтверждена. Нажмите «Проверить оплату» через несколько секунд."),
             );
           }
         }
       }, POLL_INTERVAL);
     },
-    [checkOrder, stopPolling],
+    [checkOrder, stopPolling, ar],
   );
 
   const buy = useCallback(async () => {
@@ -123,7 +129,7 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
       });
       const payload = (await response.json()) as OrderResponse;
       if (!response.ok || !payload.invoiceLink) {
-        setError(payload.error ?? "Не удалось создать счёт.");
+        setError(payload.error ?? (ar ? "تعذّر إنشاء فاتورة الدفع." : "Не удалось создать счёт."));
         setPhase("error");
         return;
       }
@@ -135,48 +141,44 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
           void checkOrder(payload.orderId);
         } else if (status === "cancelled") {
           setPhase("idle");
-          setMessage("Оплата отменена. Вы можете попробовать снова.");
+          setMessage((ar ? "أُلغي الدفع. يمكنك المحاولة مرة أخرى." : "Оплата отменена. Вы можете попробовать снова."));
         } else if (status === "failed") {
           setPhase("idle");
-          setError("Платёж не прошёл. Попробуйте ещё раз.");
+          setError((ar ? "لم يكتمل الدفع. حاول مرة أخرى." : "Платёж не прошёл. Попробуйте ещё раз."));
         }
       });
       setOpenedIn(how);
       if (how === "browser") {
-        setMessage("Счёт открыт в браузере. Если Telegram не открылся автоматически, нажмите «Открыть счёт заново». После оплаты вернитесь сюда.");
+        setMessage((ar ? "فُتحت الفاتورة في المتصفح. إذا لم يفتح Telegram تلقائيًا، اضغط على «افتح الفاتورة مجددًا». عُد إلى هنا بعد الدفع." : "Счёт открыт в браузере. Если Telegram не открылся автоматически, нажмите «Открыть счёт заново». После оплаты вернитесь сюда."));
         startPolling(payload.orderId);
       }
     } catch (caught) {
       setError((caught as Error).message);
       setPhase("error");
     }
-  }, [account, checkOrder, startPolling]);
+  }, [account, checkOrder, startPolling, ar]);
 
   const restore = useCallback(async () => {
     setError(null);
     setMessage(null);
     await refresh();
-    setMessage("Статус покупки обновлён по вашему Telegram-аккаунту.");
-  }, [refresh]);
+    setMessage((ar ? "تم تحديث حالة الشراء المرتبطة بحساب Telegram." : "Статус покупки обновлён по вашему Telegram-аккаунту."));
+  }, [refresh, ar]);
 
   // ---------------- render ----------------
 
   if (authStatus === "loading") {
     return (
       <div className="flex items-center gap-2 text-sm text-muted">
-        <Loader2 className="h-4 w-4 animate-spin" /> Проверяем аккаунт…
-      </div>
+        <Loader2 className="h-4 w-4 animate-spin" />{ar ? "جارٍ التحقق من الحساب…" : "Проверяем аккаунт…"}</div>
     );
   }
 
   if (authStatus === "local") {
     return (
       <div className="rounded-3xl border border-line bg-background-soft p-4">
-        <p className="text-sm font-bold">Оплата звёздами Telegram</p>
-        <p className="mt-1 text-sm text-muted">
-          Онлайн-оплата недоступна: приложение работает в локальном режиме. Откройте сайт с подключённым сервером
-          и базой данных, чтобы оплатить звёздами.
-        </p>
+        <p className="text-sm font-bold">{ar ? "الدفع بنجوم Telegram" : "Оплата звёздами Telegram"}</p>
+        <p className="mt-1 text-sm text-muted">{ar ? "الدفع غير متاح حاليًا. يمكنك متابعة الدروس العربية المجانية." : "Онлайн-оплата недоступна: приложение работает в локальном режиме. Откройте сайт с подключённым сервером и базой данных, чтобы оплатить звёздами."}</p>
       </div>
     );
   }
@@ -185,10 +187,9 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
     return (
       <div className="flex flex-col gap-4 rounded-3xl border border-primary/30 bg-primary/8 p-4">
         <div>
-          <p className="text-sm font-bold">Войдите через Telegram, чтобы оплатить звёздами</p>
+          <p className="text-sm font-bold">{ar ? "سجّل الدخول عبر Telegram للدفع بالنجوم" : "Войдите через Telegram, чтобы оплатить звёздами"}</p>
           <p className="mt-1 text-sm text-muted">
-            Premium — {starsPrice} ⭐ (разовая покупка). После входа здесь появится кнопка оплаты — переходить на другую страницу не нужно.
-          </p>
+            Premium — {starsPrice}{ar ? "⭐ (شراء مرة واحدة). يظهر زر الدفع هنا بعد تسجيل الدخول." : "⭐ (разовая покупка). После входа здесь появится кнопка оплаты — переходить на другую страницу не нужно."}</p>
         </div>
         <TelegramLogin variant="compact" />
       </div>
@@ -201,19 +202,13 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
     return (
       <Card className="flex flex-col gap-3 border-success/50 bg-success/8">
         <p className="flex items-center gap-2 text-base font-extrabold text-success">
-          <Check className="h-5 w-5" /> Premium активирован
-        </p>
-        <p className="text-sm text-muted">
-          Все уроки, экзамены, полное повторение и сертификат открыты. Доступ привязан к вашему Telegram, поэтому
-          он восстановится на любом устройстве.
-        </p>
+          <Check className="h-5 w-5" />{ar ? "تم تفعيل Premium" : "Premium активирован"}</p>
+        <p className="text-sm text-muted">{ar ? "فُتح الوصول إلى الدورة الأصلية والاختبارات والمراجعة والشهادة. يرتبط الشراء بحساب Telegram ويمكن استعادته على جهاز آخر. التقدّم التعليمي محفوظ محليًا." : "Все уроки, экзамены, полное повторение и сертификат открыты. Доступ привязан к вашему Telegram, поэтому он восстановится на любом устройстве."}</p>
         <div className="flex flex-wrap gap-2">
           <Link
             href="/learn/lessons"
             className="inline-flex h-12 items-center justify-center rounded-2xl bg-primary px-5 text-[15px] font-semibold text-primary-contrast shadow-[0_4px_0_0_var(--primary-strong)]"
-          >
-            Открыть все уроки →
-          </Link>
+          >{ar ? "افتح الدورة الأصلية ←" : "Открыть все уроки →"}</Link>
         </div>
       </Card>
     );
@@ -223,24 +218,18 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
     return (
       <Card className="flex flex-col gap-2 border-success/40 bg-success/8">
         <p className="flex items-center gap-2 text-sm font-extrabold text-success">
-          <Check className="h-5 w-5" /> Premium уже активен
-        </p>
-        <p className="text-sm text-muted">
-          Спасибо за поддержку проекта! Все 45 уроков и система повторения открыты.
-        </p>
+          <Check className="h-5 w-5" />{ar ? "Premium مفعّل بالفعل" : "Premium уже активен"}</p>
+        <p className="text-sm text-muted">{ar ? "شكرًا لدعم المشروع! لديك وصول إلى الدورة الأصلية. التجربة العربية تضم حاليًا ثلاثة دروس مجانية." : "Спасибо за поддержку проекта! Все 45 уроков и система повторения открыты."}</p>
         <div className="flex flex-wrap gap-2">
-          <Badge tone="success">{starsPrice} ⭐ оплачено</Badge>
+          <Badge tone="success">{starsPrice}{ar ? "⭐ مدفوعة" : "⭐ оплачено"}</Badge>
         </div>
         <div className="mt-1 flex flex-wrap gap-2">
           <Button variant="secondary" size="sm" onClick={() => void restore()}>
-            <RefreshCw className="h-4 w-4" /> Восстановить покупку
-          </Button>
+            <RefreshCw className="h-4 w-4" />{ar ? "استعادة الشراء" : "Восстановить покупку"}</Button>
           <Link
             href="/learn/lessons"
             className="inline-flex h-9 items-center justify-center rounded-2xl border border-line px-4 text-sm font-semibold"
-          >
-            К урокам
-          </Link>
+          >{ar ? "إلى الدورة الأصلية" : "К урокам"}</Link>
         </div>
       </Card>
     );
@@ -252,22 +241,18 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
     <div className={compact ? "flex flex-col gap-3" : "flex flex-col gap-4"}>
       <div className="flex flex-col gap-2">
         <p className="flex items-center gap-2 text-base font-extrabold tracking-tight">
-          <Star className="h-5 w-5 text-accent" /> Premium за {starsPrice} звёзд
-        </p>
-        <p className="text-sm text-muted">
-          Оплата внутри Telegram: Stars списываются с вашего баланса. Без карты, без подписки, доступ навсегда.
-        </p>
+          <Star className="h-5 w-5 text-accent" />{ar ? "Premium مقابل" : "Premium за"}{starsPrice}{ar ? "نجوم" : "звёзд"}</p>
+        <p className="text-sm text-muted">{ar ? "الدفع داخل Telegram: تُخصم النجوم من رصيدك. شراء مرة واحدة دون اشتراك." : "Оплата внутри Telegram: Stars списываются с вашего баланса. Без карты, без подписки, доступ навсегда."}</p>
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button size="lg" onClick={() => void buy()} disabled={busy}>
           {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Star className="h-5 w-5" />}
-          {busy ? "Создаём счёт…" : `Оплатить ${starsPrice} ⭐`}
+          {busy ? (ar ? "جارٍ إنشاء الفاتورة…" : "Создаём счёт…") : (ar ? `ادفع ${starsPrice} ⭐` : `Оплатить ${starsPrice} ⭐`)}
         </Button>
         {order ? (
           <Button variant="secondary" size="lg" onClick={() => void checkOrder(order.orderId)}>
-            <CreditCard className="h-5 w-5" /> Проверить оплату
-          </Button>
+            <CreditCard className="h-5 w-5" />{ar ? "تحقّق من الدفع" : "Проверить оплату"}</Button>
         ) : null}
       </div>
 
@@ -278,31 +263,28 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
           rel="noopener noreferrer"
           className="inline-flex w-fit items-center gap-1.5 text-xs font-bold text-primary underline decoration-primary/40"
         >
-          <ExternalLink className="h-3.5 w-3.5" /> Открыть счёт заново
-        </a>
+          <ExternalLink className="h-3.5 w-3.5" />{ar ? "افتح الفاتورة مجددًا" : "Открыть счёт заново"}</a>
       ) : null}
 
       {phase === "awaiting" ? (
         <p className="flex items-center gap-2 text-sm font-semibold text-muted">
           <Loader2 className="h-4 w-4 animate-spin" />
           {openedIn === "webapp"
-            ? "Ожидаем подтверждение оплаты в Telegram…"
-            : "Ожидаем оплату. Как только Telegram подтвердит платёж, доступ откроется автоматически."}
+            ? (ar ? "بانتظار تأكيد الدفع في Telegram…" : "Ожидаем подтверждение оплаты в Telegram…")
+            : (ar ? "بانتظار الدفع. يُفتح الوصول بعد تأكيد Telegram للدفع." : "Ожидаем оплату. Как только Telegram подтвердит платёж, доступ откроется автоматически.")}
         </p>
       ) : null}
 
       {message ? <p className="text-sm font-semibold">{message}</p> : null}
-      {error ? <p className="text-sm font-semibold text-danger">{error}</p> : null}
+      {error ? <p className="text-sm font-semibold text-danger">{ar ? "تعذّر إكمال العملية. تحقّق من الاتصال وحاول مرة أخرى." : error}</p> : null}
 
       <div className="flex flex-wrap gap-2">
-        <Badge tone="accent">Разовая покупка</Badge>
-        <Badge tone="success">Без подписки</Badge>
-        <Badge tone="info">Возврат через @BotFather</Badge>
+        <Badge tone="accent">{ar ? "شراء مرة واحدة" : "Разовая покупка"}</Badge>
+        <Badge tone="success">{ar ? "دون اشتراك" : "Без подписки"}</Badge>
+        <Badge tone="info">{ar ? "الاسترداد عبر @BotFather" : "Возврат через @BotFather"}</Badge>
       </div>
 
-      <p className="text-xs text-muted">
-        Покупка привязана к аккаунту Telegram и восстанавливается автоматически при следующем входе.
-      </p>
+      <p className="text-xs text-muted">{ar ? "يرتبط الشراء بحساب Telegram ويُستعاد عند تسجيل الدخول بالحساب نفسه." : "Покупка привязана к аккаунту Telegram и восстанавливается автоматически при следующем входе."}</p>
     </div>
   );
 }

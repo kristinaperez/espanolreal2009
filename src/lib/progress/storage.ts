@@ -37,6 +37,7 @@ export function migrate(partial: Partial<ProgressState>): ProgressState {
   return {
     ...base,
     ...partial,
+    situations: { ...base.situations, ...(partial.situations ?? {}) },
     streak: { ...base.streak, ...(partial.streak ?? {}) },
     bonusClaimed: { ...base.bonusClaimed, ...(partial.bonusClaimed ?? {}) },
     totals: { ...base.totals, ...(partial.totals ?? {}) },

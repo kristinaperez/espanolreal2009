@@ -1,3 +1,15 @@
+# Arabic MVP — 2026-10-10
+
+## NOW
+- Review draft Arabic MVP PR and Netlify preview; obtain native Arabic review of three lessons and page/account text.
+- Run browser/mobile RTL and live configured auth/payment/audio/analytics acceptance before release.
+## NEXT
+- After approved production deployment, submit sitemap and inspect Arabic landing/pillar in Search Console; measure real CWV.
+## LATER
+- Review Arabic query/impression/position/click data 4–8 weeks after actual release and scope Phase 2.
+## BACKLOG
+- Darija wording variants only after user research; expanded Arabic lesson coverage and localized installed-PWA/offline entry.
+
 # Cabinet follow-up — 2026-10-06
 
 ## NOW

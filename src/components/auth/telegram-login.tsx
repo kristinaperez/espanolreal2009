@@ -1,4 +1,5 @@
 "use client";
+import { useLanguage } from "@/components/providers/language-provider";
 
 import { useEffect, useId, useRef, useState } from "react";
 import { LogOut, ShieldCheck, Star } from "lucide-react";
@@ -15,6 +16,8 @@ import { cn } from "@/lib/utils";
  */
 export function TelegramLogin({ variant = "full" }: { variant?: "full" | "compact" }) {
   const { botUsername, authenticating, error, user, logout, miniApp, loginWithWidgetData } = useAuth();
+  const { language } = useLanguage();
+  const ar = language === "ar";
   const widgetId = useId().replace(/:/g, "");
   const callbackName = `telegramAuth${widgetId}`;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,6 +53,7 @@ export function TelegramLogin({ variant = "full" }: { variant?: "full" | "compac
     script.src = "https://telegram.org/js/telegram-widget.js?22";
     script.async = true;
     script.setAttribute("data-telegram-login", botUsername);
+    if (ar) script.setAttribute("data-lang", "ar");
     script.setAttribute("data-size", variant === "compact" ? "large" : "large");
     script.setAttribute("data-userpic", "true");
     script.setAttribute("data-radius", "16");
@@ -58,7 +62,7 @@ export function TelegramLogin({ variant = "full" }: { variant?: "full" | "compac
     script.onload = () => setWidgetError(null);
     script.onerror = () =>
       setWidgetError(
-        "Виджет Telegram не загрузился. Проверьте, что домен приложения добавлен в BotFather (/setdomain).",
+        (ar ? "تعذّر تحميل تسجيل الدخول عبر Telegram. حاول مرة أخرى لاحقًا." : "Виджет Telegram не загрузился. Проверьте, что домен приложения добавлен в BotFather (/setdomain)."),
       );
     container.appendChild(script);
 
@@ -69,7 +73,7 @@ export function TelegramLogin({ variant = "full" }: { variant?: "full" | "compac
       container.replaceChildren();
       delete (window as unknown as Record<string, unknown>)[callbackName];
     };
-  }, [botUsername, callbackName, loginWithWidgetData, user, miniApp, variant]);
+  }, [botUsername, callbackName, loginWithWidgetData, user, miniApp, variant, ar]);
 
   if (user) {
     return (
@@ -95,7 +99,7 @@ export function TelegramLogin({ variant = "full" }: { variant?: "full" | "compac
             </p>
             <p className="truncate text-xs text-muted">
               {user.username ? `@${user.username}` : `id ${user.telegramId}`}
-              {miniApp ? " · Telegram Mini App" : " · вход выполнен"}
+              {miniApp ? " · Telegram Mini App" : (ar ? " · تم تسجيل الدخول" : " · вход выполнен")}
             </p>
           </div>
         </div>
@@ -104,16 +108,16 @@ export function TelegramLogin({ variant = "full" }: { variant?: "full" | "compac
           onClick={() => void logout()}
           className="inline-flex items-center gap-1.5 rounded-2xl border border-line bg-surface px-3.5 py-2 text-xs font-bold text-muted transition hover:text-foreground"
         >
-          <LogOut className="h-4 w-4" /> Выйти
-        </button>
+          <LogOut className="h-4 w-4" />{ar ? "تسجيل الخروج" : "Выйти"}</button>
       </div>
     );
   }
 
+  if (!botUsername && ar) return <p className="rounded-xl border border-line p-4">تسجيل الدخول غير متاح حاليًا. يمكنك متابعة الدروس المجانية.</p>;
   if (!botUsername) {
     return (
       <div className="rounded-3xl border border-line bg-background-soft p-4">
-        <p className="text-sm font-bold">Вход через Telegram</p>
+        <p className="text-sm font-bold">{ar ? "تسجيل الدخول عبر Telegram" : "Вход через Telegram"}</p>
         <p className="mt-1 text-sm text-muted">
           Задайте переменные окружения <code className="font-mono text-xs">TELEGRAM_BOT_TOKEN</code> и{" "}
           <code className="font-mono text-xs">TELEGRAM_BOT_USERNAME</code>, чтобы включить вход и оплату звёздами.
@@ -129,28 +133,24 @@ export function TelegramLogin({ variant = "full" }: { variant?: "full" | "compac
         data-telegram-login-widget
         className="flex min-h-[40px] items-center justify-center overflow-hidden"
       />
-      {!miniApp && /^[A-Za-z0-9_]+$/.test(botUsername) && <a href={`https://t.me/${botUsername}?startapp`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm font-bold transition-shadow hover:shadow-md">Открыть приложение в Telegram</a>}
+      {!miniApp && /^[A-Za-z0-9_]+$/.test(botUsername) && <a href={`https://t.me/${botUsername}?startapp`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm font-bold transition-shadow hover:shadow-md">{ar ? "افتح التطبيق في Telegram" : "Открыть приложение в Telegram"}</a>}
       {authenticating ? (
         <p className="flex items-center gap-2 text-sm font-semibold text-primary">
-          <Star className="h-4 w-4 animate-flame" /> Подтверждаем данные Telegram…
-        </p>
+          <Star className="h-4 w-4 animate-flame" />{ar ? "جارٍ تأكيد بيانات Telegram…" : "Подтверждаем данные Telegram…"}</p>
       ) : null}
       {widgetError ? <p className="text-sm font-semibold text-danger">{widgetError}</p> : null}
       {error ? (
         <div className="rounded-2xl border border-danger/30 bg-danger/8 p-3">
-          <p className="text-sm font-semibold text-danger">{error}</p>
-          {error.includes("TELEGRAM_BOT_TOKEN") || error.includes("Подпись Telegram") ? (
+          <p className="text-sm font-semibold text-danger">{ar ? "تعذّر تسجيل الدخول. حاول مرة أخرى أو افتح التطبيق في Telegram." : error}</p>
+          {!ar && (error.includes("TELEGRAM_BOT_TOKEN") || error.includes("Подпись Telegram")) ? (
             <p className="mt-1 text-xs text-muted">На сервере токен должен принадлежать именно тому Telegram-боту, который указан в кнопке входа.</p>
           ) : null}
         </div>
       ) : null}
       {variant === "full" ? (
         <>
-          <p className="text-xs text-muted">
-            Мы получаем только имя, username и Telegram ID. Прогресс обучения остаётся на вашем устройстве:
-            аккаунт нужен только для оплаты и восстановления покупки.
-          </p>
-          {hostname ? (
+          <p className="text-xs text-muted">{ar ? "نستقبل الاسم واسم المستخدم ومعرّف Telegram فقط. يبقى تقدّم التعلم على جهازك؛ يُستخدم الحساب للشراء واستعادته." : "Мы получаем только имя, username и Telegram ID. Прогресс обучения остаётся на вашем устройстве: аккаунт нужен только для оплаты и восстановления покупки."}</p>
+          {hostname && !ar ? (
             <p className="text-xs text-muted">
               Если видите «Bot domain invalid», откройте @BotFather → /setdomain → добавьте домен{" "}
               <code className="font-mono font-bold">{hostname}</code> (без https:// и без www, если сайт открывается
@@ -158,8 +158,8 @@ export function TelegramLogin({ variant = "full" }: { variant?: "full" | "compac
             </p>
           ) : null}
           <div className="flex flex-wrap gap-2">
-            <Badge tone="info">Без пароля</Badge>
-            <Badge tone="success">Официальный виджет Telegram</Badge>
+            <Badge tone="info">{ar ? "دون كلمة مرور" : "Без пароля"}</Badge>
+            <Badge tone="success">{ar ? "تسجيل الدخول الرسمي من Telegram" : "Официальный виджет Telegram"}</Badge>
           </div>
         </>
       ) : null}

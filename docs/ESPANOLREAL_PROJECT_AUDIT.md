@@ -61,3 +61,8 @@ Main inspected at ea281b63e02cb14012a79f90bc609d221042a8b4, related issue #1 rem
 ## 2026-10-06 cabinet review
 
 Main e3ef31c83003610c7de3c25caabfce0994c87707 inspected with open issues/PRs. Existing publication was already server-authenticated but guest UI showed a disabled control. Teacher cabinet lacked persistent social settings. Follow-up in separate feature branch; see docs/TEACHER_CABINET.md for CHANGE/WHY/FILES/RISK/TEST/RESULT. Manual profile-link approach confirmed by user; no OAuth automation added.
+
+
+## 2026-10-10 Arabic MVP review
+
+Main inspected at 8f4a8f6e02afb0ae935db2768ec3b004125b736a; Arabic specification and ordered feature-branch/PR plan approved by the user. Confirmed RU/FR type with RU reset on mount, a two-lesson FR prototype, Russian root HTML, no Arabic routes and numbered-course progress/access coupling. Implementation uses shared multiple-locale root shell and typed Arabic SEO content, common exercise runner and additive situation progress namespace. Existing page URLs, course data, auth/payment/API/database/PWA contracts retained. See ARABIC_SEO_MVP.md for CHANGE/WHY/FILES/RISK/TEST/RESULT and pending native/device/live acceptance.

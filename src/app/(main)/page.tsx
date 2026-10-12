@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     "живой испанский",
     "Español Real",
   ],
-  alternates: { canonical: "/" },
+  alternates: { canonical: "/", languages: { ru: "https://espanolreal.es/", ar: "https://espanolreal.es/ar", "x-default": "https://espanolreal.es/" } },
 };
 
 export default function LandingPage() {

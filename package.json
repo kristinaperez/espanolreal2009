@@ -8,7 +8,11 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test:security": "node scripts/security-regression.mjs",
-    "test:support-webhook": "node scripts/e2e-support-webhook.mjs"
+    "test:support-webhook": "node scripts/e2e-support-webhook.mjs",
+    "test:arabic": "node scripts/arabic/checks.cjs",
+    "test:arabic:http": "node scripts/arabic/http-checks.cjs",
+    "test:arabic:interaction": "node scripts/arabic/interaction-checks.cjs",
+    "test:arabic:browser": "node scripts/arabic/browser-checks.cjs"
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.3",
