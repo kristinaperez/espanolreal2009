@@ -1,3 +1,4 @@
+import { publishedStories } from "@/lib/stories";
 import { arabicSeoPages, arabicPath } from "@/lib/arabic/seo-content";
 import type { MetadataRoute } from "next";
 import { getLessonNumbers } from "@/lib/content/loader";
@@ -43,5 +44,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
 
   const arabicRoutes: MetadataRoute.Sitemap = arabicSeoPages.map(page => ({ url: `${siteUrl}${arabicPath(page.slug)}`, changeFrequency: "monthly", priority: page.slug ? 0.7 : 0.9 }));
-  return [...staticRoutes, ...topicRoutes, ...lessonRoutes, ...arabicRoutes];
+  const storyRoutes: MetadataRoute.Sitemap = [
+    { url: `${siteUrl}/ru/100-prichin-uchit-ispanskiy/`, changeFrequency: "weekly", priority: 0.7 },
+    ...publishedStories.map(story => ({ url: `${siteUrl}/ru/zachem-uchit-ispanskiy/${story.slug}/`, lastModified: new Date(story.updatedAt), changeFrequency: "monthly" as const, priority: 0.6 }))
+  ];
+  return [...staticRoutes, ...topicRoutes, ...lessonRoutes, ...arabicRoutes, ...storyRoutes];
 }
