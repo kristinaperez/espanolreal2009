@@ -7,6 +7,7 @@ import Link from "next/link";
 import { recordingToWav } from "@/lib/audio/wav";
 import type { PronunciationResult } from "@/server/pronunciation/azure";
 import { getWebApp } from "@/lib/telegram/webapp";
+import { useAuth } from "@/components/providers/auth-provider";
 
 type CaptureState = "idle" | "requesting" | "recording" | "ready";
 const MAX_SECONDS = 15;
@@ -21,6 +22,7 @@ function captureError(error: unknown) {
 
 /** Audio stays local until explicit consent and assessment submission. */
 export function PronunciationPractice({ phrases, lessonId }: { phrases: string[]; lessonId: string }) {
+  const { refresh } = useAuth();
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [state, setState] = useState<CaptureState>("idle");
   const [seconds, setSeconds] = useState(0);
@@ -164,8 +166,13 @@ export function PronunciationPractice({ phrases, lessonId }: { phrases: string[]
       const initData = getWebApp()?.initData;
       if (response.status === 401 && initData && !controller.signal.aborted) {
         const login = await fetch("/api/telegram/auth/init", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ initData }), signal: controller.signal });
-        if (login.ok) response = await submit();
+        if (login.ok) {
+          await refresh();
+          if (controller.signal.aborted || !mounted.current) return;
+          response = await submit();
+        }
       }
+      if (controller.signal.aborted || !mounted.current) return;
       if (!response.headers.get("content-type")?.includes("application/json")) {
         setError(`تعذّر الوصول إلى خدمة التقييم (HTTP ${response.status}). أعد تحميل الصفحة وحاول مجددًا؛ لم تُحسب درجة.`);
         return;
