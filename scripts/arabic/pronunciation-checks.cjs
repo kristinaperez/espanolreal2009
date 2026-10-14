@@ -15,20 +15,28 @@ let acquire = async () => audioStream();
 Object.defineProperty(window.navigator, 'mediaDevices', { value: { getUserMedia: async options => { requests++; assert.deepEqual(JSON.parse(JSON.stringify(options)), { audio: true, video: false }); return acquire(); } } });
 let limitCallback;
 let uploads = 0;
+let mode = 'success', authCalls = 0, refreshes = 0, attempts = 0, lateStop;
+const reply = (status, body, type = 'application/json') => ({ ok: status < 400, status, headers: new Headers({ 'content-type': type }), json: async () => body });
 class Recorder {
   static isTypeSupported(type) { return type === 'audio/mp4'; }
   constructor(stream, options) { this.state = 'inactive'; this.mimeType = options.mimeType; lastRecorder = this; }
   start() { this.state = 'recording'; }
-  stop() { this.state = 'inactive'; this.ondataavailable?.({ data: new Blob(['voice'], { type: this.mimeType }) }); this.onstop?.(); }
+  stop() { this.state = 'inactive'; this.ondataavailable?.({ data: new Blob(['voice'], { type: this.mimeType }) }); if (mode === 'late-stop') lateStop = this.onstop; else this.onstop?.(); }
 }
 configure({ globals: { AbortController,
   fetch: async (url, options) => {
-    if (options?.method === 'POST') { uploads++; return { ok: true, status: 200, headers: new Headers({ 'content-type': 'application/json' }), json: async () => ({ ok: true, score: 7.8, words: [{ word: 'Hola', accuracy: 78, error: 'None' }] }) }; }
+    if (url === '/api/telegram/auth/init') { authCalls++; return reply(mode === 'auth-fail' ? 401 : 200, {}); }
+    if (options?.method === 'POST') {
+      uploads++; attempts++;
+      if (mode === 'html') return reply(404, null, 'text/html');
+      if (['retry','auth-fail','always401'].includes(mode) && (attempts === 1 || mode !== 'retry')) return reply(401, {ok:false,code:'login_required'});
+      return reply(200, { ok: true, score: 7.8, words: [{ word: 'Hola', accuracy: 78, error: 'None' }] });
+    }
     return { json: async () => ({ enabled: true }) };
   }, window, document, navigator: window.navigator, MediaRecorder: Recorder, Blob,
   URL: { createObjectURL: () => 'blob:voice-' + ++created, revokeObjectURL: url => revoked.push(url) },
   setInterval: () => 1, clearInterval() {}, setTimeout: callback => { limitCallback = callback; return 2; }, clearTimeout() {},
-}, mocks: { '@/lib/audio/wav': { recordingToWav: async blob => blob }, 'next/link': { __esModule: true, default: ({ children, href, ...props }) => React.createElement('a', { ...props, href }, children) }, './audio-button': { AudioButton: () => React.createElement('button', null, 'sample') } } });
+}, mocks: { '@/components/providers/auth-provider': { useAuth: () => ({ refresh: async () => { refreshes++; } }) }, '@/lib/audio/wav': { recordingToWav: async blob => blob }, 'next/link': { __esModule: true, default: ({ children, href, ...props }) => React.createElement('a', { ...props, href }, children) }, './audio-button': { AudioButton: () => React.createElement('button', null, 'sample') } } });
 const { PronunciationPractice } = load('src/components/arabic/pronunciation-practice.tsx');
 let root;
 async function mount() { root = createRoot(document.getElementById('root')); await act(async () => root.render(React.createElement(PronunciationPractice, { lessonId: 'housing', phrases: ['Hola', 'Gracias'] }))); }
@@ -47,11 +55,30 @@ async function click(text) { await act(async () => button(text).click()); }
   assert(button('قيّم نطقي').disabled, 'explicit consent is required');
   await act(async () => document.querySelector('input[type=checkbox]').click());
   await click('قيّم نطقي'); assert.equal(uploads, 1); assert(document.querySelector('meter')); assert.equal(document.querySelector('meter').value, 7.8);
+  for (const scenario of ['retry', 'auth-fail', 'always401', 'html']) {
+    mode = scenario; attempts = 0; const before = authCalls;
+    window.Telegram = { WebApp: { initData: 'signed-fixture' } };
+    await click('قيّم نطقي');
+    assert.equal(authCalls - before, scenario === 'html' ? 0 : 1, 'at most one signed authentication');
+    assert.equal(attempts, ['retry','always401'].includes(scenario) ? 2 : 1);
+    assert(document.querySelector('audio'), 'failure preserves recording');
+    assert.equal(Boolean(document.querySelector('meter')), scenario === 'retry');
+    if (scenario === 'html') assert(document.querySelector('[role=alert]').textContent.includes('404'));
+  }
+  assert.equal(refreshes, 2, 'successful reauthentication refreshes account state');
+  mode = 'always401'; attempts = 0; window.Telegram = undefined; const before = authCalls;
+  await click('قيّم نطقي'); assert.equal(attempts, 1); assert.equal(authCalls, before);
+  mode = 'success';
   await click('احذف التسجيل'); assert.equal(revoked.length, 1); assert.equal(document.querySelector('audio'), null);
   await click('سجّل صوتك'); await act(async () => root.unmount()); assert.equal(stopped, 2, 'leaving exercise must stop capture');
   await mount(); let resolvePermission;
   acquire = () => new Promise(resolve => { resolvePermission = resolve; });
   await click('سجّل صوتك'); await act(async () => root.unmount());
   await act(async () => resolvePermission(audioStream())); assert.equal(stopped, 3, 'late permission response must release microphone');
+  acquire = async () => audioStream(); await mount(); await click('سجّل صوتك');
+  const old = lastRecorder; mode = 'late-stop'; await act(async () => old.onerror());
+  mode = 'success'; await click('سجّل صوتك'); const current = lastRecorder, stoppedBefore = stopped;
+  await act(async () => lateStop()); assert.equal(current.state, 'recording'); assert.equal(stopped, stoppedBefore, 'old stop must not release newer microphone');
+  await act(async () => root.unmount());
   console.log('PASS: permission denial, explicit recording, format selection, auto-stop, local playback, per-recording consent before upload, assessment display, deletion, unmount and late-permission cleanup; provider mocked. Real device recording still pending.');
 })().catch(error => { console.error(error); process.exitCode = 1; }).finally(() => dom.window.close());
