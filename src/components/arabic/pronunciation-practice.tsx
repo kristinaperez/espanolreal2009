@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { recordingToWav } from "@/lib/audio/wav";
 import type { PronunciationResult } from "@/server/pronunciation/azure";
+import { getWebApp } from "@/lib/telegram/webapp";
+import { useAuth } from "@/components/providers/auth-provider";
 
 type CaptureState = "idle" | "requesting" | "recording" | "ready";
 const MAX_SECONDS = 15;
@@ -20,6 +22,7 @@ function captureError(error: unknown) {
 
 /** Audio stays local until explicit consent and assessment submission. */
 export function PronunciationPractice({ phrases, lessonId }: { phrases: string[]; lessonId: string }) {
+  const { refresh } = useAuth();
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [state, setState] = useState<CaptureState>("idle");
   const [seconds, setSeconds] = useState(0);
@@ -115,12 +118,14 @@ export function PronunciationPractice({ phrases, lessonId }: { phrases: string[]
       let failed = false;
       active.ondataavailable = event => { if (event.data.size > 0) chunks.push(event.data); };
       active.onerror = () => {
+        if (recorder.current !== active) return;
         failed = true;
         releaseCapture();
         if (active.state !== "inactive") active.stop();
         if (mounted.current) { setState("idle"); setError(captureError(null)); }
       };
       active.onstop = () => {
+        if (recorder.current !== active) return;
         releaseCapture();
         recorder.current = null;
         if (!mounted.current || failed) return;
@@ -154,7 +159,24 @@ export function PronunciationPractice({ phrases, lessonId }: { phrases: string[]
     try {
       const wav = await recordingToWav(recordingBlob.current);
       if (controller.signal.aborted || !mounted.current) return;
-      const response = await fetch(`/api/pronunciation?lesson=${encodeURIComponent(lessonId)}&phrase=${phraseIndex}`, { method: "POST", headers: { "Content-Type": "audio/wav" }, body: wav, signal: controller.signal });
+      const submit = () => fetch(`/api/pronunciation?lesson=${encodeURIComponent(lessonId)}&phrase=${phraseIndex}`, { method: "POST", credentials: "same-origin", cache: "no-store", headers: { "Content-Type": "audio/wav" }, body: wav, signal: controller.signal });
+      let response = await submit();
+      // A Mini App can retain signed initData after its browser cookie expires.
+      // Reauthenticate through the existing signature-validated endpoint once.
+      const initData = getWebApp()?.initData;
+      if (response.status === 401 && initData && !controller.signal.aborted) {
+        const login = await fetch("/api/telegram/auth/init", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ initData }), signal: controller.signal });
+        if (login.ok) {
+          await refresh();
+          if (controller.signal.aborted || !mounted.current) return;
+          response = await submit();
+        }
+      }
+      if (controller.signal.aborted || !mounted.current) return;
+      if (!response.headers.get("content-type")?.includes("application/json")) {
+        setError(`تعذّر الوصول إلى خدمة التقييم (HTTP ${response.status}). أعد تحميل الصفحة وحاول مجددًا؛ لم تُحسب درجة.`);
+        return;
+      }
       const payload = await response.json();
       if (!mounted.current || controller.signal.aborted) return;
       if (!response.ok || payload.ok !== true) {

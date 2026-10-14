@@ -18,7 +18,7 @@ export function TelegramLogin({ variant = "full" }: { variant?: "full" | "compac
   const { botUsername, authenticating, error, user, logout, miniApp, loginWithWidgetData } = useAuth();
   const { language } = useLanguage();
   const ar = language === "ar";
-  const widgetId = useId().replace(/:/g, "");
+  const widgetId = useId().replace(/[^A-Za-z0-9_]/g, "_");
   const callbackName = `telegramAuth${widgetId}`;
   const containerRef = useRef<HTMLDivElement>(null);
   const [widgetError, setWidgetError] = useState<string | null>(null);
