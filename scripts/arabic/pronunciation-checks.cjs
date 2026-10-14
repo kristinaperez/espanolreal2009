@@ -23,7 +23,7 @@ class Recorder {
 }
 configure({ globals: { AbortController,
   fetch: async (url, options) => {
-    if (options?.method === 'POST') { uploads++; return { ok: true, json: async () => ({ ok: true, score: 7.8, words: [{ word: 'Hola', accuracy: 78, error: 'None' }] }) }; }
+    if (options?.method === 'POST') { uploads++; return { ok: true, status: 200, headers: new Headers({ 'content-type': 'application/json' }), json: async () => ({ ok: true, score: 7.8, words: [{ word: 'Hola', accuracy: 78, error: 'None' }] }) }; }
     return { json: async () => ({ enabled: true }) };
   }, window, document, navigator: window.navigator, MediaRecorder: Recorder, Blob,
   URL: { createObjectURL: () => 'blob:voice-' + ++created, revokeObjectURL: url => revoked.push(url) },
