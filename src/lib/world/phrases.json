@@ -1,0 +1,492 @@
+[
+  {
+    "id": "world-01",
+    "spanish": "Me cuentas",
+    "translation": "Расскажешь мне",
+    "source": {
+      "lesson": 1,
+      "index": 0
+    },
+    "reason": "Позволяет попросить рассказать подробнее и начать обмен репликами.",
+    "reward": "Фундамент",
+    "situations": [
+      {
+        "id": "world-01-s1",
+        "title": "С другом",
+        "cue": "Tengo una noticia.",
+        "cueTranslation": "У меня новость.",
+        "reply": "¿Me cuentas?",
+        "replyTranslation": "Расскажешь?"
+      },
+      {
+        "id": "world-01-s2",
+        "title": "С преподавателем",
+        "cue": "Hoy hay una actividad.",
+        "cueTranslation": "Сегодня будет занятие.",
+        "reply": "¿Me cuentas?",
+        "replyTranslation": "Расскажешь?"
+      }
+    ]
+  },
+  {
+    "id": "world-02",
+    "spanish": "No entiendo",
+    "translation": "Я не понимаю",
+    "source": {
+      "lesson": 3,
+      "index": 0
+    },
+    "reason": "Позволяет остановить непонятное объяснение в любой бытовой ситуации.",
+    "reward": "Стены",
+    "situations": [
+      {
+        "id": "world-02-s1",
+        "title": "В магазине",
+        "cue": "Está en el segundo pasillo.",
+        "cueTranslation": "Это во втором проходе.",
+        "reply": "No entiendo.",
+        "replyTranslation": "Не понимаю."
+      },
+      {
+        "id": "world-02-s2",
+        "title": "На приёме",
+        "cue": "Necesitas este documento.",
+        "cueTranslation": "Тебе нужен этот документ.",
+        "reply": "No entiendo.",
+        "replyTranslation": "Не понимаю."
+      }
+    ]
+  },
+  {
+    "id": "world-03",
+    "spanish": "¿Puede repetir, por favor?",
+    "translation": "Повторите, пожалуйста",
+    "source": {
+      "lesson": 3,
+      "index": 1
+    },
+    "reason": "Помогает получить вторую попытку услышать ответ.",
+    "reward": "Крыша",
+    "situations": [
+      {
+        "id": "world-03-s1",
+        "title": "В транспорте",
+        "cue": "Es la próxima parada.",
+        "cueTranslation": "Это следующая остановка.",
+        "reply": "¿Puede repetir, por favor?",
+        "replyTranslation": "Повторите, пожалуйста?"
+      },
+      {
+        "id": "world-03-s2",
+        "title": "У врача",
+        "cue": "Vuelve el martes.",
+        "cueTranslation": "Приходи во вторник.",
+        "reply": "¿Puede repetir, por favor?",
+        "replyTranslation": "Повторите, пожалуйста?"
+      }
+    ]
+  },
+  {
+    "id": "world-04",
+    "spanish": "Más despacio, por favor",
+    "translation": "Помедленнее, пожалуйста",
+    "source": {
+      "lesson": 3,
+      "index": 2
+    },
+    "reason": "Позволяет самому регулировать темп разговора.",
+    "reward": "Дверь",
+    "situations": [
+      {
+        "id": "world-04-s1",
+        "title": "На занятии",
+        "cue": "Primero escuchamos y después hablamos.",
+        "cueTranslation": "Сначала слушаем, потом говорим.",
+        "reply": "Más despacio, por favor.",
+        "replyTranslation": "Помедленнее, пожалуйста."
+      },
+      {
+        "id": "world-04-s2",
+        "title": "С соседом",
+        "cue": "La reunión es mañana a las seis.",
+        "cueTranslation": "Встреча завтра в шесть.",
+        "reply": "Más despacio, por favor.",
+        "replyTranslation": "Помедленнее, пожалуйста."
+      }
+    ]
+  },
+  {
+    "id": "world-05",
+    "spanish": "Vale",
+    "translation": "Ок, ладно, хорошо",
+    "source": {
+      "lesson": 42,
+      "index": 2
+    },
+    "reason": "Даёт короткий ответ согласия на предложение или инструкцию.",
+    "reward": "Первое окно",
+    "situations": [
+      {
+        "id": "world-05-s1",
+        "title": "С другом",
+        "cue": "Nos vemos a las cinco.",
+        "cueTranslation": "Увидимся в пять.",
+        "reply": "Vale.",
+        "replyTranslation": "Хорошо."
+      },
+      {
+        "id": "world-05-s2",
+        "title": "На приёме",
+        "cue": "Espera aquí un momento.",
+        "cueTranslation": "Подожди здесь немного.",
+        "reply": "Vale.",
+        "replyTranslation": "Хорошо."
+      }
+    ]
+  },
+  {
+    "id": "world-06",
+    "spanish": "No pasa nada",
+    "translation": "Ничего страшного / всё в порядке",
+    "source": {
+      "lesson": 1,
+      "index": 7
+    },
+    "reason": "Позволяет отреагировать на извинение и поддержать разговор.",
+    "reward": "Второе окно",
+    "situations": [
+      {
+        "id": "world-06-s1",
+        "title": "С другом",
+        "cue": "Perdona, llego tarde.",
+        "cueTranslation": "Извини, я опаздываю.",
+        "reply": "No pasa nada.",
+        "replyTranslation": "Ничего страшного."
+      },
+      {
+        "id": "world-06-s2",
+        "title": "В кафе",
+        "cue": "Perdona por la espera.",
+        "cueTranslation": "Извини за ожидание.",
+        "reply": "No pasa nada.",
+        "replyTranslation": "Ничего страшного."
+      }
+    ]
+  },
+  {
+    "id": "world-07",
+    "spanish": "¿Me lo puede escribir?",
+    "translation": "Можете это написать?",
+    "source": {
+      "lesson": 3,
+      "index": 6
+    },
+    "reason": "Помогает перенести непонятный адрес, время или инструкцию в текст.",
+    "reward": "Ступеньки",
+    "situations": [
+      {
+        "id": "world-07-s1",
+        "title": "На приёме",
+        "cue": "La cita es el jueves a las once.",
+        "cueTranslation": "Приём в четверг в одиннадцать.",
+        "reply": "¿Me lo puede escribir?",
+        "replyTranslation": "Можете мне это написать?"
+      },
+      {
+        "id": "world-07-s2",
+        "title": "В дороге",
+        "cue": "La dirección es calle Luna, ocho.",
+        "cueTranslation": "Адрес: улица Луна, восемь.",
+        "reply": "¿Me lo puede escribir?",
+        "replyTranslation": "Можете мне это написать?"
+      }
+    ]
+  },
+  {
+    "id": "world-08",
+    "spanish": "¿Qué significa esto?",
+    "translation": "Что это значит?",
+    "source": {
+      "lesson": 3,
+      "index": 7
+    },
+    "reason": "Позволяет спросить значение слова на вывеске, в форме или в объяснении.",
+    "reward": "Крыльцо",
+    "situations": [
+      {
+        "id": "world-08-s1",
+        "title": "На занятии",
+        "cue": "Aquí pone «salida».",
+        "cueTranslation": "Здесь написано «salida».",
+        "reply": "¿Qué significa esto?",
+        "replyTranslation": "Что это значит?"
+      },
+      {
+        "id": "world-08-s2",
+        "title": "С соцработником",
+        "cue": "Aquí pone «cita previa».",
+        "cueTranslation": "Здесь написано «cita previa».",
+        "reply": "¿Qué significa esto?",
+        "replyTranslation": "Что это значит?"
+      }
+    ]
+  },
+  {
+    "id": "world-09",
+    "spanish": "Gracias por la ayuda",
+    "translation": "Спасибо за помощь",
+    "source": {
+      "lesson": 30,
+      "index": 7
+    },
+    "reason": "Позволяет завершить просьбу о помощи благодарностью.",
+    "reward": "Свет в окнах",
+    "situations": [
+      {
+        "id": "world-09-s1",
+        "title": "С соцработником",
+        "cue": "Aquí tienes el formulario.",
+        "cueTranslation": "Вот твоя анкета.",
+        "reply": "Gracias por la ayuda.",
+        "replyTranslation": "Спасибо за помощь."
+      },
+      {
+        "id": "world-09-s2",
+        "title": "С соседом",
+        "cue": "La parada está allí.",
+        "cueTranslation": "Остановка вон там.",
+        "reply": "Gracias por la ayuda.",
+        "replyTranslation": "Спасибо за помощь."
+      }
+    ]
+  },
+  {
+    "id": "world-10",
+    "spanish": "Estoy aprendiendo español",
+    "translation": "Я учу испанский",
+    "source": {
+      "lesson": 3,
+      "index": 4
+    },
+    "reason": "Позволяет объяснить собеседнику свой уровень без длинной речи.",
+    "reward": "Табличка «Мой дом»",
+    "situations": [
+      {
+        "id": "world-10-s1",
+        "title": "С новым знакомым",
+        "cue": "¿Hablas español?",
+        "cueTranslation": "Ты говоришь по-испански?",
+        "reply": "Estoy aprendiendo español.",
+        "replyTranslation": "Я учу испанский."
+      },
+      {
+        "id": "world-10-s2",
+        "title": "На занятии",
+        "cue": "Bienvenido al grupo.",
+        "cueTranslation": "Добро пожаловать в группу.",
+        "reply": "Estoy aprendiendo español.",
+        "replyTranslation": "Я учу испанский."
+      }
+    ]
+  },
+  {
+    "id": "world-11",
+    "spanish": "Buenos días",
+    "translation": "Добрый день (до обеда)",
+    "source": {
+      "lesson": 2,
+      "index": 2
+    },
+    "reason": "Начинает разговор в магазине, учреждении и с соседями."
+  },
+  {
+    "id": "world-12",
+    "spanish": "¿Qué tal?",
+    "translation": "Как дела?",
+    "source": {
+      "lesson": 2,
+      "index": 0
+    },
+    "reason": "Даёт простой способ начать знакомый разговор."
+  },
+  {
+    "id": "world-13",
+    "spanish": "¿Cómo te llamas?",
+    "translation": "Как тебя зовут?",
+    "source": {
+      "lesson": 2,
+      "index": 5
+    },
+    "reason": "Позволяет узнать имя нового знакомого."
+  },
+  {
+    "id": "world-14",
+    "spanish": "Mucho gusto",
+    "translation": "Очень приятно",
+    "source": {
+      "lesson": 2,
+      "index": 4
+    },
+    "reason": "Поддерживает знакомство короткой ответной репликой."
+  },
+  {
+    "id": "world-15",
+    "spanish": "Hasta luego",
+    "translation": "До встречи / пока",
+    "source": {
+      "lesson": 2,
+      "index": 3
+    },
+    "reason": "Помогает закончить повседневный разговор."
+  },
+  {
+    "id": "world-16",
+    "spanish": "¿Cómo se dice...?",
+    "translation": "Как говорится / как сказать...?",
+    "source": {
+      "lesson": 3,
+      "index": 3
+    },
+    "reason": "Позволяет спросить недостающее испанское слово."
+  },
+  {
+    "id": "world-17",
+    "spanish": "¿Habla inglés?",
+    "translation": "Вы говорите по-английски?",
+    "source": {
+      "lesson": 3,
+      "index": 5
+    },
+    "reason": "Помогает найти запасной язык общения."
+  },
+  {
+    "id": "world-18",
+    "spanish": "¿Me lo puede explicar despacio?",
+    "translation": "Можете объяснить медленно?",
+    "source": {
+      "lesson": 34,
+      "index": 6
+    },
+    "reason": "Позволяет попросить медленное объяснение."
+  },
+  {
+    "id": "world-19",
+    "spanish": "¿Cuánto es todo?",
+    "translation": "Сколько всего?",
+    "source": {
+      "lesson": 16,
+      "index": 5
+    },
+    "reason": "Позволяет узнать итоговую сумму покупки или услуги."
+  },
+  {
+    "id": "world-20",
+    "spanish": "¿Puedo pagar con tarjeta?",
+    "translation": "Можно картой?",
+    "source": {
+      "lesson": 11,
+      "index": 1
+    },
+    "reason": "Помогает уточнить способ оплаты в магазине или кафе."
+  },
+  {
+    "id": "world-21",
+    "spanish": "¿Dónde está la salida?",
+    "translation": "Где выход?",
+    "source": {
+      "lesson": 18,
+      "index": 4
+    },
+    "reason": "Позволяет найти выход в учреждении или на станции."
+  },
+  {
+    "id": "world-22",
+    "spanish": "¿Va al centro?",
+    "translation": "Он идёт в центр?",
+    "source": {
+      "lesson": 17,
+      "index": 1
+    },
+    "reason": "Позволяет проверить направление транспорта."
+  },
+  {
+    "id": "world-23",
+    "spanish": "Un billete, por favor",
+    "translation": "Один билет, пожалуйста",
+    "source": {
+      "lesson": 17,
+      "index": 0
+    },
+    "reason": "Позволяет коротко попросить билет."
+  },
+  {
+    "id": "world-24",
+    "spanish": "Quiero pedir cita",
+    "translation": "Я хочу записаться на приём",
+    "source": {
+      "lesson": 21,
+      "index": 0
+    },
+    "reason": "Позволяет начать запись на приём или услугу."
+  },
+  {
+    "id": "world-25",
+    "spanish": "Tengo cita a las diez",
+    "translation": "У меня запись на десять",
+    "source": {
+      "lesson": 29,
+      "index": 2
+    },
+    "reason": "Позволяет сообщить время своей записи на приём."
+  },
+  {
+    "id": "world-26",
+    "spanish": "¿Qué documentos tengo que traer?",
+    "translation": "Какие документы мне нужно принести?",
+    "source": {
+      "lesson": 24,
+      "index": 1
+    },
+    "reason": "Позволяет уточнить необходимые документы до визита."
+  },
+  {
+    "id": "world-27",
+    "spanish": "Necesito ayuda con los papeles",
+    "translation": "Мне нужна помощь с документами",
+    "source": {
+      "lesson": 34,
+      "index": 0
+    },
+    "reason": "Позволяет сформулировать запрос на помощь с документами."
+  },
+  {
+    "id": "world-28",
+    "spanish": "Tengo experiencia",
+    "translation": "У меня есть опыт",
+    "source": {
+      "lesson": 35,
+      "index": 4
+    },
+    "reason": "Позволяет начать разговор о своей работе и навыках."
+  },
+  {
+    "id": "world-29",
+    "spanish": "Estoy disponible",
+    "translation": "Я доступен / могу работать",
+    "source": {
+      "lesson": 36,
+      "index": 3
+    },
+    "reason": "Позволяет сообщить готовность к работе или встрече."
+  },
+  {
+    "id": "world-30",
+    "spanish": "Nos vemos",
+    "translation": "Увидимся",
+    "source": {
+      "lesson": 2,
+      "index": 7
+    },
+    "reason": "Позволяет закончить разговор с намерением встретиться снова."
+  }
+]

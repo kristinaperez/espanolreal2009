@@ -1,0 +1,24 @@
+.world-shell { max-width: 1120px; margin-inline: auto; padding: 24px clamp(16px, 4vw, 40px) max(40px, env(safe-area-inset-bottom)); }
+.world-shell :is(button,a,input):focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+.world-shell button { min-height: 44px; }
+.world-hero { display: grid; gap: 24px; align-items: center; }
+.world-title { font-size: clamp(2rem, 6vw, 3.8rem); line-height: 1.08; letter-spacing: -.045em; font-weight: 900; }
+.world-scene { background: linear-gradient(160deg, var(--surface), var(--bg-soft)); border: 1px solid var(--border); border-radius: 32px; overflow: hidden; }
+.world-house { width: 100%; height: auto; }
+.world-outline { opacity: .3; }
+.world-outline > :is(path,rect,circle) { fill: none; stroke: var(--muted); stroke-width: 2; stroke-dasharray: 6 6; }
+.world-outline text { opacity: 0; }
+.world-built { animation: world-reveal .45s ease both; }
+.world-options { display: grid; gap: 12px; }
+.world-option { padding: 16px; text-align: left; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); overflow-wrap: anywhere; }
+.world-option:hover { border-color: var(--primary); background: var(--bg-soft); }
+.world-steps { display: grid; gap: 10px; grid-template-columns: repeat(2,minmax(0,1fr)); }
+.world-step { min-width: 0; border: 1px solid var(--border); background: var(--surface); border-radius: 18px; padding: 14px; text-align: left; }
+.world-step[aria-current="step"] { border-color: var(--primary); box-shadow: inset 0 0 0 1px var(--primary); }
+.world-step span { display: block; overflow-wrap: anywhere; }
+.world-situations { display: grid; gap: 16px; }
+.world-panel { max-width: 760px; margin-inline: auto; }
+.world-shell audio { max-width: 100%; }
+@keyframes world-reveal { from { opacity: .4; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+@media (min-width: 760px) { .world-hero { grid-template-columns: .9fr 1.1fr; } .world-steps { grid-template-columns: repeat(5,minmax(0,1fr)); } .world-situations { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (prefers-reduced-motion: reduce) { .world-built { animation: none; } .world-shell * { scroll-behavior: auto; transition: none; } }

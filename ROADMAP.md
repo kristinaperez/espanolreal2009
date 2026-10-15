@@ -1,3 +1,15 @@
+# World MVP — 2026-10-15
+
+## NOW
+- Review isolated ten-phrase world PR and test `/ru/world` on its Netlify preview.
+- Complete real mobile/audio/microphone/Telegram acceptance before any main merge.
+## NEXT
+- User-test whether the ten-step house goal is clear and each element feels rewarding; revise phrase selection and examples from feedback.
+## LATER
+- Expand the approved thirty-phrase catalog into surroundings, richer situation exercises and optional account progress sync.
+## BACKLOG
+- Street/city expansion beyond thirty phrases; independently reviewed SEO structure and access policy.
+
 # Arabic MVP — 2026-10-10
 
 ## NOW
