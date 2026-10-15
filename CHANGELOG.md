@@ -1,3 +1,14 @@
+## [2026-10-15] — World MVP (draft)
+
+### Added
+- Isolated noindex `/ru/world` with ten short Russian phrase steps, a ten-element house and twenty example dialogues.
+- Separate versioned browser progress, listening/response/recall evidence and optional private in-memory voice practice.
+- Thirty source-mapped phrase candidates and functional/interaction/HTTP/browser QA scripts.
+### Changed
+- No existing trainer, auth, payment, course-data, sitemap or progress contracts changed.
+### Tests
+- See `docs/WORLD_MVP.md` for executed checks and explicit device/browser limitations. No main merge or production deployment.
+
 ## [2026-10-10] — Arabic SEO MVP (draft)
 
 ### Added
