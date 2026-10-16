@@ -1,3 +1,13 @@
+## [2026-10-16] — Spanish casita styling
+
+### Changed
+- Restyle the ten-part world house as a Mediterranean casita: whitewashed stucco, terracotta tile pattern, arched timber door, green shutters, wrought-iron window rails, stone steps, potted geraniums, warm windows and ceramic Mi casa plaque.
+- Keep construction groups, sequence, training and saved progress intact; scope illustration material colors to the SVG. Hide ornamental detail on unbuilt outlines and use unique pattern IDs per illustration.
+### Fixed
+- Use a single string for SVG title content to avoid React rendering warnings.
+### Tests
+- Typecheck, changed-file ESLint, world data/React interaction checks; raster inspection of six construction stages. See docs/WORLD_MVP.md for build and device verification limits.
+
 ## [2026-10-15] — World MVP (draft)
 
 ### Added
