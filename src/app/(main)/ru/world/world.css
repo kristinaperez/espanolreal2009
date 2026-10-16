@@ -4,10 +4,34 @@
 .world-hero { display: grid; gap: 24px; align-items: center; }
 .world-title { font-size: clamp(2rem, 6vw, 3.8rem); line-height: 1.08; letter-spacing: -.045em; font-weight: 900; }
 .world-scene { background: linear-gradient(160deg, var(--surface), var(--bg-soft)); border: 1px solid var(--border); border-radius: 32px; overflow: hidden; }
-.world-house { width: 100%; height: auto; }
+/* Illustration materials are deliberately independent of UI theme colors. */
+.world-house {
+  --house-stucco: #fff7e7;
+  --house-wall-shadow: #ead7b8;
+  --house-clay: #c76542;
+  --house-clay-shadow: #8b422f;
+  --house-clay-light: #e79865;
+  --house-wood: #9a603e;
+  --house-wood-dark: #62412f;
+  --house-shutter: #487d71;
+  --house-shutter-dark: #2b554c;
+  --house-iron: #35474a;
+  --house-stone: #c1aa8a;
+  --house-stone-light: #dfceb3;
+  --house-glass: #b5d4d6;
+  --house-tile: #326b91;
+  --house-sun: #f1c76c;
+  --house-lamplight: #ffe09a;
+  --house-cloud: #e5ded0;
+  --house-ground: #eadfc8;
+  --house-hill: #cbd2af;
+  --house-leaf: #487647;
+  --house-flower: #c74758;
+  width: 100%; height: auto;
+}
 .world-outline { opacity: .3; }
-.world-outline > :is(path,rect,circle) { fill: none; stroke: var(--muted); stroke-width: 2; stroke-dasharray: 6 6; }
-.world-outline text { opacity: 0; }
+.world-outline > path, .world-outline > rect, .world-outline > circle, .world-outline > ellipse, .world-outline > line, .world-outline > polygon, .world-outline > polyline { fill: none; stroke: var(--muted); stroke-width: 2; stroke-dasharray: 6 6; }
+.world-outline text, .world-outline .house-detail { visibility: hidden; }
 .world-built { animation: world-reveal .45s ease both; }
 .world-options { display: grid; gap: 12px; }
 .world-option { padding: 16px; text-align: left; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); overflow-wrap: anywhere; }

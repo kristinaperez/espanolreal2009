@@ -92,3 +92,12 @@ TEST/RESULT: see validation below; no production credentials, database migration
 ## Device acceptance before merging
 
 Open the Netlify PR preview at `/ru/world` on a phone and desktop. Complete one step, refresh and verify its house element remains. Try an incorrect answer. Try speech and optional record/replay; deny microphone access and continue. Finish ten steps, repeat one and verify the count remains ten. Confirm the numbered course retains its previous progress. Confirm no horizontal overflow at 320px, keyboard focus, dark theme and reduced motion. This is a check of the build, not a requirement to understand grammar or formality.
+
+
+## 2026-10-16 — Spanish house visual update
+
+CHANGE/WHY: replace the generic house drawing with a recognizable Mediterranean casita while preserving the ten rewards. FILES: house SVG and scoped world stylesheet, plus changelog and this record. Reuse page typography, UI colors/components and existing motion preference behavior; add SVG-only material colors because stucco, clay, timber and shutters are illustration materials without matching UI tokens. No data, state, exercise, audio, SEO, auth or payment changes.
+
+Decorations appear with the corresponding existing construction group: tiled roof/chimney (3), timber door (4), shutters and iron rails (5–6), stone steps (7), porch and geranium pots (8), warm windows and lantern (9), ceramic Mi casa plaque (10). Russian accessible construction labels and text progress remain intact. Per-instance React useId prevents pattern collisions when multiple illustrations render. Unbuilt ornament groups stay hidden so future details do not obscure the silhouettes.
+
+TEST: TypeScript, ESLint on the changed component, existing world model and actual React interaction checks pass. SVG rendered with React DOM Server and Sharp at stages 0, 3, 6, 8, 9 and 10 and visually inspected; this is raster illustration QA, not browser/device layout verification. Before/after Memi static audit stays 86/100 (partial class coverage). Production build and HTTP checks run before publication. Existing browser/mobile/audio limitations above still apply. RISK: presentation only; exact browser font rasterization and physical-device appearance remain device checks.
