@@ -20,6 +20,7 @@ type Phase = "intro" | "run" | "done";
 interface LessonPayload {
   lesson: Lesson;
   pool: Distractor[];
+  trialExpiresAt?: string | null;
 }
 
 /**
@@ -49,7 +50,7 @@ export function TrainerPage({
   introHeadingLevel?: "h1" | "h2";
 }) {
   const { state, dispatch, access } = useProgress();
-  const { serverPremium } = useAuth();
+  const { serverPremium, refresh } = useAuth();
   const { language } = useLanguage();
   const fr = language === "fr";
   const [phase, setPhase] = useState<Phase>("intro");
@@ -59,6 +60,11 @@ export function TrainerPage({
   const [payloads, setPayloads] = useState<LessonPayload[] | null>(
     protectedContent ? null : lessons.map((lesson) => ({ lesson, pool })),
   );
+  const [denied, setDenied] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [finishError, setFinishError] = useState<string | null>(null);
+  const [pendingResult, setPendingResult] = useState<SessionResult | null>(null);
+  const [completionRecorded, setCompletionRecorded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const primary = lessons[0];
@@ -67,7 +73,7 @@ export function TrainerPage({
   // Deliberately independent of hydration state so SSR and the first client
   // render agree: locked lessons never leak their phrases.
   const entitled = access(accessLesson) || serverPremium;
-  const locked = !entitled;
+  const locked = !entitled || (denied && !serverPremium);
 
   const loadProtected = useCallback(async () => {
     if (!protectedContent || payloads || locked) return;
@@ -79,6 +85,7 @@ export function TrainerPage({
             cache: "no-store",
             credentials: "same-origin",
           });
+          if (response.status === 402) setDenied(true);
           if (!response.ok) return null;
           return (await response.json()) as LessonPayload;
         } catch {
@@ -99,6 +106,13 @@ export function TrainerPage({
     const timer = window.setTimeout(() => { void loadProtected(); }, 0);
     return () => window.clearTimeout(timer);
   }, [loadProtected, locked, payloads, protectedContent]);
+
+  useEffect(() => {
+    const expiry = payloads?.[0]?.trialExpiresAt;
+    if (!expiry || serverPremium) return;
+    const timer = window.setTimeout(() => setDenied(true), Math.max(0, Date.parse(expiry) - Date.now()));
+    return () => clearTimeout(timer);
+  }, [payloads, serverPremium]);
 
   const activeLessons = useMemo(
     () => (payloads ? payloads.map((item) => item.lesson) : lessons),
@@ -134,7 +148,19 @@ export function TrainerPage({
   const progress = state.lessons[String(primary.lesson)];
   const category = categoryById.get(primary.category);
 
-  const finish = (payload: SessionResult) => {
+  const finish = async (payload: SessionResult) => {
+    if (saving) return;
+    if (mode === "lesson" && !serverPremium && process.env.NEXT_PUBLIC_STATIC_EXPORT !== "true") {
+      setSaving(true); setFinishError(null); setPendingResult(payload);
+      try {
+        const response = await fetch("/api/trial", { method: "POST" });
+        if (!response.ok) throw Error("Не удалось сохранить завершение урока. Проверьте связь и повторите.");
+        setCompletionRecorded(true);
+        window.dispatchEvent(new Event("er-trial-changed"));
+        await refresh();
+      } catch (e) { setFinishError((e as Error).message); setSaving(false); return; }
+      setSaving(false);
+    }
     if (mode === "exam" && blockNumber) {
       dispatch({ type: "examComplete", block: blockNumber, correct: payload.correct, total: payload.total });
     } else {
@@ -144,7 +170,9 @@ export function TrainerPage({
     setPhase("done");
   };
 
-  if (locked) {
+  if (saving || finishError) return <Card><p role="status">{saving ? "Сохраняем результат…" : finishError}</p>{finishError && pendingResult && <Button onClick={() => void finish(pendingResult)}>Повторить сохранение</Button>}</Card>;
+
+  if (locked && phase !== "done") {
     return <PremiumLock />;
   }
 
@@ -201,7 +229,8 @@ export function TrainerPage({
       <SessionSummary
         result={result}
         title={mode === "exam" ? (fr ? "Examen réussi !" : "Экзамен сдан!") : (fr ? "Leçon terminée !" : "Урок пройден!")}
-        nextHref={visibleNextHref}
+        nextHref={serverPremium || process.env.NEXT_PUBLIC_STATIC_EXPORT === "true" ? visibleNextHref : undefined}
+        showPayment={completionRecorded && !serverPremium}
         retryHref={mode === "lesson" ? `/lesson/${primary.lesson}` : blockNumber ? `/exam/${blockNumber}` : undefined}
         reviewHref="/learn/review"
       />

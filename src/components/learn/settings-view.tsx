@@ -180,7 +180,7 @@ export function SettingsView() {
         ) : (
           <>
             <p className="mt-3 text-sm text-muted">
-              После урока {course.freeLessonCount} курс открывается разовой покупкой за {starsPrice} звёзд Telegram.
+              После первого завершённого урока или 7 дней — что наступит раньше — продолжите за {starsPrice} ⭐ на 30 дней.
             </p>
 
             <div className="mt-4">

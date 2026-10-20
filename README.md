@@ -1,7 +1,9 @@
 # Español Real
 
+Текущие условия и запуск блога: [docs/ACCESS_BLOG.md](docs/ACCESS_BLOG.md). Новый тариф — **1790 ⭐ за 30 дней с ручным продлением**. Проба: первый завершённый урок или 7 дней с начала первого урока — что наступит раньше.
+
 Коммерческий MVP веб-тренажёра разговорного испанского для жизни в Испании.
-Контент берётся из авторского учебника; бесплатная часть работает локально, а коммерческий
+Контент берётся из авторского учебника; учебный прогресс хранится локально, а коммерческий
 режим использует серверную авторизацию и оплату.
 
 ## Что внутри
@@ -13,9 +15,9 @@
 | Повторение | Интервалы 1 → 3 → 7 → 30 → 90 дней, очередь ошибок, дневное повторение |
 | Геймификация | XP, уровни (Новичок → Native Killer), серия дней, комбо-бонусы, 15 достижений, календарь, цель дня, сердечки (опция, выключены) |
 | Карта адаптации | 11 этапов жизни в Испании: от «Первых дней» до «Чувствую себя как дома» |
-| Монетизация | 7 бесплатных уроков + Premium **500 ⭐ Telegram Stars** |
+| Монетизация | 1 урок или 7 дней — что наступит раньше + Premium **1790 ⭐ Telegram Stars** |
 | Прогресс | localStorage: уроки, ошибки, XP, серия, расписание повторения, достижения, дата старта триала |
-| Оплата | Вход через Telegram + **Telegram Stars (500 ⭐)**: invoice → вебхук → серверный Premium entitlement |
+| Оплата | Вход через Telegram + **Telegram Stars (1790 ⭐)**: invoice → вебхук → серверный Premium entitlement |
 | SEO | robots.txt, sitemap.xml, Open Graph, Twitter cards, Schema.org (Course / LearningResource), метатеги каждого урока |
 | PWA | manifest, service worker, офлайн-режим, установка на телефон |
 
@@ -23,13 +25,12 @@
 
 Next.js (App Router) · React 19 · TypeScript · Tailwind CSS v4 · компоненты в стиле shadcn/ui.
 
-Обучение полностью офлайн (localStorage). Сервер + PostgreSQL нужны **только** для Telegram-входа,
-оплаты звёздами и восстановления покупки. Если API недоступен, бесплатная часть тренажёра продолжает
-работать локально; Premium entitlement подтверждается только сервером.
+Прогресс хранится в localStorage. Сервер + PostgreSQL нужны для проверки пробного доступа, Telegram-входа,
+оплаты звёздами и восстановления покупки. Если API недоступен, новые защищённые занятия не загружаются; проба и Premium подтверждаются сервером.
 
 ## Telegram: вход и оплата звёздами
 
-Premium после урока 7 покупается за **500 Telegram Stars** (цена настраивается: `TELEGRAM_STARS_PRICE`).
+Premium после завершения первого урока или истечения 7 дней покупается за **1790 Telegram Stars на 30 дней**. Продление вручную; старые переменные переопределения цены не используются.
 
 ### Настройка
 
@@ -41,7 +42,7 @@ Premium после урока 7 покупается за **500 Telegram Stars**
 ```bash
 TELEGRAM_BOT_TOKEN=123456:AA...
 TELEGRAM_BOT_USERNAME=MyEspanolRealBot
-TELEGRAM_STARS_PRICE=500
+# Цена нового тарифа фиксирована: 1790 Stars
 NEXT_PUBLIC_SITE_URL=https://your-domain.com
 NEXT_PUBLIC_TELEGRAM_CHAT_URL=https://t.me/your-community-chat
 SESSION_SECRET=<отдельный результат openssl rand -hex 32>
@@ -60,7 +61,7 @@ curl -X POST \
 ### Как это работает
 
 ```
-Кнопка «Оплатить 500 ⭐»
+Кнопка «Оплатить 1790 ⭐»
    → POST /api/payments/telegram/stars        создаёт заказ + invoice link (createInvoiceLink, XTR)
    → Telegram.WebApp.openInvoice() / новая вкладка
    → Telegram присылает pre_checkout_query    POST /api/telegram/webhook → answerPreCheckoutQuery
@@ -89,7 +90,7 @@ curl -X POST \
 | DELETE | `/api/telegram/auth` | выход |
 | POST | `/api/telegram/auth/init` | вход из Mini App (`initData`) |
 | GET | `/api/telegram/session` | текущий аккаунт, состояние Premium, цена в звёздах |
-| POST | `/api/payments/telegram/stars` | создать счёт на 500 ⭐ |
+| POST | `/api/payments/telegram/stars` | создать счёт на 1790 ⭐ |
 | GET/POST | `/api/payments/telegram/order` | чтение статуса / явная резервная проверка оплаты |
 | POST | `/api/telegram/webhook` | подтверждение оплаты от Telegram |
 | POST | `/api/telegram/setup` | регистрация вебхука (`X-Admin-Secret`) |
@@ -99,8 +100,8 @@ curl -X POST \
 
 ### Защита платного контента
 
-Серверная сборка не отдаёт фразы платных уроков в HTML: `/lesson/8…45` содержит только заголовок,
-описание и 2 фразы-тизера (для индексации). Полный урок приходит из `GET /api/lessons/[n]`
+Серверная сборка не отдаёт фразы платных уроков в HTML: `/lesson/1…45` содержит только заголовок,
+описание и 2 фразы-тизера (для индексации). Полный первый урок доступен в пробе. Полный урок приходит из `GET /api/lessons/[n]`
 после подтверждения права по Telegram-сессии с оплаченным заказом. Ключи не передаются в URL.
 
 * `PROTECT_PREMIUM_CONTENT=false` — отключить защиту (отдать всё в HTML).
@@ -130,7 +131,7 @@ node scripts/e2e-telegram-stars.mjs http://127.0.0.1:3100
 ```
 
 Проверяются подпись Login Widget, отклонение подделанных данных, вход из Mini App
-(`initData`), создание счёта на 500 ⭐, `pre_checkout_query`, `successful_payment`,
+(`initData`), создание счёта на 1790 ⭐, `pre_checkout_query`, `successful_payment`,
 server-side entitlement без раскрытия ключа, отказ анониму и резервная проверка через
 `getStarTransactions` без вебхука.
 
@@ -258,7 +259,7 @@ src/lib/exercises/        # генератор упражнений из фра�
 src/lib/srs.ts            # интервальное повторение
 src/lib/progress/         # состояние, редьюсер, селекторы, localStorage
 src/lib/telegram/         # проверка подписи, Bot API клиент, Mini App мост
-src/lib/payments/catalog  # товары и цены (500 ⭐)
+src/lib/payments/catalog  # товары и цены (1790 ⭐)
 src/lib/session.ts        # подписанная cookie-сессия
 src/lib/license.ts        # нормализация server-side ключей
 src/server/               # пользователи, заказы, лицензии, аккаунт-пейлоад

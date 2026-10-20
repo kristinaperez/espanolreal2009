@@ -1,6 +1,6 @@
 /* EspanolReal | CristinaPerez — minimal offline service worker. */
 
-const CACHE = "espanol-real-v2";
+const CACHE = "espanol-real-v3";
 
 const PRECACHE = [
   "/",
@@ -42,7 +42,7 @@ self.addEventListener("fetch", (event) => {
 
   if (url.origin !== self.location.origin) return;
 
-  if (url.pathname.startsWith("/api/")) return;
+  if (["/api/", "/admin", "/blog"].some(path => url.pathname.startsWith(path))) return;
 
   // Cache-first for static assets, network-first for pages.
   const isAsset =

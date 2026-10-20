@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { Distractor, ExamBlock, IndexedPhrase, Lesson, LessonMeta, SearchEntry } from "./types";
-import { EXAM_EVERY, FREE_LESSON_COUNT } from "./config";
+import { EXAM_EVERY } from "./config";
 
 /**
  * Content loader.
@@ -221,7 +221,7 @@ export function getPhraseIndex(): IndexedPhrase[] {
 
 /** Phrase data safe to serialize to an anonymous browser. */
 export function getPublicPhraseIndex(): IndexedPhrase[] {
-  return getPhraseIndex().filter((phrase) => phrase.lesson <= FREE_LESSON_COUNT);
+  return []; // Exercise data is delivered only after the server checks access.
 }
 
 /** Static exports intentionally contain the full offline course; server builds start with public phrases only. */

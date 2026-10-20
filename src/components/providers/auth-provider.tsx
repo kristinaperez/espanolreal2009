@@ -24,6 +24,7 @@ export interface AccountUser {
 export interface AccountState {
   ok: true;
   configured: boolean;
+  blogAdmin: boolean;
   botUsername: string | null;
   starsPrice: number;
   productId: string;
@@ -34,6 +35,7 @@ export interface AccountState {
     productId: string | null;
     source: string | null;
     issuedAt: string | null;
+    expiresAt: string | null;
   };
   orders: { id: number; status: string; stars: number; createdAt: string }[];
 }
@@ -58,18 +60,19 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 const FALLBACK_BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? null;
-const FALLBACK_STARS = Number(process.env.NEXT_PUBLIC_STARS_PRICE ?? 500) || 500;
+const FALLBACK_STARS = 1790;
 
 function fallbackAccount(): AccountState {
   return {
     ok: true,
     configured: Boolean(FALLBACK_BOT_USERNAME),
+    blogAdmin: false,
     botUsername: FALLBACK_BOT_USERNAME,
     starsPrice: FALLBACK_STARS,
-    productId: "premium-45",
+    productId: "premium-monthly",
     user: null,
     displayName: null,
-    premium: { active: false, productId: null, source: null, issuedAt: null },
+    premium: { active: false, productId: null, source: null, issuedAt: null, expiresAt: null },
     orders: [],
   };
 }
@@ -202,6 +205,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const expiry = account?.premium.expiresAt;
+    if (!expiry) return;
+    const delay = Math.max(0, Date.parse(expiry) - Date.now());
+    const timer = setTimeout(() => void refresh(), Math.min(delay + 100, 2147483647));
+    return () => clearTimeout(timer);
+  }, [account?.premium.expiresAt, refresh]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

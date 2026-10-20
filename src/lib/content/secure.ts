@@ -37,7 +37,7 @@ export function trimLesson(lesson: Lesson): Lesson {
 }
 
 export function protectLesson(lesson: Lesson): { lesson: Lesson; trimmed: boolean } {
-  if (!premiumContentProtectionEnabled() || isFreeLesson(lesson.lesson)) {
+  if (!premiumContentProtectionEnabled()) {
     return { lesson, trimmed: false };
   }
   return { lesson: trimLesson(lesson), trimmed: true };

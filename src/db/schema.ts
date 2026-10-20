@@ -111,3 +111,5 @@ export type LicenseRow = typeof licenses.$inferSelect;
 export * from "./teacher-schema";
 
 export * from "./teacher-posts-schema";
+
+export * from "./blog-schema";

@@ -1,3 +1,22 @@
+## [2026-10-20] — monthly-access-blog
+
+### Added
+- Server-persisted first-lesson/seven-day trial; additive SQL migration with two editable starter blog articles.
+- Public blog, article metadata and dynamic published-only sitemap; Telegram admin article editor with drafts, preview and unpublishing.
+- Executable access/blog policy and API handler checks; prepared Chromium acceptance script.
+
+### Changed
+- New purchases: 1790 Stars for 30 days with manual renewal. Historical lifetime purchases retain their terms; paid overlapping invoices extend time.
+- Homepage checkout and teacher navigation removed; payment offered after trial completion/expiry.
+- Main lesson exercise payloads, including the trial lesson, now require server checks. PWA cache version bumped; blog/admin bypass service worker cache.
+
+### Security
+- Server-side admin Telegram allowlist, same-origin writes, bounded validated article input and escaped HTML.
+- Expired/refunded purchases do not restore access via legacy key activation or order polling.
+
+### Tests
+- Policy/handler tests use mocked storage; live database/Telegram and browser checks require acceptance as detailed in docs/ACCESS_BLOG.md.
+
 ## [2026-10-16] — Spanish casita styling
 
 ### Changed

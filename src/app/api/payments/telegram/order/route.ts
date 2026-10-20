@@ -3,6 +3,7 @@ import { errorResponse, jsonResponse, rateLimit, readJsonBody } from "@/server/h
 import { currentUser } from "@/server/http";
 import {
   fulfillOrder,
+  findPaidLicenseForUser,
   getOrderForUser,
   verifyOrderThroughStarsHistory,
 } from "@/server/orders";
@@ -38,7 +39,7 @@ async function resolve(request: NextRequest, orderId: number, verifyHistory: boo
       stars: order.stars,
       currency: order.currency,
       invoiceLink: order.invoiceLink,
-      premium: Boolean(fulfilled?.license),
+      premium: Boolean(fulfilled?.license && await findPaidLicenseForUser(user.id)),
       verification: "webhook",
     };
     return jsonResponse(payload);
@@ -68,7 +69,7 @@ async function resolve(request: NextRequest, orderId: number, verifyHistory: boo
       stars: order.stars,
       currency: order.currency,
       invoiceLink: order.invoiceLink,
-      premium: Boolean(fulfilled?.license),
+      premium: Boolean(fulfilled?.license && await findPaidLicenseForUser(user.id)),
       verification: "stars-history",
     };
     return jsonResponse(payload);

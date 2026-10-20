@@ -30,7 +30,7 @@ export async function generateMetadata({
   const category = categoryById.get(lesson.category);
   const intent = (lesson.summary ?? lesson.subtitle ?? lesson.situation ?? lesson.title).replace(/[.!?]+$/, "");
   const title = `${intent}: ${lesson.title}`;
-  const access = lesson.lesson <= 7 ? "Упражнения доступны бесплатно." : "Упражнения доступны в Premium.";
+  const access = lesson.lesson === 1 ? "Упражнения доступны бесплатно." : "Упражнения доступны в Premium.";
   const description = `${intent}. Испанские фразы с переводом и контекстом для жизни в Испании. ${access}`;
   return {
     title,

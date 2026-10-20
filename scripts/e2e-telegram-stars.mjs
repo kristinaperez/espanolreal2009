@@ -111,6 +111,7 @@ async function api(path, options = {}) {
     ...options,
     headers: {
       "content-type": "application/json",
+      origin: BASE,
       ...(cookie ? { cookie } : {}),
       ...(options.headers ?? {}),
     },
@@ -140,7 +141,7 @@ check("user stored", login.json?.user?.telegramId === TELEGRAM_ID, login.json?.u
 
 const session = await api("/api/telegram/session");
 check("session endpoint sees the user", session.json?.user?.telegramId === TELEGRAM_ID, session.json);
-check("stars price reported", session.json?.starsPrice === 500, session.json?.starsPrice);
+check("stars price reported", session.json?.starsPrice === 1790, session.json?.starsPrice);
 
 // 2. Tampered payload must be rejected
 const tampered = await api("/api/telegram/auth", {
@@ -149,13 +150,24 @@ const tampered = await api("/api/telegram/auth", {
 });
 check("tampered login rejected", tampered.status === 401, tampered);
 
+// Trial is consumed server-side before offering checkout.
+const trialLesson = await api("/api/lessons/1");
+check("first lesson starts trial", trialLesson.status === 200, trialLesson);
+const trialDone = await api("/api/trial", { method: "POST" });
+check("trial completion recorded", trialDone.status === 200, trialDone);
 // 3. Create the invoice
 const invoice = await api("/api/payments/telegram/stars", {
   method: "POST",
-  body: JSON.stringify({ productId: "premium-45" }),
+  body: JSON.stringify({ productId: "premium-monthly" }),
 });
 check("invoice created", invoice.status === 200 && Boolean(invoice.json?.invoiceLink), invoice);
-check("invoice is for 500 stars", invoice.json?.stars === 500, invoice.json?.stars);
+check("invoice is for 1790 stars", invoice.json?.stars === 1790, invoice.json?.stars);
+
+const fallbackInvoice = await api("/api/payments/telegram/stars", {
+  method: "POST",
+  body: JSON.stringify({ productId: "premium-monthly" }),
+});
+check("second invoice created", fallbackInvoice.status === 200, fallbackInvoice);
 
 // 4. Telegram confirms the payment through the webhook
 const orderPayload = invoice.json?.payload;
@@ -190,7 +202,7 @@ const preCheckout = await api("/api/telegram/webhook", {
       id: "pcq-1",
       from: { id: TELEGRAM_ID },
       currency: "XTR",
-      total_amount: 500,
+      total_amount: 1790,
       invoice_payload: orderPayload,
     },
   }),
@@ -209,7 +221,7 @@ const paid = await api("/api/telegram/webhook", {
       date: Math.floor(Date.now() / 1000),
       successful_payment: {
         currency: "XTR",
-        total_amount: 500,
+        total_amount: 1790,
         invoice_payload: orderPayload,
         telegram_payment_charge_id: "charge-webhook-1",
       },
@@ -237,7 +249,7 @@ const savedCookie = cookie;
 cookie = "";
 const anonymous = await api("/api/payments/telegram/stars", {
   method: "POST",
-  body: JSON.stringify({ productId: "premium-45" }),
+  body: JSON.stringify({ productId: "premium-monthly" }),
 });
 check("anonymous purchase blocked", anonymous.status === 401, anonymous);
 cookie = savedCookie;
@@ -278,11 +290,7 @@ cookie = savedCookie;
 
 // -------------------------------------------- webhook-less verification path
 console.log("\n▶ Fallback verification via getStarTransactions\n");
-const fallbackInvoice = await api("/api/payments/telegram/stars", {
-  method: "POST",
-  body: JSON.stringify({ productId: "premium-45" }),
-});
-check("second invoice created", fallbackInvoice.status === 200, fallbackInvoice);
+
 
 const fallback = await api("/api/payments/telegram/order", {
   method: "POST",
