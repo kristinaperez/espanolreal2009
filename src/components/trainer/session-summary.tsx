@@ -5,6 +5,7 @@ import { Star } from "lucide-react";
 import { Confetti } from "@/components/ui/confetti";
 import { Badge, Card, ProgressBar } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useTrialStatus } from "@/components/providers/trial-status";
 import { useState } from "react";
 import { useProgress } from "@/components/providers/progress-provider";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -20,12 +21,14 @@ export function SessionSummary({
   nextHref,
   retryHref,
   reviewHref,
+  showPayment = false,
 }: {
   result: SessionResult;
   title: string;
   nextHref?: string;
   retryHref?: string;
   reviewHref?: string;
+  showPayment?: boolean;
 }) {
   const { state } = useProgress();
   const { language } = useLanguage();
@@ -92,15 +95,16 @@ export function SessionSummary({
             <ProgressBar value={progress.percent} tone="accent" />
           </div>
 
+          {showPayment && <Card className="mt-6 text-left"><h3 className="mb-3 text-xl font-bold">Первый урок завершён! Продолжим?</h3><TelegramStarsPayment compact /></Card>}
           <div className="mx-auto mt-8 flex max-w-xl flex-col gap-3">
-            {nextHref ? (
+            {!showPayment && nextHref ? (
               <Link
                 href={nextHref}
                 className="inline-flex h-14 items-center justify-center rounded-full bg-primary px-7 text-base font-extrabold text-white shadow-[0_4px_0_0_var(--primary-strong)] transition hover:bg-primary-strong active:scale-95"
               >
                 {fr ? "Continuer le cours →" : "Продолжить курс →"}
               </Link>
-            ) : retryHref ? (
+            ) : !showPayment && retryHref ? (
               <Link
                 href={retryHref}
                 className="inline-flex h-14 items-center justify-center rounded-full bg-primary px-7 text-base font-extrabold text-white shadow-[0_4px_0_0_var(--primary-strong)] transition hover:bg-primary-strong active:scale-95"
@@ -134,9 +138,11 @@ function Stat({ icon, label, value }: { icon: string; label: string; value: stri
 
 export function PremiumLock({ nextLesson }: { nextLesson?: number }) {
   const { starsPrice, user, serverPremium } = useAuth();
+  const trial = useTrialStatus();
   const premium = serverPremium || process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
   const [showPayment, setShowPayment] = useState(false);
 
+  if (!premium && (!trial || trial.active)) return <Card><h2 className="text-2xl font-bold">Начните с первого урока</h2><p className="mt-3 text-muted">Бесплатно до завершения первого урока или истечения 7 дней с начала обучения — что наступит раньше.</p><Link href="/lesson/1" className="mt-4 inline-flex min-h-12 items-center font-bold text-primary">Начать бесплатно →</Link></Card>;
   return (
     <div className="flex flex-col gap-5 rounded-[28px] border-2 border-primary/30 bg-primary/8 p-6 text-center sm:p-10">
       <div>
@@ -145,9 +151,8 @@ export function PremiumLock({ nextLesson }: { nextLesson?: number }) {
           Вы прошли бесплатную часть курса
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-base text-muted">
-          Откройте все уроки, полную систему повторения, экзамены и сертификат. Разовая оплата{" "}
-          <span className="font-bold text-foreground">{starsPrice} ⭐</span> в Telegram — без подписки и
-          автоплатежей.
+          Откройте все уроки, полную систему повторения, экзамены и сертификат. Доступ на 30 дней за{" "}
+          <span className="font-bold text-foreground">{starsPrice} ⭐</span> в Telegram. Продление вручную, без автоплатежей.
         </p>
       </div>
 
@@ -185,10 +190,11 @@ export function PremiumLock({ nextLesson }: { nextLesson?: number }) {
         </div>
       ) : null}
 
+      <Link href="/lesson/1" className="text-sm font-bold text-primary underline">Открыть первый урок</Link>
       <div className="flex flex-wrap justify-center gap-2">
-        <Badge tone="success">Без подписки</Badge>
+        <Badge tone="success">Без автосписаний</Badge>
         <Badge tone="info">Все будущие уроки</Badge>
-        <Badge tone="accent">Бессрочный доступ</Badge>
+        <Badge tone="accent">Доступ на 30 дней</Badge>
       </div>
     </div>
   );

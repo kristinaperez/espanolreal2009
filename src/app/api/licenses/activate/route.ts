@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { formatKey, normalizeKey } from "@/lib/license";
 import { currentUser, errorResponse, jsonResponse, rateLimit, readJsonBody, serverErrorResponse } from "@/server/http";
-import { getLicenseByKey, markLicenseActivated } from "@/server/orders";
+import { getLicenseByKey, markLicenseActivated, getOrderForUser, findPaidLicenseForUser } from "@/server/orders";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +41,10 @@ export async function POST(request: NextRequest) {
       return jsonResponse({ ok: true, valid: false, reason: "invalid" });
     }
 
+    const order = await getOrderForUser(license.orderId, user.id);
+    if (!order || order.status !== "paid" || !await findPaidLicenseForUser(user.id)) {
+      return jsonResponse({ ok: true, valid: false, reason: "expired" });
+    }
     await markLicenseActivated(license.key);
     return jsonResponse({
       ok: true,

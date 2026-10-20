@@ -14,7 +14,9 @@ import path from "node:path";
 
 const API_DIR = path.join(process.cwd(), "src", "app", "api");
 const STASH = path.join(process.cwd(), ".telegram-api-stash");
-const SERVER_ROUTES = ["p", "media"].map(name => [path.join(process.cwd(), "src", "app", name), path.join(process.cwd(), `.static-${name}-stash`)]);
+const SERVER_ROUTES = ["(main)/p", "media", "(main)/blog", "(main)/admin"].map(name => [path.join(process.cwd(), "src", "app", name), path.join(process.cwd(), `.static-${name.replaceAll("/", "-")}-stash`)]);
+const SITEMAP = path.join(process.cwd(), "src/app/sitemap.ts");
+const SITEMAP_STASH = path.join(process.cwd(), ".static-sitemap-stash");
 
 function move(from, to) {
   if (!fs.existsSync(from)) return false;
@@ -23,6 +25,11 @@ function move(from, to) {
   return true;
 }
 
+// Recover the original server sitemap if a previous offline build was interrupted.
+if (fs.existsSync(SITEMAP_STASH)) {
+  if (fs.existsSync(SITEMAP)) fs.unlinkSync(SITEMAP);
+  move(SITEMAP_STASH, SITEMAP);
+}
 // Recover from a previously interrupted run first.
 if (fs.existsSync(STASH)) {
   if (fs.existsSync(API_DIR)) {
@@ -36,6 +43,8 @@ for (const [source, stash] of SERVER_ROUTES) {
   if (fs.existsSync(stash)) { if (fs.existsSync(source)) throw new Error(`Both ${source} and ${stash} exist`); move(stash, source); }
 }
 try {
+  move(SITEMAP, SITEMAP_STASH);
+  fs.writeFileSync(SITEMAP, 'export const dynamic = "force-static";\nexport default function sitemap() { return [{ url: "https://espanolreal.es/" }]; }\n');
   for (const [source, stash] of SERVER_ROUTES) move(source, stash);
   const stashed = move(API_DIR, STASH);
   if (stashed) {
@@ -51,6 +60,10 @@ try {
     },
   });
 } finally {
+  if (fs.existsSync(SITEMAP_STASH)) {
+    if (fs.existsSync(SITEMAP)) fs.unlinkSync(SITEMAP);
+    move(SITEMAP_STASH, SITEMAP);
+  }
   for (const [source, stash] of SERVER_ROUTES) if (fs.existsSync(stash) && !fs.existsSync(source)) move(stash, source);
   if (fs.existsSync(STASH) && !fs.existsSync(API_DIR)) {
     move(STASH, API_DIR);

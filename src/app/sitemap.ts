@@ -1,3 +1,4 @@
+import { listArticles } from "@/server/blog";
 import { publishedStories } from "@/lib/stories";
 import { arabicSeoPages, arabicPath } from "@/lib/arabic/seo-content";
 import type { MetadataRoute } from "next";
@@ -5,7 +6,7 @@ import { getLessonNumbers } from "@/lib/content/loader";
 import { topics } from "@/lib/seo/topics";
 
 // Required for `output: "export"` builds.
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 const siteUrl = "https://espanolreal.es";
 
@@ -17,7 +18,9 @@ const siteUrl = "https://espanolreal.es";
  * /learn/review, /learn/mistakes, /learn/search, /learn/settings, /learn/stats
  * and /certificate are intentionally excluded because they are noindex.
  */
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const articles = await listArticles();
+  const blogRoutes: MetadataRoute.Sitemap = [{ url: `${siteUrl}/blog`, changeFrequency: "weekly", priority: 0.7 }, ...articles.map(article => ({ url: `${siteUrl}/blog/${article.slug}`, lastModified: article.updatedAt, changeFrequency: "monthly" as const, priority: 0.6 }))];
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${siteUrl}/`, changeFrequency: "weekly", priority: 1 },
     { url: `${siteUrl}/learn/lessons`, changeFrequency: "weekly", priority: 0.8 },
@@ -48,5 +51,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${siteUrl}/ru/100-prichin-uchit-ispanskiy/`, changeFrequency: "weekly", priority: 0.7 },
     ...publishedStories.map(story => ({ url: `${siteUrl}/ru/zachem-uchit-ispanskiy/${story.slug}/`, lastModified: new Date(story.updatedAt), changeFrequency: "monthly" as const, priority: 0.6 }))
   ];
-  return [...staticRoutes, ...topicRoutes, ...lessonRoutes, ...arabicRoutes, ...storyRoutes];
+  return [...blogRoutes, ...staticRoutes, ...topicRoutes, ...lessonRoutes, ...arabicRoutes, ...storyRoutes];
 }

@@ -3,6 +3,8 @@ import { and, desc, eq, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { licenses, orders, telegramUsers, type LicenseRow, type OrderRow } from "@/db/schema";
 import { getStarTransactions, type TgStarTransaction } from "@/lib/telegram/bot-api";
+import { monthlyExpiry } from "@/lib/payments/access";
+export { licenseIsActive } from "@/lib/payments/access";
 import type { Product } from "@/lib/payments/catalog";
 
 export function buildPayload(product: Product, userId: number): string {
@@ -153,18 +155,18 @@ export async function markLicenseActivated(key: string) {
   await db.update(licenses).set({ activatedAt: new Date() }).where(eq(licenses.key, key));
 }
 
+export async function getPremiumEntitlement(userId: number) {
+  const rows = await db.select().from(licenses).innerJoin(orders,
+    and(eq(licenses.orderId, orders.id), eq(orders.status, "paid")))
+    .where(eq(licenses.userId, userId)).orderBy(desc(orders.paidAt));
+  const legacy = rows.find(row => row.licenses.productId === "premium-45");
+  if (legacy) return { license: legacy.licenses, expiresAt: null as Date | null };
+  const expiresAt = monthlyExpiry(rows.map(row => row.orders));
+  const monthly = rows.find(row => row.licenses.productId === "premium-monthly");
+  return monthly && expiresAt && expiresAt.getTime() > Date.now() ? { license: monthly.licenses, expiresAt } : null;
+}
 export async function findPaidLicenseForUser(userId: number): Promise<LicenseRow | null> {
-  const [row] = await db
-    .select()
-    .from(licenses)
-    .innerJoin(
-      orders,
-      and(eq(licenses.orderId, orders.id), eq(orders.status, "paid")),
-    )
-    .where(eq(licenses.userId, userId))
-    .orderBy(desc(licenses.issuedAt))
-    .limit(1);
-  return row?.licenses ?? null;
+  return (await getPremiumEntitlement(userId))?.license ?? null;
 }
 
 const STARS_LOOKUP_WINDOW_MS = 15 * 60 * 1000;

@@ -20,24 +20,25 @@ export interface Product {
   lifetime: boolean;
 }
 
-export const DEFAULT_STARS_PRICE = 500;
+export const DEFAULT_STARS_PRICE = 1790;
+export const MONTHLY_PRODUCT_ID = "premium-monthly";
+export const ACCESS_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
 
 export function starsPrice(): number {
-  const raw = Number(process.env.TELEGRAM_STARS_PRICE ?? process.env.NEXT_PUBLIC_STARS_PRICE);
-  return Number.isFinite(raw) && raw > 0 ? Math.round(raw) : DEFAULT_STARS_PRICE;
+  return DEFAULT_STARS_PRICE;
 }
 
 export function premiumProduct(): Product {
   const stars = starsPrice();
   return {
-    id: "premium-45",
+    id: MONTHLY_PRODUCT_ID,
     title: "Español Real · Premium",
     description:
-      "Все уроки курса, полная система повторения, экзамены и сертификат. Разовая оплата, бессрочный доступ.",
+      "Все уроки курса, полная система повторения, экзамены и сертификат. Доступ на 30 дней за 1790 Stars. Продление вручную, без автосписаний.",
     stars,
     currency: "XTR",
     unlocks: "premium",
-    lifetime: true,
+    lifetime: false,
   };
 }
 

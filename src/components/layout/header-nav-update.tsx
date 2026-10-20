@@ -1,4 +1,5 @@
 "use client";
+import { useAuth } from "@/components/providers/auth-provider";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 
 import Link from "next/link";
@@ -7,6 +8,7 @@ import { useState } from "react";
 import { useLanguage } from "@/components/providers/language-provider";
 
 export function HeaderNavUpdate() {
+  const { account } = useAuth();
   const [open, setOpen] = useState(false);
   const { language } = useLanguage();
   const fr = language === "fr";
@@ -15,7 +17,7 @@ export function HeaderNavUpdate() {
     ["/#method", fr ? "Méthode" : "Метод"],
     ["/#pricing", fr ? "Tarifs" : "Цена"],
     ["/#community", fr ? "Communauté" : "Сообщество"],
-    ["/for-teachers", fr ? "Enseignants" : "Преподавателям"],
+    ["/blog", "Блог"],
   ];
   return <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/95 text-stone-900 backdrop-blur-xl">
     <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
@@ -28,6 +30,7 @@ export function HeaderNavUpdate() {
           {links.map(([href, label]) => <Link key={href} href={href}>{label}</Link>)}
         </nav>
         <div className="flex shrink-0 items-center gap-2">
+          {account?.blogAdmin && <Link href="/admin/blog" className="inline-flex min-h-11 items-center text-sm font-bold">Статьи</Link>}
           <LanguageSwitcher />
           <Link href="/learn/settings" aria-label={fr ? "Réglages" : "Настройки"} className="grid h-11 w-11 place-items-center rounded-xl border border-stone-200"><Settings size={18} /></Link>
           <button type="button" aria-expanded={open} aria-controls="mobile-site-nav" aria-label={open ? "Закрыть меню" : "Открыть меню"} onClick={() => setOpen(!open)} className="grid h-11 w-11 place-items-center rounded-xl border border-stone-200 xl:hidden">{open ? <X size={20} /> : <Menu size={20} />}</button>

@@ -1,3 +1,15 @@
+# Access and blog — 2026-10-20
+
+## NOW
+- Review monthly-access/blog PR; apply additive migration and configure confirmed BLOG_ADMIN_TELEGRAM_IDS on preview.
+- Accept first-lesson/seven-day trial, 1790-Star payment/restore and published article visibility on the configured preview.
+## NEXT
+- Deploy after acceptance; check production editor and expiry on a disposable account.
+## LATER
+- Evaluate whether anonymous trial resets justify login before the first lesson.
+## BACKLOG
+- Article image uploads, rich text toolbar and multilingual article versions if needed.
+
 # World MVP — 2026-10-15
 
 ## NOW
