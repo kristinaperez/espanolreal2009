@@ -146,4 +146,5 @@ assert(cardHtml.includes('telegram-login'));
 assert((cardHtml.match(/<li/g) || []).length >= 22);
 const trainerSource = fs.readFileSync('src/components/trainer/trainer-page.tsx', 'utf8');
 assert(/response\.status === 401/.test(trainerSource) && /<StartLessonCard/.test(trainerSource), 'trainer must switch to the start card on 401 / signed-out');
+assert(/lesson\.lesson === 1/.test(fs.readFileSync('src/components/seo/lesson-intro.tsx', 'utf8')), 'lesson 1 intro must not say Premium is required');
 console.log('PASS: start card shows the lion, ¡Vamos!, exactly two teaser phrases, Telegram login and 22 age-free motivations; trainer wired for signed-out visitors.');

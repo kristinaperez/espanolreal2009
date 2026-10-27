@@ -44,3 +44,24 @@ FILES: payment catalogue/access policy, server trial/billing/account handlers, m
 RISK: migration/environment must precede deployment; guest trial reset limitation; live Telegram/payment acceptance still required.
 TEST: policy/handler execution with mocks, static security regression, lint/types/build and real local HTTP checks. Browser/manual/live-database checks distinguished above.
 RESULT: implementation prepared on feat/monthly-access-blog-20261020. The owner explicitly authorized publishing the changes to kristinaperez/espanolreal2009 and opening a PR on 2026-10-20. Production deployment still requires the migration, server configuration and acceptance checks described above.
+
+## Update — 2026-10-27 (branch feat/access-1490-paywall-20261027)
+
+Design: `docs/superpowers/specs/2026-10-27-access-paywall-design.md`. Plan: `docs/superpowers/plans/2026-10-27-access-paywall.md`.
+
+- **Price:** 1490 Stars, caption «≈ 32 € в месяц · около 1 € в день» (Telegram iOS prices in Spain on 27.10.2026: 1000 + 250 + 250 Stars = 32,27 €). Change the caption in `payments.priceHint` if Telegram prices move.
+- **Period:** one calendar month from `orders.paid_at` (UTC); a missing day clamps to the month end. Stacked payments add a month to the later of current expiry and payment time.
+- **Login first:** `/api/lessons/1` returns 401 without a session; the trainer shows the start card instead. Login (POST and redirect GET) creates the account trial; a failed trial write never blocks login.
+- **Comparisons:** `payments.comparisons` in the config; ids are stored as `orders.price_variant`. Report: see the commented query in `docs/migrations/20261027-price-variant.sql`. Analytics goals: `paywall_view`, `checkout_click` with parameter `variant` (GA4 event + Metrika `reachGoal`, counter 113580037), only after consent. Metrika webvisor stays off.
+
+### Deployment order (production still runs pre-#27 code)
+
+1. Back up the production database.
+2. Apply `docs/migrations/20261020-blog-trials.sql`, then `docs/migrations/20261027-price-variant.sql`.
+3. Netlify env: `DATABASE_URL`, `SESSION_SECRET` (32+ bytes), `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, webhook secret, `BLOG_ADMIN_TELEGRAM_IDS`.
+4. Deploy preview: anonymous `/lesson/1` shows the start card; login; finish lesson 1; paywall shows 1490 ⭐ + caption + comparison; one real Stars payment; access restored after re-login; `select price_variant from orders order by id desc limit 1` is filled.
+5. Merge and deploy production only after steps 1–4 and the independent review.
+
+### Verification on 2026-10-27 (local, no database)
+
+`npm run lint`, `npm run typecheck -- --incremental false`, `npm run test:security`, `node scripts/access-blog-checks.mjs`, `npm run test:paywall`, `npm run test:arabic`, `npm run build`, `node scripts/build-static.mjs`: passed. Local production server: anonymous `/api/lessons/1` → 401; Playwright at 390 px (light/dark): start card renders, no page errors, no horizontal scroll; landing pricing shows price, caption and a comparison. Not verified here: real PostgreSQL, Telegram login widget, real Stars payment, real devices.
