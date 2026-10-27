@@ -14,8 +14,9 @@ export function trackPaywall(event: "paywall_view" | "checkout_click", variant: 
   try {
     if (typeof window === "undefined" || localStorage.getItem(CONSENT_KEY) !== "accepted") return;
     const w = window as unknown as AnalyticsWindow;
-    if (!w.gtag && !w.ym) {
-      if (attempt < MAX_ATTEMPTS && typeof setTimeout === "function") setTimeout(() => trackPaywall(event, variant, attempt + 1), RETRY_MS);
+    // Wait for both counters; after the last attempt send to whichever loaded (e.g. one is blocked).
+    if ((!w.gtag || !w.ym) && attempt < MAX_ATTEMPTS && typeof setTimeout === "function") {
+      setTimeout(() => trackPaywall(event, variant, attempt + 1), RETRY_MS);
       return;
     }
     try { w.gtag?.("event", event, { variant }); } catch { /* keep Metrika working */ }
