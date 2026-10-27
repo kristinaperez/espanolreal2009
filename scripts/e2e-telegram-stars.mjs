@@ -141,7 +141,7 @@ check("user stored", login.json?.user?.telegramId === TELEGRAM_ID, login.json?.u
 
 const session = await api("/api/telegram/session");
 check("session endpoint sees the user", session.json?.user?.telegramId === TELEGRAM_ID, session.json);
-check("stars price reported", session.json?.starsPrice === 1790, session.json?.starsPrice);
+check("stars price reported", session.json?.starsPrice === 1490, session.json?.starsPrice);
 
 // 2. Tampered payload must be rejected
 const tampered = await api("/api/telegram/auth", {
@@ -161,7 +161,7 @@ const invoice = await api("/api/payments/telegram/stars", {
   body: JSON.stringify({ productId: "premium-monthly" }),
 });
 check("invoice created", invoice.status === 200 && Boolean(invoice.json?.invoiceLink), invoice);
-check("invoice is for 1790 stars", invoice.json?.stars === 1790, invoice.json?.stars);
+check("invoice is for 1490 stars", invoice.json?.stars === 1490, invoice.json?.stars);
 
 const fallbackInvoice = await api("/api/payments/telegram/stars", {
   method: "POST",
@@ -202,7 +202,7 @@ const preCheckout = await api("/api/telegram/webhook", {
       id: "pcq-1",
       from: { id: TELEGRAM_ID },
       currency: "XTR",
-      total_amount: 1790,
+      total_amount: 1490,
       invoice_payload: orderPayload,
     },
   }),
@@ -221,7 +221,7 @@ const paid = await api("/api/telegram/webhook", {
       date: Math.floor(Date.now() / 1000),
       successful_payment: {
         currency: "XTR",
-        total_amount: 1790,
+        total_amount: 1490,
         invoice_payload: orderPayload,
         telegram_payment_charge_id: "charge-webhook-1",
       },

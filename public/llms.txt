@@ -5,7 +5,7 @@
 ## Product facts
 - The course currently contains 45 lessons built around real-life situations and phrases used in Spain.
 - The first 7 lessons can be started free without registration.
-- Premium costs 1790 Telegram Stars for 30 days, with manual renewal. The free trial ends after completing the first lesson or after seven days, whichever comes first.
+- Premium costs 1490 Telegram Stars (about 32 EUR) for one calendar month, with manual renewal. Learners sign in with Telegram first; the free trial ends after completing the first lesson or seven days after registration, whichever comes first.
 - Telegram login is used for Premium purchase and access restoration.
 - Learning progress is stored locally in the browser; not every feature is guaranteed to work offline.
 - The target language is Spanish used in Spain; the main public explanatory language is Russian.

@@ -12,7 +12,8 @@
     "test:arabic": "node scripts/arabic/checks.cjs",
     "test:arabic:http": "node scripts/arabic/http-checks.cjs",
     "test:arabic:interaction": "node scripts/arabic/interaction-checks.cjs",
-    "test:arabic:browser": "node scripts/arabic/browser-checks.cjs"
+    "test:arabic:browser": "node scripts/arabic/browser-checks.cjs",
+    "test:paywall": "node scripts/paywall-checks.mjs"
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.3",

@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { getProduct, premiumProduct } from "@/lib/payments/catalog";
+import { knownVariant } from "@/lib/payments/comparisons";
 import { createStarsInvoiceLink, isBotConfigured } from "@/lib/telegram/bot-api";
 import { errorResponse, jsonResponse, rateLimit, readJsonBody, serverErrorResponse, siteOrigin } from "@/server/http";
 import { currentUser } from "@/server/http";
@@ -9,7 +10,7 @@ import { findPaidLicenseForUser, attachInvoiceLink, createPendingOrder } from "@
 export const dynamic = "force-dynamic";
 
 /**
- * POST — creates a Telegram Stars invoice for Premium (1790 ⭐ for 30 days).
+ * POST — creates a Telegram Stars invoice for Premium (one calendar month).
  * Returns the invoice link that the client opens via
  * `Telegram.WebApp.openInvoice()` or in a new browser tab.
  */
@@ -39,13 +40,13 @@ export async function POST(request: NextRequest) {
   const trial = await resolveTrial(request, user.id);
   if (!trial || trialActive(trial)) return errorResponse("Сначала попробуйте первый урок. Оплата появится после завершения пробы.", 409);
 
-  const body = await readJsonBody<{ productId?: string }>(request);
+  const body = await readJsonBody<{ productId?: string; variant?: unknown }>(request);
   const product = getProduct(body?.productId ?? premiumProduct().id);
   if (!product) return errorResponse("Неизвестный товар", 404);
 
   let order;
   try {
-    order = await createPendingOrder(user.id, product);
+    order = await createPendingOrder(user.id, product, knownVariant(body?.variant));
   } catch (error) {
     return serverErrorResponse("stars-order-create", error);
   }

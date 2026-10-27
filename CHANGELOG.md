@@ -1,3 +1,15 @@
+## [2026-10-27] — access-1490-paywall
+
+### Added
+- Price comparisons (8, editable in `data/course.config.json → payments.comparisons`), one stable comparison per Telegram account; `paywall_view` / `checkout_click` GA4 + Metrika goals with `variant` (consent only); `orders.price_variant` (additive migration `docs/migrations/20261027-price-variant.sql`).
+- Start card for signed-out visitors on lesson 1: Zaragoza lion mascot, two public teaser phrases with audio, "why people learn Spanish" ticker (22 paraphrased motives, no names or ages), Telegram login.
+- `npm run test:paywall`.
+
+### Changed
+- New purchases: 1490 Stars (≈ 32 €) for one calendar month (31 Jan → 28/29 Feb). Lifetime `premium-45` purchases unchanged.
+- Telegram login is required before the free lesson; the trial starts at registration (or first login after deploy for existing accounts). Anonymous `GET /api/lessons/1` → 401.
+- All price/period copy now comes from the catalogue/config; landing no longer promises "no registration".
+
 ## [2026-10-20] — monthly-access-blog
 
 ### Added

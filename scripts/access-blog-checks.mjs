@@ -14,21 +14,31 @@ function load(file, aliases = {}) {
 }
 const catalogue = load('src/lib/payments/catalog.ts');
 process.env.TELEGRAM_STARS_PRICE = '500';
-assert.equal(catalogue.starsPrice(), 1790);
+assert.equal(catalogue.starsPrice(), 1490);
 assert.equal(catalogue.premiumProduct().id, 'premium-monthly');
 assert.equal(catalogue.premiumProduct().lifetime, false);
 const policy = load('src/lib/payments/access.ts', { './catalog': catalogue });
-const paidAt = new Date('2026-10-01T00:00:00Z'), end = paidAt.getTime() + catalogue.ACCESS_PERIOD_MS;
+const paidAt = new Date('2026-10-01T00:00:00Z'), end = policy.addCalendarMonth(paidAt).getTime();
+assert.equal(new Date(end).toISOString(), '2026-11-01T00:00:00.000Z');
 assert(policy.licenseIsActive('premium-monthly', paidAt, end - 1));
 assert(!policy.licenseIsActive('premium-monthly', paidAt, end));
 assert(!policy.licenseIsActive('premium-monthly', null, end));
-assert(policy.licenseIsActive('premium-45', paidAt, end + 20 * catalogue.ACCESS_PERIOD_MS));
+assert(policy.licenseIsActive('premium-45', paidAt, end + 20 * 365 * 86400000));
 assert(!policy.licenseIsActive('forged-product', paidAt, paidAt.getTime()));
-assert.equal(policy.monthlyExpiry([{productId:'premium-monthly', paidAt}, {productId:'premium-monthly', paidAt}]).getTime(), paidAt.getTime() + 2 * catalogue.ACCESS_PERIOD_MS);
+assert.equal(policy.monthlyExpiry([{productId:'premium-monthly', paidAt}, {productId:'premium-monthly', paidAt}]).toISOString(), '2026-12-01T00:00:00.000Z');
 const later = new Date(end + 86400000);
-assert.equal(policy.monthlyExpiry([{productId:'premium-monthly', paidAt}, {productId:'premium-monthly', paidAt: later}]).getTime(), later.getTime() + catalogue.ACCESS_PERIOD_MS);
+assert.equal(policy.monthlyExpiry([{productId:'premium-monthly', paidAt}, {productId:'premium-monthly', paidAt: later}]).getTime(), policy.addCalendarMonth(later).getTime());
 assert.equal(policy.monthlyExpiry([]), null);
-console.log('PASS: fixed price, new SKU, expiry boundary, legacy access, stacked payments and renewal after a gap.');
+const m = d => policy.addCalendarMonth(new Date(d)).toISOString();
+assert.equal(m('2026-11-15T10:00:00Z'), '2026-12-15T10:00:00.000Z');
+assert.equal(m('2027-01-31T10:00:00Z'), '2027-02-28T10:00:00.000Z');
+assert.equal(m('2028-01-31T10:00:00Z'), '2028-02-29T10:00:00.000Z');
+assert.equal(m('2026-12-31T10:00:00Z'), '2027-01-31T10:00:00.000Z');
+const jan31 = new Date('2027-01-31T00:00:00Z');
+assert(policy.licenseIsActive('premium-monthly', jan31, Date.parse('2027-02-28T00:00:00Z') - 1));
+assert(!policy.licenseIsActive('premium-monthly', jan31, Date.parse('2027-02-28T00:00:00Z')));
+assert.equal(policy.monthlyExpiry([{productId:'premium-monthly',paidAt:jan31},{productId:'premium-monthly',paidAt:jan31}]).toISOString(), '2027-03-28T00:00:00.000Z');
+console.log('PASS: fixed 1490 price, new SKU, calendar-month expiry with month-end clamping, legacy access, stacked payments and renewal after a gap.');
 
 process.env.SESSION_SECRET = 'test-independent-secret-at-least-32-bytes';
 const trial = load('src/server/trial.ts', {
@@ -48,8 +58,12 @@ let user = null, activeLicense = null, row = null, completions = 0;
 const http = {currentUser: async () => user, rateLimit: () => null, jsonResponse: (value,status=200) => ({value,status}), errorResponse: (error,status=400) => ({error,status}), serverErrorResponse: () => ({status:503}), readJsonBody:async r => r.body};
 const request = {cookies:{get:()=>null}, headers:{get:()=> 'https://example.test'},nextUrl:{origin:'https://example.test'}};
 const trialService = {resolveTrial:async (_r,_id,start) => row ?? (start ? (row={id:'guest-id',startedAt:new Date(),completedAt:null}) : null), setTrialCookie:()=>{}, trialActive:trial.trialActive, TRIAL_MS:trial.TRIAL_MS, completeTrial:async()=>{completions++; row.completedAt ??= new Date();}};
-const lessonRoute = load('src/app/api/lessons/[n]/route.ts', {'@/lib/content/loader':{getLesson:n=>n===1 || n===2?{lesson:n,phrases:['protected']}:null,getDistractorPool:()=>[]},'@/server/http':http,'@/server/orders':{findPaidLicenseForUser:async()=>activeLicense},'@/server/trial':trialService});
+const lessonRoute = load('src/app/api/lessons/[n]/route.ts', {'@/lib/content/loader':{getLesson:n=>n===1 || n===2?{lesson:n,phrases:['protected']}:null,getDistractorPool:()=>[]},'@/server/http':http,'@/server/orders':{findPaidLicenseForUser:async()=>activeLicense},'@/lib/payments/catalog':catalogue,'@/server/trial':trialService});
 const getLesson = n => lessonRoute.GET(request, {params:Promise.resolve({n:String(n)})});
+user=null;
+assert.equal((await getLesson(1)).status,401);
+assert.equal(row,null,'anonymous visitors must not create a trial');
+user={id:1,telegramId:42}; activeLicense=null;
 assert.equal((await getLesson('nope')).status,400);
 assert.equal((await getLesson(99)).status,404);
 assert.equal((await getLesson(2)).status,402);
@@ -64,7 +78,7 @@ row={id:'guest-id',startedAt:new Date(Date.now()-trial.TRIAL_MS),completedAt:nul
 assert.equal((await getLesson(1)).status,402);
 user={id:1,telegramId:42}; activeLicense={id:1};
 assert.equal((await getLesson(2)).status,200);
-console.log('PASS: real lesson/trial route functions with mocked storage: invalid/unknown lessons, no lesson-2 trial, first lesson, completion replay, expiry, paid access, CSRF rejection.');
+console.log('PASS: real lesson/trial route functions with mocked storage: anonymous 401 without a trial, invalid/unknown lessons, no lesson-2 trial, first lesson, completion replay, expiry, paid access, CSRF rejection.');
 
 const model=load('src/lib/blog.ts');
 const article={slug:'first-article',title:'Первая статья',description:'Практика разговорного испанского',body:'## Первая фраза\n\n<script>alert(1)</script> & текст',published:false};
@@ -96,7 +110,8 @@ let invoices=0;
 const invoiceRoute=load('src/app/api/payments/telegram/stars/route.ts', {
  '@/db':{db:{execute:async()=>null}},'drizzle-orm':{sql:()=>null},
  '@/lib/payments/catalog':catalogue,
- '@/lib/telegram/bot-api':{isBotConfigured:()=>true,createStarsInvoiceLink:async value=>{invoices++;assert.equal(value.stars,1790);return 'https://t.me/$test';}},
+ '@/lib/payments/comparisons':{knownVariant:()=>null},
+ '@/lib/telegram/bot-api':{isBotConfigured:()=>true,createStarsInvoiceLink:async value=>{invoices++;assert.equal(value.stars,1490);return 'https://t.me/$test';}},
  '@/server/http':{...http,siteOrigin:()=> 'https://example.test'},
  '@/server/trial':trialService,
  '@/server/orders':{findPaidLicenseForUser:async()=>activeLicense,createPendingOrder:async()=>({id:1,payload:'test-payload'}),attachInvoiceLink:async()=>{}},
@@ -109,4 +124,4 @@ row.completedAt=new Date();assert.equal((await invoiceRoute.POST({...request,bod
 assert.equal((await invoiceRoute.POST({...request,body:{productId:'premium-monthly'}})).status,200);
 assert.equal(invoices,1);
 activeLicense={id:1};assert.equal((await invoiceRoute.POST(request)).status,409);
-console.log('PASS: invoice route rejects guests, unused/active trial, legacy SKU and already-active Premium; expired trial creates exactly a 1790-Star invoice (mock Telegram and storage).');
+console.log('PASS: invoice route rejects guests, unused/active trial, legacy SKU and already-active Premium; expired trial creates exactly a 1490-Star invoice (mock Telegram and storage).');

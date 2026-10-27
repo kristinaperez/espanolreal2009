@@ -20,9 +20,8 @@ export interface Product {
   lifetime: boolean;
 }
 
-export const DEFAULT_STARS_PRICE = 1790;
+export const DEFAULT_STARS_PRICE = 1490;
 export const MONTHLY_PRODUCT_ID = "premium-monthly";
-export const ACCESS_PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
 
 export function starsPrice(): number {
   return DEFAULT_STARS_PRICE;
@@ -34,7 +33,7 @@ export function premiumProduct(): Product {
     id: MONTHLY_PRODUCT_ID,
     title: "Español Real · Premium",
     description:
-      "Все уроки курса, полная система повторения, экзамены и сертификат. Доступ на 30 дней за 1790 Stars. Продление вручную, без автосписаний.",
+      "Все уроки курса, полная система повторения, экзамены и сертификат. Доступ на календарный месяц за 1490 Stars. Продление вручную, без автосписаний.",
     stars,
     currency: "XTR",
     unlocks: "premium",

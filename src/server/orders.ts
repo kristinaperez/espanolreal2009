@@ -14,6 +14,7 @@ export function buildPayload(product: Product, userId: number): string {
 export async function createPendingOrder(
   userId: number,
   product: Product,
+  priceVariant: string | null = null,
 ): Promise<OrderRow> {
   const [row] = await db
     .insert(orders)
@@ -24,6 +25,7 @@ export async function createPendingOrder(
       currency: product.currency,
       status: "pending",
       payload: buildPayload(product, userId),
+      priceVariant,
     })
     .returning();
   return row;

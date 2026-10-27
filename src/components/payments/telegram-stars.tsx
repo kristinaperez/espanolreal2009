@@ -11,6 +11,9 @@ import { Badge, Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { openInvoiceLink } from "@/lib/telegram/webapp";
 import { TelegramLogin } from "@/components/auth/telegram-login";
+import { payments } from "@/lib/content/config";
+import { comparisonFor } from "@/lib/payments/comparisons";
+import { trackPaywall } from "@/lib/analytics/paywall";
 
 type Phase = "idle" | "creating" | "awaiting" | "verifying" | "paid" | "error";
 
@@ -38,7 +41,7 @@ const POLL_INTERVAL = 3000;
 const POLL_ATTEMPTS = 40;
 
 /**
- * Telegram Stars checkout for the Premium unlock (1790 ⭐ by default).
+ * Telegram Stars checkout for the Premium unlock (price from the catalogue).
  * Works both in a browser tab (invoice link) and inside a Telegram Mini App
  * (`Telegram.WebApp.openInvoice`).
  */
@@ -53,6 +56,15 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [openedIn, setOpenedIn] = useState<"webapp" | "browser" | null>(null);
   const trackedOrders = useRef(new Set<number>());
+  // One stable comparison per Telegram account, so conversion can be measured per variant.
+  const comparison = user && !ar ? comparisonFor(user.telegramId) : null;
+  const paywallOpen = Boolean(comparison && !serverPremium && trial && !trial.active && phase !== "paid");
+  const trackedView = useRef<string | null>(null);
+  useEffect(() => {
+    if (!paywallOpen || !comparison || trackedView.current === comparison.id) return;
+    trackedView.current = comparison.id;
+    trackPaywall("paywall_view", comparison.id);
+  }, [paywallOpen, comparison]);
   const pollRef = useRef<number | null>(null);
 
   const stopPolling = useCallback(() => {
@@ -123,11 +135,12 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
     setError(null);
     setMessage(null);
     setPhase("creating");
+    if (comparison) trackPaywall("checkout_click", comparison.id);
     try {
       const response = await fetch("/api/payments/telegram/stars", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ productId: account?.productId ?? "premium-monthly" }),
+        body: JSON.stringify({ productId: account?.productId ?? "premium-monthly", ...(comparison ? { variant: comparison.id } : {}) }),
       });
       const payload = (await response.json()) as OrderResponse;
       if (!response.ok || !payload.invoiceLink) {
@@ -158,7 +171,7 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
       setError((caught as Error).message);
       setPhase("error");
     }
-  }, [account, checkOrder, startPolling, ar]);
+  }, [account, checkOrder, startPolling, ar, comparison]);
 
   const restore = useCallback(async () => {
     setError(null);
@@ -186,7 +199,7 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
   }
 
   if (!serverPremium && phase !== "paid" && (!trial || trial.active)) {
-    return <Card><p className="font-bold">{trial ? "Попробуйте первый урок бесплатно" : "Проверяем пробный доступ…"}</p><p className="mt-2 text-sm text-muted">Оплата появится после первого завершённого урока или через 7 дней с начала обучения — что наступит раньше. Затем 1790 ⭐ за 30 дней.</p><Link href="/lesson/1" className="mt-3 inline-flex min-h-11 items-center font-bold text-primary">Начать урок →</Link></Card>;
+    return <Card><p className="font-bold">{trial ? "Попробуйте первый урок бесплатно" : "Проверяем пробный доступ…"}</p><p className="mt-2 text-sm text-muted">Оплата появится после первого завершённого урока или через 7 дней с начала обучения — что наступит раньше. Затем {starsPrice} ⭐ за месяц.</p><Link href="/lesson/1" className="mt-3 inline-flex min-h-11 items-center font-bold text-primary">Начать урок →</Link></Card>;
   }
 
   if (!user) {
@@ -195,7 +208,7 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
         <div>
           <p className="text-sm font-bold">{ar ? "سجّل الدخول عبر Telegram للدفع بالنجوم" : "Войдите через Telegram, чтобы оплатить звёздами"}</p>
           <p className="mt-1 text-sm text-muted">
-            Premium — {starsPrice}{ar ? "⭐ لمدة 30 يومًا. يظهر زر الدفع هنا بعد تسجيل الدخول." : "⭐ за 30 дней. После входа здесь появится кнопка оплаты — переходить на другую страницу не нужно."}</p>
+            Premium — {starsPrice}{ar ? "⭐ لمدة شهر. يظهر زر الدفع هنا بعد تسجيل الدخول." : "⭐ за месяц. После входа здесь появится кнопка оплаты — переходить на другую страницу не нужно."}</p>
         </div>
         <TelegramLogin variant="compact" />
       </div>
@@ -248,7 +261,8 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
       <div className="flex flex-col gap-2">
         <p className="flex items-center gap-2 text-base font-extrabold tracking-tight">
           <Star className="h-5 w-5 text-accent" />{ar ? "Premium مقابل" : "Premium за"}{starsPrice}{ar ? "نجوم" : "звёзд"}</p>
-        <p className="text-sm text-muted">{ar ? "الدفع داخل Telegram: تُخصم النجوم من رصيدك. الوصول لمدة 30 يومًا. التجديد يدوي دون خصم تلقائي." : "1790 ⭐ за 30 дней. Продление вручную, без автоматических списаний."}</p>
+        <p className="text-sm text-muted">{ar ? "الدفع داخل Telegram: تُخصم النجوم من رصيدك. الوصول لمدة شهر. التجديد يدوي دون خصم تلقائي." : `${starsPrice} ⭐ · ${payments.priceHint}. Продление вручную, без автоматических списаний.`}</p>
+        {comparison ? <p className="rounded-2xl bg-accent/10 px-3 py-2 text-sm font-semibold" data-variant={comparison.id}>{comparison.text}</p> : null}
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row">
@@ -285,7 +299,7 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
       {error ? <p className="text-sm font-semibold text-danger">{ar ? "تعذّر إكمال العملية. تحقّق من الاتصال وحاول مرة أخرى." : error}</p> : null}
 
       <div className="flex flex-wrap gap-2">
-        <Badge tone="accent">{ar ? "30 يومًا" : "30 дней доступа"}</Badge>
+        <Badge tone="accent">{ar ? "شهر" : "Месяц доступа"}</Badge>
         <Badge tone="success">{ar ? "تجديد يدوي" : "Продление вручную"}</Badge>
         <Badge tone="info">{ar ? "الاسترداد عبر @BotFather" : "Возврат через @BotFather"}</Badge>
       </div>

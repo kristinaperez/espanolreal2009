@@ -70,12 +70,18 @@ export interface PaymentMethodConfig {
 export interface PaymentsConfig {
   premiumProductId: string;
   starsPrice: number;
+  /** Euro-equivalent caption shown next to the Stars price. */
+  priceHint: string;
+  /** Rotating price comparisons; ids are stored on orders as price_variant. */
+  comparisons: { id: string; text: string; source?: string }[];
   currency: string;
   methods: PaymentMethodConfig[];
 }
 
 export interface CourseConfig {
   payments: PaymentsConfig;
+  /** "Why people learn Spanish" — paraphrased, no names or ages. */
+  motivations: string[];
   course: {
     id: string;
     title: string;

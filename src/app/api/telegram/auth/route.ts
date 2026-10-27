@@ -4,6 +4,12 @@ import { clearSessionCookie, sessionIsConfigured, setSessionCookie } from "@/lib
 import { currentUser, errorResponse, jsonResponse, rateLimit, readJsonBody, serverErrorResponse } from "@/server/http";
 import { buildAccountPayload } from "@/server/account";
 import { upsertTelegramUser } from "@/server/users";
+import { resolveTrial } from "@/server/trial";
+
+/** The free trial starts at registration; a storage hiccup must never block login. */
+async function startTrial(request: NextRequest, userId: number) {
+  await resolveTrial(request, userId, true).catch(() => null);
+}
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +70,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return serverErrorResponse("telegram-auth-save", error);
   }
+  await startTrial(request, user.id);
 
   const response = jsonResponse(await buildAccountPayload(user));
   setSessionCookie(response, user.telegramId);
@@ -118,6 +125,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const user = await upsertTelegramUser(verified.user);
+    await startTrial(request, user.id);
     target.searchParams.set("telegram", "ok");
     const response = NextResponse.redirect(target);
     setSessionCookie(response, user.telegramId);
