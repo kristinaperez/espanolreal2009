@@ -60,6 +60,10 @@ const request = {cookies:{get:()=>null}, headers:{get:()=> 'https://example.test
 const trialService = {resolveTrial:async (_r,_id,start) => row ?? (start ? (row={id:'guest-id',startedAt:new Date(),completedAt:null}) : null), setTrialCookie:()=>{}, trialActive:trial.trialActive, TRIAL_MS:trial.TRIAL_MS, completeTrial:async()=>{completions++; row.completedAt ??= new Date();}};
 const lessonRoute = load('src/app/api/lessons/[n]/route.ts', {'@/lib/content/loader':{getLesson:n=>n===1 || n===2?{lesson:n,phrases:['protected']}:null,getDistractorPool:()=>[]},'@/server/http':http,'@/server/orders':{findPaidLicenseForUser:async()=>activeLicense},'@/lib/payments/catalog':catalogue,'@/server/trial':trialService});
 const getLesson = n => lessonRoute.GET(request, {params:Promise.resolve({n:String(n)})});
+user=null;
+assert.equal((await getLesson(1)).status,401);
+assert.equal(row,null,'anonymous visitors must not create a trial');
+user={id:1,telegramId:42}; activeLicense=null;
 assert.equal((await getLesson('nope')).status,400);
 assert.equal((await getLesson(99)).status,404);
 assert.equal((await getLesson(2)).status,402);
@@ -74,7 +78,7 @@ row={id:'guest-id',startedAt:new Date(Date.now()-trial.TRIAL_MS),completedAt:nul
 assert.equal((await getLesson(1)).status,402);
 user={id:1,telegramId:42}; activeLicense={id:1};
 assert.equal((await getLesson(2)).status,200);
-console.log('PASS: real lesson/trial route functions with mocked storage: invalid/unknown lessons, no lesson-2 trial, first lesson, completion replay, expiry, paid access, CSRF rejection.');
+console.log('PASS: real lesson/trial route functions with mocked storage: anonymous 401 without a trial, invalid/unknown lessons, no lesson-2 trial, first lesson, completion replay, expiry, paid access, CSRF rejection.');
 
 const model=load('src/lib/blog.ts');
 const article={slug:'first-article',title:'Первая статья',description:'Практика разговорного испанского',body:'## Первая фраза\n\n<script>alert(1)</script> & текст',published:false};

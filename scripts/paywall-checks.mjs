@@ -28,3 +28,37 @@ assert.equal(config.payments.starsPrice, 1490);
 assert.equal(config.payments.priceHint, PRICE_HINT);
 assert(!/без регистрации/i.test(fs.readFileSync('src/components/landing/landing-page.tsx', 'utf8')), 'landing still promises no registration');
 console.log('PASS: no 1790 / 30-day copy left, price 1490 and price hint come from config, landing no longer promises "no registration".');
+
+// --- Task 3: login required; trial starts at registration ------------------
+import vm from 'node:vm';
+import ts from 'typescript';
+export function load(file, aliases = {}) {
+  const exports = {};
+  vm.runInNewContext(ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, target: ts.ScriptTarget.ES2022, esModuleInterop: true } }).outputText,
+    { exports, process, Buffer, Date, console, URL, URLSearchParams, setTimeout, require: name => { if (!(name in aliases)) throw Error(`Unexpected import ${name}`); return aliases[name]; } });
+  return exports;
+}
+const trialCalls = [];
+let trialFails = false;
+const authHttp = { currentUser: async () => null, rateLimit: () => null, readJsonBody: async r => r.body,
+  jsonResponse: (value, status = 200) => ({ value, status, cookies: { set() {} } }), errorResponse: (error, status = 400) => ({ error, status }), serverErrorResponse: () => ({ status: 503 }) };
+const authRoute = load('src/app/api/telegram/auth/route.ts', {
+  'next/server': { NextResponse: { redirect: url => ({ status: 307, url: String(url), cookies: { set() {} } }) } },
+  '@/lib/telegram/crypto': { verifyTelegramAuthDetailed: () => ({ ok: true, user: { id: 99, first_name: 'Ana' } }) },
+  '@/lib/session': { sessionIsConfigured: () => true, setSessionCookie() {}, clearSessionCookie() {} },
+  '@/server/http': authHttp,
+  '@/server/account': { buildAccountPayload: async user => ({ user }) },
+  '@/server/users': { upsertTelegramUser: async () => ({ id: 7, telegramId: 99 }) },
+  '@/server/trial': { resolveTrial: async (...args) => { trialCalls.push(args); if (trialFails) throw Error('db down'); return { id: 'user-7' }; } },
+  '@/db': { db: { execute: async () => null } }, 'drizzle-orm': { sql: () => null },
+});
+const authRequest = { body: { id: 99, hash: 'x' }, url: 'https://example.test/api/telegram/auth?id=99&hash=x', cookies: { get: () => null } };
+assert.equal((await authRoute.POST(authRequest)).status, 200);
+assert.equal(trialCalls.length, 1);
+assert.equal(trialCalls[0][1], 7); assert.equal(trialCalls[0][2], true);
+trialFails = true;
+assert.equal((await authRoute.POST(authRequest)).status, 200, 'login must not fail when the trial row cannot be written');
+trialFails = false;
+assert.equal((await authRoute.GET(authRequest)).status, 307);
+assert.equal(trialCalls.length, 3);
+console.log('PASS: Telegram login (POST and redirect GET) starts the account trial; a trial write failure never blocks login.');
