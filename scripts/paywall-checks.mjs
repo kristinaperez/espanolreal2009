@@ -62,3 +62,37 @@ trialFails = false;
 assert.equal((await authRoute.GET(authRequest)).status, 307);
 assert.equal(trialCalls.length, 3);
 console.log('PASS: Telegram login (POST and redirect GET) starts the account trial; a trial write failure never blocks login.');
+
+// --- Task 4: price comparisons, variant stored on the order ----------------
+const comparisonsLib = load('src/lib/payments/comparisons.ts', { '@/lib/content/config': { payments: config.payments } });
+const list = comparisonsLib.comparisons();
+assert.equal(list.length, 8);
+assert.deepEqual(list.map(c => c.id), ['coffee', 'supermarket', 'menu', 'group', 'cafe', 'netflix', 'gym', 'tutor']);
+assert(list.every(c => typeof c.text === 'string' && c.text.length > 10));
+assert.equal(comparisonsLib.comparisonFor(42).id, comparisonsLib.comparisonFor(42).id);
+assert.equal(comparisonsLib.comparisonFor('42').id, comparisonsLib.comparisonFor(42).id);
+assert(new Set(Array.from({ length: 200 }, (_, i) => comparisonsLib.comparisonFor(i + 1).id)).size >= 6);
+assert.equal(comparisonsLib.knownVariant('menu'), 'menu');
+assert.equal(comparisonsLib.knownVariant('x'), null);
+assert.equal(comparisonsLib.knownVariant({}), null);
+assert.equal(comparisonsLib.knownVariant('<script>'), null);
+
+const catalogue = load('src/lib/payments/catalog.ts');
+const orderVariants = [];
+let invoiceStars = 0;
+const invoiceRoute = load('src/app/api/payments/telegram/stars/route.ts', {
+  '@/db': { db: { execute: async () => null } }, 'drizzle-orm': { sql: () => null },
+  '@/lib/payments/catalog': catalogue, '@/lib/payments/comparisons': comparisonsLib,
+  '@/lib/telegram/bot-api': { isBotConfigured: () => true, createStarsInvoiceLink: async v => { invoiceStars = v.stars; return 'https://t.me/$test'; } },
+  '@/server/http': { ...authHttp, currentUser: async () => ({ id: 1, telegramId: 42 }), siteOrigin: () => 'https://example.test' },
+  '@/server/trial': { resolveTrial: async () => ({ startedAt: new Date(0), completedAt: new Date(0) }), trialActive: () => false },
+  '@/server/orders': { findPaidLicenseForUser: async () => null, attachInvoiceLink: async () => {}, createPendingOrder: async (_u, _p, variant) => { orderVariants.push(variant); return { id: 1, payload: 'p' }; } },
+});
+const invoiceRequest = body => ({ body, headers: { get: () => null }, cookies: { get: () => null } });
+assert.equal((await invoiceRoute.POST(invoiceRequest({ productId: 'premium-monthly', variant: 'menu' }))).status, 200);
+assert.equal((await invoiceRoute.POST(invoiceRequest({ productId: 'premium-monthly', variant: '<script>' }))).status, 200);
+assert.equal((await invoiceRoute.POST(invoiceRequest({ productId: 'premium-monthly' }))).status, 200);
+assert.deepEqual(orderVariants, ['menu', null, null]);
+assert.equal(invoiceStars, 1490);
+assert(fs.readFileSync('docs/migrations/20261027-price-variant.sql', 'utf8').includes('ADD COLUMN IF NOT EXISTS price_variant text'));
+console.log('PASS: 8 comparisons, stable per-user assignment, unknown/forged variants stored as null, 1490-Star invoice, additive migration present.');

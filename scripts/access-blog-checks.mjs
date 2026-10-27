@@ -110,6 +110,7 @@ let invoices=0;
 const invoiceRoute=load('src/app/api/payments/telegram/stars/route.ts', {
  '@/db':{db:{execute:async()=>null}},'drizzle-orm':{sql:()=>null},
  '@/lib/payments/catalog':catalogue,
+ '@/lib/payments/comparisons':{knownVariant:()=>null},
  '@/lib/telegram/bot-api':{isBotConfigured:()=>true,createStarsInvoiceLink:async value=>{invoices++;assert.equal(value.stars,1490);return 'https://t.me/$test';}},
  '@/server/http':{...http,siteOrigin:()=> 'https://example.test'},
  '@/server/trial':trialService,

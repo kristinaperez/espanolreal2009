@@ -55,6 +55,8 @@ export const orders = pgTable(
     chargeId: text("charge_id").unique(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     paidAt: timestamp("paid_at", { withTimezone: true }),
+    /** Price comparison shown at checkout (data/course.config.json → payments.comparisons). */
+    priceVariant: text("price_variant"),
   },
   (table) => [
     index("orders_user_idx").on(table.userId),

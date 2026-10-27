@@ -72,6 +72,8 @@ export interface PaymentsConfig {
   starsPrice: number;
   /** Euro-equivalent caption shown next to the Stars price. */
   priceHint: string;
+  /** Rotating price comparisons; ids are stored on orders as price_variant. */
+  comparisons: { id: string; text: string; source?: string }[];
   currency: string;
   methods: PaymentMethodConfig[];
 }
