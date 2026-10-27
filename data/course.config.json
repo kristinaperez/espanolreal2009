@@ -597,7 +597,7 @@
   ],
   "payments": {
     "premiumProductId": "premium-monthly",
-    "starsPrice": 1790,
+    "starsPrice": 1490,
     "currency": "XTR",
     "methods": [
       {
