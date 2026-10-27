@@ -96,3 +96,25 @@ assert.deepEqual(orderVariants, ['menu', null, null]);
 assert.equal(invoiceStars, 1490);
 assert(fs.readFileSync('docs/migrations/20261027-price-variant.sql', 'utf8').includes('ADD COLUMN IF NOT EXISTS price_variant text'));
 console.log('PASS: 8 comparisons, stable per-user assignment, unknown/forged variants stored as null, 1490-Star invoice, additive migration present.');
+
+// --- Task 5: paywall analytics ----------------------------------------------
+function analyticsWith({ consent, gtagThrows = false }) {
+  const calls = [];
+  const storage = { getItem: key => (key === 'espanolreal:analytics-consent:v1' && consent ? 'accepted' : null) };
+  const window = { gtag: (...a) => { if (gtagThrows) throw Error('boom'); calls.push(['gtag', ...a]); }, ym: (...a) => calls.push(['ym', ...a]) };
+  const exports = {};
+  vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/analytics/paywall.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText,
+    { exports, window, localStorage: storage, require: () => { throw Error('no imports expected'); } });
+  return { track: exports.trackPaywall, calls };
+}
+{
+  const off = analyticsWith({ consent: false }); off.track('paywall_view', 'menu'); assert.equal(off.calls.length, 0);
+  const on = analyticsWith({ consent: true }); on.track('checkout_click', 'menu');
+  assert.deepEqual(JSON.parse(JSON.stringify(on.calls)), [['gtag', 'event', 'checkout_click', { variant: 'menu' }], ['ym', 113580037, 'reachGoal', 'checkout_click', { variant: 'menu' }]]);
+  const broken = analyticsWith({ consent: true, gtagThrows: true }); assert.doesNotThrow(() => broken.track('paywall_view', 'menu'));
+}
+const starsSource = fs.readFileSync('src/components/payments/telegram-stars.tsx', 'utf8');
+assert(/comparisonFor\(/.test(starsSource) && /trackPaywall\("paywall_view"/.test(starsSource) && /trackPaywall\("checkout_click"/.test(starsSource) && /variant: comparison\.id/.test(starsSource), 'paywall must show a comparison, track view/click and send the variant');
+const landingSource = fs.readFileSync('src/components/landing/landing-page.tsx', 'utf8');
+assert(/PriceComparisonLine/.test(landingSource) && !/TelegramStarsPayment/.test(landingSource), 'landing shows the comparison text but no checkout');
+console.log('PASS: paywall analytics only with consent, GA4 + Metrika goals carry the variant, analytics failures are swallowed; paywall and landing wired.');

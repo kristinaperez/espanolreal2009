@@ -11,6 +11,9 @@ import { Badge, Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { openInvoiceLink } from "@/lib/telegram/webapp";
 import { TelegramLogin } from "@/components/auth/telegram-login";
+import { payments } from "@/lib/content/config";
+import { comparisonFor } from "@/lib/payments/comparisons";
+import { trackPaywall } from "@/lib/analytics/paywall";
 
 type Phase = "idle" | "creating" | "awaiting" | "verifying" | "paid" | "error";
 
@@ -53,6 +56,15 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [openedIn, setOpenedIn] = useState<"webapp" | "browser" | null>(null);
   const trackedOrders = useRef(new Set<number>());
+  // One stable comparison per Telegram account, so conversion can be measured per variant.
+  const comparison = user && !ar ? comparisonFor(user.telegramId) : null;
+  const paywallOpen = Boolean(comparison && !serverPremium && trial && !trial.active && phase !== "paid");
+  const trackedView = useRef<string | null>(null);
+  useEffect(() => {
+    if (!paywallOpen || !comparison || trackedView.current === comparison.id) return;
+    trackedView.current = comparison.id;
+    trackPaywall("paywall_view", comparison.id);
+  }, [paywallOpen, comparison]);
   const pollRef = useRef<number | null>(null);
 
   const stopPolling = useCallback(() => {
@@ -123,11 +135,12 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
     setError(null);
     setMessage(null);
     setPhase("creating");
+    if (comparison) trackPaywall("checkout_click", comparison.id);
     try {
       const response = await fetch("/api/payments/telegram/stars", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ productId: account?.productId ?? "premium-monthly" }),
+        body: JSON.stringify({ productId: account?.productId ?? "premium-monthly", ...(comparison ? { variant: comparison.id } : {}) }),
       });
       const payload = (await response.json()) as OrderResponse;
       if (!response.ok || !payload.invoiceLink) {
@@ -158,7 +171,7 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
       setError((caught as Error).message);
       setPhase("error");
     }
-  }, [account, checkOrder, startPolling, ar]);
+  }, [account, checkOrder, startPolling, ar, comparison]);
 
   const restore = useCallback(async () => {
     setError(null);
@@ -248,7 +261,8 @@ export function TelegramStarsPayment({ compact = false }: { compact?: boolean })
       <div className="flex flex-col gap-2">
         <p className="flex items-center gap-2 text-base font-extrabold tracking-tight">
           <Star className="h-5 w-5 text-accent" />{ar ? "Premium مقابل" : "Premium за"}{starsPrice}{ar ? "نجوم" : "звёзд"}</p>
-        <p className="text-sm text-muted">{ar ? "الدفع داخل Telegram: تُخصم النجوم من رصيدك. الوصول لمدة شهر. التجديد يدوي دون خصم تلقائي." : `${starsPrice} ⭐ за месяц. Продление вручную, без автоматических списаний.`}</p>
+        <p className="text-sm text-muted">{ar ? "الدفع داخل Telegram: تُخصم النجوم من رصيدك. الوصول لمدة شهر. التجديد يدوي دون خصم تلقائي." : `${starsPrice} ⭐ · ${payments.priceHint}. Продление вручную, без автоматических списаний.`}</p>
+        {comparison ? <p className="rounded-2xl bg-accent/10 px-3 py-2 text-sm font-semibold" data-variant={comparison.id}>{comparison.text}</p> : null}
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row">
