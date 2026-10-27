@@ -84,6 +84,7 @@ export function TrainerPage({
     if (!protectedContent || payloads || locked || signedOut) return;
     setLoadError(null);
     setNeedsLogin(false);
+    let unauthorized = false;
     const responses = await Promise.all(
       lessons.map(async (lesson) => {
         try {
@@ -92,7 +93,7 @@ export function TrainerPage({
             credentials: "same-origin",
           });
           if (response.status === 402) setDenied(true);
-          if (response.status === 401) setNeedsLogin(true);
+          if (response.status === 401) unauthorized = true;
           if (!response.ok) return null;
           return (await response.json()) as LessonPayload;
         } catch {
@@ -101,7 +102,8 @@ export function TrainerPage({
       }),
     );
     if (responses.some((item) => !item)) {
-      if (accessLesson === 1 && !user) return;
+      // Only a real 401 means "sign in first"; any other failure keeps the retry card.
+      if (unauthorized && accessLesson === 1 && !user) { setNeedsLogin(true); return; }
       setLoadError(fr ? "Impossible de charger la leçon. Vérifiez votre connexion ou connectez-vous avec Telegram pour restaurer votre achat." : "Не удалось загрузить урок. Проверьте подключение к интернету или войдите через Telegram, чтобы восстановить покупку.");
       return;
     }
@@ -184,7 +186,7 @@ export function TrainerPage({
     return <PremiumLock />;
   }
 
-  if (showStart && !payloads) return <StartLessonCard lesson={primary} />;
+  if (showStart && !payloads) return <StartLessonCard lesson={primary} language={fr ? "fr" : "ru"} />;
 
   if (protectedContent && !payloads) {
     return (

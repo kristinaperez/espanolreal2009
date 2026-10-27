@@ -4,6 +4,7 @@ import { sessionIsConfigured, setSessionCookie } from "@/lib/session";
 import { errorResponse, jsonResponse, rateLimit, readJsonBody, serverErrorResponse } from "@/server/http";
 import { buildAccountPayload } from "@/server/account";
 import { upsertTelegramUser } from "@/server/users";
+import { resolveTrial } from "@/server/trial";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,8 @@ export async function POST(request: NextRequest) {
 
   try {
     const user = await upsertTelegramUser(verified.user);
+    // The free trial starts at registration; a storage hiccup must never block login.
+    await resolveTrial(request, user.id, true).catch(() => null);
     const account = await buildAccountPayload(user);
     const response = jsonResponse({ ...account, success: true });
     setSessionCookie(response, user.telegramId);

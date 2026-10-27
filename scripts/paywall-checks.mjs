@@ -98,20 +98,27 @@ assert(fs.readFileSync('docs/migrations/20261027-price-variant.sql', 'utf8').inc
 console.log('PASS: 8 comparisons, stable per-user assignment, unknown/forged variants stored as null, 1490-Star invoice, additive migration present.');
 
 // --- Task 5: paywall analytics ----------------------------------------------
-function analyticsWith({ consent, gtagThrows = false }) {
-  const calls = [];
+function analyticsWith({ consent, gtagThrows = false, counters = true }) {
+  const calls = [], timers = [];
   const storage = { getItem: key => (key === 'espanolreal:analytics-consent:v1' && consent ? 'accepted' : null) };
-  const window = { gtag: (...a) => { if (gtagThrows) throw Error('boom'); calls.push(['gtag', ...a]); }, ym: (...a) => calls.push(['ym', ...a]) };
+  const window = {};
+  const install = () => { window.gtag = (...a) => { if (gtagThrows) throw Error('boom'); calls.push(['gtag', ...a]); }; window.ym = (...a) => calls.push(['ym', ...a]); };
+  if (counters) install();
   const exports = {};
   vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/analytics/paywall.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText,
-    { exports, window, localStorage: storage, require: () => { throw Error('no imports expected'); } });
-  return { track: exports.trackPaywall, calls };
+    { exports, window, localStorage: storage, setTimeout: fn => timers.push(fn), require: () => { throw Error('no imports expected'); } });
+  return { track: exports.trackPaywall, calls, timers, install };
 }
 {
   const off = analyticsWith({ consent: false }); off.track('paywall_view', 'menu'); assert.equal(off.calls.length, 0);
   const on = analyticsWith({ consent: true }); on.track('checkout_click', 'menu');
   assert.deepEqual(JSON.parse(JSON.stringify(on.calls)), [['gtag', 'event', 'checkout_click', { variant: 'menu' }], ['ym', 113580037, 'reachGoal', 'checkout_click', { variant: 'menu' }]]);
   const broken = analyticsWith({ consent: true, gtagThrows: true }); assert.doesNotThrow(() => broken.track('paywall_view', 'menu'));
+  assert.equal(broken.calls.filter(c => c[0] === 'ym').length, 1, 'a failing gtag must not stop the Metrika goal');
+  const late = analyticsWith({ consent: true, counters: false }); late.track('paywall_view', 'gym');
+  assert.equal(late.calls.length, 0); assert.equal(late.timers.length, 1, 'event waits for counters');
+  late.install(); late.timers.shift()();
+  assert.equal(late.calls.length, 2, 'event is sent once counters are loaded');
 }
 const starsSource = fs.readFileSync('src/components/payments/telegram-stars.tsx', 'utf8');
 assert(/comparisonFor\(/.test(starsSource) && /trackPaywall\("paywall_view"/.test(starsSource) && /trackPaywall\("checkout_click"/.test(starsSource) && /variant: comparison\.id/.test(starsSource), 'paywall must show a comparison, track view/click and send the variant');
@@ -146,5 +153,7 @@ assert(cardHtml.includes('telegram-login'));
 assert((cardHtml.match(/<li/g) || []).length >= 22);
 const trainerSource = fs.readFileSync('src/components/trainer/trainer-page.tsx', 'utf8');
 assert(/response\.status === 401/.test(trainerSource) && /<StartLessonCard/.test(trainerSource), 'trainer must switch to the start card on 401 / signed-out');
+const frHtml = renderToStaticMarkup(React.createElement(startCard.StartLessonCard, { lesson: teaserLesson, language: 'fr' }));
+assert(frHtml.includes('Première leçon gratuite') && !frHtml.includes('Первый урок') && !frHtml.includes('<li class="text-sm'), 'French card: French copy, no Russian ticker');
 assert(/lesson\.lesson === 1/.test(fs.readFileSync('src/components/seo/lesson-intro.tsx', 'utf8')), 'lesson 1 intro must not say Premium is required');
 console.log('PASS: start card shows the lion, ¡Vamos!, exactly two teaser phrases, Telegram login and 22 age-free motivations; trainer wired for signed-out visitors.');

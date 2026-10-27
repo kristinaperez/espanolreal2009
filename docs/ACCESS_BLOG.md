@@ -57,7 +57,7 @@ Design: `docs/superpowers/specs/2026-10-27-access-paywall-design.md`. Plan: `doc
 ### Deployment order (production still runs pre-#27 code)
 
 1. Back up the production database.
-2. Apply `docs/migrations/20261020-blog-trials.sql`, then `docs/migrations/20261027-price-variant.sql`.
+2. **Hard gate:** apply `docs/migrations/20261020-blog-trials.sql`, then `docs/migrations/20261027-price-variant.sql` **before** the new code goes live. Drizzle selects every schema column explicitly; without `orders.price_variant` all order/entitlement queries fail (Premium lessons, webhook fulfilment, checkout). The migration is additive, so the current production code keeps working after it.
 3. Netlify env: `DATABASE_URL`, `SESSION_SECRET` (32+ bytes), `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, webhook secret, `BLOG_ADMIN_TELEGRAM_IDS`.
 4. Deploy preview: anonymous `/lesson/1` shows the start card; login; finish lesson 1; paywall shows 1490 ⭐ + caption + comparison; one real Stars payment; access restored after re-login; `select price_variant from orders order by id desc limit 1` is filled.
 5. Merge and deploy production only after steps 1–4 and the independent review.

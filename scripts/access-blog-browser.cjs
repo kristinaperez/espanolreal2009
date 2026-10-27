@@ -7,7 +7,7 @@ const base = process.env.ACCESS_BLOG_QA_BASE || 'http://127.0.0.1:3100';
  try {
   const context = await browser.newContext({serviceWorkers:'block'});
   await context.route('https://**/*', route => route.abort());
-  const account={ok:true,configured:true,botUsername:'TestBot',starsPrice:1790,productId:'premium-monthly',user:{telegramId:42,firstName:'Test'},blogAdmin:true,premium:{active:false,expiresAt:null},orders:[]};
+  const account={ok:true,configured:true,botUsername:'TestBot',starsPrice:1490,productId:'premium-monthly',user:{telegramId:42,firstName:'Test'},blogAdmin:true,premium:{active:false,expiresAt:null},orders:[]};
   let active=true,articles=[];
   const fulfill=(route,data,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
   await context.route('**/api/telegram/session', r=>fulfill(r,account));
@@ -23,9 +23,9 @@ const base = process.env.ACCESS_BLOG_QA_BASE || 'http://127.0.0.1:3100';
   for(const width of [320,390,768,1440]){await page.setViewportSize({width,height:900});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`landing overflow ${width}`);}
   await page.goto(base+'/learn/settings');
   await page.getByText('Попробуйте первый урок бесплатно',{exact:true}).waitFor();
-  assert.equal(await page.getByRole('button',{name:'Оплатить 1790 ⭐',exact:true}).count(),0);
+  assert.equal(await page.getByRole('button',{name:'Оплатить 1490 ⭐',exact:true}).count(),0);
   active=false;await page.evaluate(()=>window.dispatchEvent(new Event('er-trial-changed')));
-  await page.getByRole('button',{name:'Оплатить 1790 ⭐',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Оплатить 1490 ⭐',exact:true}).waitFor();
   await page.goto(base+'/admin/blog');
   await page.getByLabel('Заголовок',{exact:true}).fill('Живой испанский в кафе');
   await page.getByLabel('Адрес статьи',{exact:true}).fill('ispanskiy-v-kafe');
