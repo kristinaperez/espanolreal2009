@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowRight, BookOpen, GraduationCap, Loader2, Sparkles } from "lucide-react";
 import { ExerciseRunner, type SessionResult } from "./exercise-runner";
 import { PremiumLock, SessionSummary } from "./session-summary";
+import { StartLessonCard } from "./start-lesson-card";
 import { Button } from "@/components/ui/button";
 import { Badge, Card } from "@/components/ui/card";
 import { useProgress } from "@/components/providers/progress-provider";
@@ -50,7 +51,7 @@ export function TrainerPage({
   introHeadingLevel?: "h1" | "h2";
 }) {
   const { state, dispatch, access } = useProgress();
-  const { serverPremium, refresh } = useAuth();
+  const { serverPremium, refresh, user, status: authStatus } = useAuth();
   const { language } = useLanguage();
   const fr = language === "fr";
   const [phase, setPhase] = useState<Phase>("intro");
@@ -61,6 +62,7 @@ export function TrainerPage({
     protectedContent ? null : lessons.map((lesson) => ({ lesson, pool })),
   );
   const [denied, setDenied] = useState(false);
+  const [needsLogin, setNeedsLogin] = useState(false);
   const [saving, setSaving] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
   const [pendingResult, setPendingResult] = useState<SessionResult | null>(null);
@@ -74,10 +76,14 @@ export function TrainerPage({
   // render agree: locked lessons never leak their phrases.
   const entitled = access(accessLesson) || serverPremium;
   const locked = !entitled || (denied && !serverPremium);
+  // The free first lesson starts with a Telegram login (the trial belongs to an account).
+  const signedOut = authStatus === "server" && !user;
+  const showStart = protectedContent && mode === "lesson" && accessLesson === 1 && !serverPremium && (signedOut || (needsLogin && !user));
 
   const loadProtected = useCallback(async () => {
-    if (!protectedContent || payloads || locked) return;
+    if (!protectedContent || payloads || locked || signedOut) return;
     setLoadError(null);
+    setNeedsLogin(false);
     const responses = await Promise.all(
       lessons.map(async (lesson) => {
         try {
@@ -86,6 +92,7 @@ export function TrainerPage({
             credentials: "same-origin",
           });
           if (response.status === 402) setDenied(true);
+          if (response.status === 401) setNeedsLogin(true);
           if (!response.ok) return null;
           return (await response.json()) as LessonPayload;
         } catch {
@@ -94,11 +101,12 @@ export function TrainerPage({
       }),
     );
     if (responses.some((item) => !item)) {
+      if (accessLesson === 1 && !user) return;
       setLoadError(fr ? "Impossible de charger la leçon. Vérifiez votre connexion ou connectez-vous avec Telegram pour restaurer votre achat." : "Не удалось загрузить урок. Проверьте подключение к интернету или войдите через Telegram, чтобы восстановить покупку.");
       return;
     }
     setPayloads(responses as LessonPayload[]);
-  }, [fr, lessons, locked, payloads, protectedContent]);
+  }, [accessLesson, fr, lessons, locked, payloads, protectedContent, signedOut, user]);
 
   useEffect(() => {
     if (!protectedContent || locked) return;
@@ -175,6 +183,8 @@ export function TrainerPage({
   if (locked && phase !== "done") {
     return <PremiumLock />;
   }
+
+  if (showStart && !payloads) return <StartLessonCard lesson={primary} />;
 
   if (protectedContent && !payloads) {
     return (

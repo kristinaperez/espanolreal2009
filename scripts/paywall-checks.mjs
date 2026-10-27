@@ -118,3 +118,32 @@ assert(/comparisonFor\(/.test(starsSource) && /trackPaywall\("paywall_view"/.tes
 const landingSource = fs.readFileSync('src/components/landing/landing-page.tsx', 'utf8');
 assert(/PriceComparisonLine/.test(landingSource) && !/TelegramStarsPayment/.test(landingSource), 'landing shows the comparison text but no checkout');
 console.log('PASS: paywall analytics only with consent, GA4 + Metrika goals carry the variant, analytics failures are swallowed; paywall and landing wired.');
+
+// --- Task 6: start card with the lion ---------------------------------------
+import React from 'react';
+import jsxRuntime from 'react/jsx-runtime';
+import { renderToStaticMarkup } from 'react-dom/server';
+assert.equal(config.motivations.length, 22);
+assert(config.motivations.every(m => typeof m === 'string' && !/\d+\s*(лет|год)/.test(m)), 'motivations must not carry ages');
+assert(fs.existsSync('public/mascot/lion.png'));
+const ui = { Card: p => React.createElement('div', null, p.children), Badge: p => React.createElement('span', null, p.children) };
+const startCard = load('src/components/trainer/start-lesson-card.tsx', {
+  'react/jsx-runtime': jsxRuntime, react: React,
+  'next/image': { __esModule: true, default: p => React.createElement('img', { src: p.src, alt: p.alt }) },
+  '@/components/auth/telegram-login': { TelegramLogin: () => React.createElement('button', null, 'telegram-login') },
+  '@/components/ui/card': ui,
+  '@/lib/content/config': { courseConfig: config },
+  'lucide-react': { Volume2: () => React.createElement('svg') },
+});
+const teaserLesson = { lesson: 1, title: 'В кафе', phrases: [{ spanish: 'Un café con leche, por favor', translation: 'Кофе с молоком, пожалуйста' }, { spanish: '¿Me cobras?', translation: 'Посчитай меня' }, { spanish: 'SECRET', translation: 'закрыто' }] };
+const cardHtml = renderToStaticMarkup(React.createElement(startCard.StartLessonCard, { lesson: teaserLesson }));
+assert(cardHtml.includes('Первый урок бесплатно'));
+assert(cardHtml.includes('/mascot/lion.png'));
+assert(cardHtml.includes('¡Vamos!'));
+assert(cardHtml.includes('Un café con leche, por favor') && cardHtml.includes('¿Me cobras?'));
+assert(!cardHtml.includes('SECRET'), 'only two teaser phrases may appear');
+assert(cardHtml.includes('telegram-login'));
+assert((cardHtml.match(/<li/g) || []).length >= 22);
+const trainerSource = fs.readFileSync('src/components/trainer/trainer-page.tsx', 'utf8');
+assert(/response\.status === 401/.test(trainerSource) && /<StartLessonCard/.test(trainerSource), 'trainer must switch to the start card on 401 / signed-out');
+console.log('PASS: start card shows the lion, ¡Vamos!, exactly two teaser phrases, Telegram login and 22 age-free motivations; trainer wired for signed-out visitors.');

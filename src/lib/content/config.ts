@@ -80,6 +80,8 @@ export interface PaymentsConfig {
 
 export interface CourseConfig {
   payments: PaymentsConfig;
+  /** "Why people learn Spanish" — paraphrased, no names or ages. */
+  motivations: string[];
   course: {
     id: string;
     title: string;
