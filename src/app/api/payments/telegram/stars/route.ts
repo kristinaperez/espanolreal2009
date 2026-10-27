@@ -9,7 +9,7 @@ import { findPaidLicenseForUser, attachInvoiceLink, createPendingOrder } from "@
 export const dynamic = "force-dynamic";
 
 /**
- * POST — creates a Telegram Stars invoice for Premium (1790 ⭐ for 30 days).
+ * POST — creates a Telegram Stars invoice for Premium (one calendar month).
  * Returns the invoice link that the client opens via
  * `Telegram.WebApp.openInvoice()` or in a new browser tab.
  */

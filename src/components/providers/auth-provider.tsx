@@ -60,7 +60,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 const FALLBACK_BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? null;
-const FALLBACK_STARS = 1790;
+const FALLBACK_STARS = 1490;
 
 function fallbackAccount(): AccountState {
   return {

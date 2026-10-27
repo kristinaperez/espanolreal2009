@@ -70,6 +70,8 @@ export interface PaymentMethodConfig {
 export interface PaymentsConfig {
   premiumProductId: string;
   starsPrice: number;
+  /** Euro-equivalent caption shown next to the Stars price. */
+  priceHint: string;
   currency: string;
   methods: PaymentMethodConfig[];
 }

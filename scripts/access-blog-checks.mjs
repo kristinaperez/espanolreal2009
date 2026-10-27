@@ -58,7 +58,7 @@ let user = null, activeLicense = null, row = null, completions = 0;
 const http = {currentUser: async () => user, rateLimit: () => null, jsonResponse: (value,status=200) => ({value,status}), errorResponse: (error,status=400) => ({error,status}), serverErrorResponse: () => ({status:503}), readJsonBody:async r => r.body};
 const request = {cookies:{get:()=>null}, headers:{get:()=> 'https://example.test'},nextUrl:{origin:'https://example.test'}};
 const trialService = {resolveTrial:async (_r,_id,start) => row ?? (start ? (row={id:'guest-id',startedAt:new Date(),completedAt:null}) : null), setTrialCookie:()=>{}, trialActive:trial.trialActive, TRIAL_MS:trial.TRIAL_MS, completeTrial:async()=>{completions++; row.completedAt ??= new Date();}};
-const lessonRoute = load('src/app/api/lessons/[n]/route.ts', {'@/lib/content/loader':{getLesson:n=>n===1 || n===2?{lesson:n,phrases:['protected']}:null,getDistractorPool:()=>[]},'@/server/http':http,'@/server/orders':{findPaidLicenseForUser:async()=>activeLicense},'@/server/trial':trialService});
+const lessonRoute = load('src/app/api/lessons/[n]/route.ts', {'@/lib/content/loader':{getLesson:n=>n===1 || n===2?{lesson:n,phrases:['protected']}:null,getDistractorPool:()=>[]},'@/server/http':http,'@/server/orders':{findPaidLicenseForUser:async()=>activeLicense},'@/lib/payments/catalog':catalogue,'@/server/trial':trialService});
 const getLesson = n => lessonRoute.GET(request, {params:Promise.resolve({n:String(n)})});
 assert.equal((await getLesson('nope')).status,400);
 assert.equal((await getLesson(99)).status,404);

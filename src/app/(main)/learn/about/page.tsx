@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
-import { categories, course, milestones } from "@/lib/content/config";
+import { categories, course, milestones, payments } from "@/lib/content/config";
 import { getCourseStats } from "@/lib/content/loader";
 
 export const metadata: Metadata = {
@@ -101,7 +101,7 @@ export default function AboutPage() {
           Первый урок можно начать без регистрации. Бесплатная проба заканчивается после завершения урока или через 7 дней — что наступит раньше. Прогресс обучения хранится локально в браузере. Для покупки Premium и восстановления доступа используется вход через Telegram, а закрытые уроки проверяют право доступа на сервере.
         </p>
         <p className="mt-3 text-sm text-muted">
-          Приложение можно установить как PWA, но не все функции гарантированно доступны без интернета: закрытый урок может потребовать серверную проверку или загрузку. Premium — 1790 Telegram Stars за 30 дней, продление вручную.
+          Приложение можно установить как PWA, но не все функции гарантированно доступны без интернета: закрытый урок может потребовать серверную проверку или загрузку. Premium — {payments.starsPrice} Telegram Stars за календарный месяц, продление вручную.
         </p>
       </Card>
 

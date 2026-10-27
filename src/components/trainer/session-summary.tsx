@@ -151,7 +151,7 @@ export function PremiumLock({ nextLesson }: { nextLesson?: number }) {
           Вы прошли бесплатную часть курса
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-base text-muted">
-          Откройте все уроки, полную систему повторения, экзамены и сертификат. Доступ на 30 дней за{" "}
+          Откройте все уроки, полную систему повторения, экзамены и сертификат. Доступ на календарный месяц за{" "}
           <span className="font-bold text-foreground">{starsPrice} ⭐</span> в Telegram. Продление вручную, без автоплатежей.
         </p>
       </div>
@@ -194,7 +194,7 @@ export function PremiumLock({ nextLesson }: { nextLesson?: number }) {
       <div className="flex flex-wrap justify-center gap-2">
         <Badge tone="success">Без автосписаний</Badge>
         <Badge tone="info">Все будущие уроки</Badge>
-        <Badge tone="accent">Доступ на 30 дней</Badge>
+        <Badge tone="accent">Доступ на месяц</Badge>
       </div>
     </div>
   );
